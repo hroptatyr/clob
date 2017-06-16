@@ -20,6 +20,13 @@ SUFFIXES =
 CLEANFILES += version.c
 EXTRA_DIST += version.c.in
 
+noinst_LIBRARIES = libdfp.a
+libdfp_a_SOURCES =
+libdfp_a_SOURCES += dfp754_d32.c dfp754_d32.h
+libdfp_a_SOURCES += dfp754_d64.c dfp754_d64.h
+libdfp_a_CPPFLAGS = $(AM_CPPFLAGS)
+libdfp_a_CPPFLAGS += $(dfp754_CFLAGS)
+
 
 ## version rules
 version.c: version.c.in $(top_builddir)/.version
