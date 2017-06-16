@@ -1,0 +1,4 @@
+/* -*- c -*- */
+#include "version.h"
+
+const char _version_string[] = "YUCK_SCMVER_VERSION";
