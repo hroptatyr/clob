@@ -48,6 +48,7 @@
 struct plqu_s {
 	size_t z;
 	plqu_val_t *a;
+	plqu_val_t sum;
 	size_t head;
 	size_t tail;
 };
@@ -59,6 +60,7 @@ make_plqu(void)
 	struct plqu_s *r = malloc(sizeof(*r));
 	r->z = PLQU_INIZ;
 	r->a = malloc(PLQU_INIZ * sizeof(*r));
+	r->sum = plqu_val_0;
 	r->head = 0U;
 	r->tail = 0U;
 	return r;
@@ -80,7 +82,9 @@ plqu_put(plqu_t q, plqu_qid_t i, plqu_val_t v)
 	if (UNLIKELY(!(i > q->head && i <= q->tail))) {
 		return -1;
 	}
-	q->a[(i - 1U) % q->z] = v;
+	const size_t slot = (i - 1U) % q->z;
+	q->sum = plqu_val_sub(q->sum, q->a[slot]);
+	q->sum = plqu_val_add(q->sum, q->a[slot] = v);
 	return 0;
 }
 
@@ -127,9 +131,17 @@ plqu_pop(plqu_t q)
 	plqu_val_t r = plqu_val_0;
 
 	if (LIKELY(q->head < q->tail)) {
-		r = q->a[q->head++ % q->z];
+		const size_t slot = q->head++ % q->z;
+		r = q->a[slot];
+		q->sum = plqu_val_sub(q->sum, r);
 	}
 	return r;
+}
+
+plqu_val_t
+plqu_sum(plqu_t q)
+{
+	return q->sum;
 }
 
 /* plqu.c ends here */
