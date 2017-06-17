@@ -309,61 +309,6 @@ twig_add(btree_t t, btree_key_t k, bool *splitp)
 	return r;
 }
 
-
-#include <stdio.h>
-static void
-__prnt(btree_t t, size_t lvl)
-{
-	printf("%p\tL%zu", t, lvl);
-	if (t->innerp) {
-		for (size_t i = 0U; i < t->n; i++) {
-			printf("\t%f", (double)t->key[i]);
-		}
-	} else {
-		/* leaves */
-		for (size_t i = 0U; i < t->n; i++) {
-			printf("\t%f|%p", (double)t->key[i], t->val[i].v);
-		}
-	}
-	putchar('\n');
-	if (t->innerp) {
-		for (size_t i = 0U; i <= t->n; i++) {
-			__prnt(t->val[i].t, lvl + 1U);
-		}
-	}
-	return;
-}
-
-static void
-__chck(btree_t t, btree_key_t thresh)
-{
-	switch (t->descp) {
-	case 0U:
-		for (size_t i = 0U; i < t->n; i++) {
-			if (t->key[i] > thresh) {
-				printf("ALARM %f > %f\n",
-				       (double)t->key[i], (double)thresh);
-			}
-		}
-		break;
-	case 1U:
-		for (size_t i = 0U; i < t->n; i++) {
-			if (t->key[i] < thresh) {
-				printf("ALARM %f < %f\n",
-				       (double)t->key[i], (double)thresh);
-			}
-		}
-		break;
-	}
-	if (!t->innerp) {
-		return;
-	}
-	for (size_t i = 0U; i < t->n; i++) {
-		__chck(t->val[i].t, t->key[i]);
-	}
-	return;
-}
-
 
 btree_t
 make_btree(bool descp)
@@ -455,27 +400,6 @@ btree_iter_next(btree_iter_t *iter)
 		iter->i = 0U;
 	} while ((iter->t = iter->t->next));
 	return false;
-}
-
-
-/* for debugging purposes */
-void
-btree_prnt(btree_t t)
-{
-	__prnt(t, 0U);
-	return;
-}
-
-void
-btree_chck(btree_t t)
-{
-	if (!t->innerp) {
-		return;
-	}
-	for (size_t i = 0U; i < t->n; i++) {
-		__chck(t->val[i].t, t->key[i]);
-	}
-	return;
 }
 
 /* btree.c ends here */

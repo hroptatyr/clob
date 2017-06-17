@@ -66,9 +66,4 @@ extern btree_key_t btree_bot(btree_t, btree_val_t*);
 
 extern bool btree_iter_next(btree_iter_t*);
 
-
-/* for debugging */
-extern void btree_prnt(btree_t);
-extern void btree_chck(btree_t);
-
 #endif	/* INCLUDED_btree_h_ */
