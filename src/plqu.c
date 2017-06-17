@@ -37,8 +37,10 @@
 #if defined HAVE_CONFIG_H
 # include "config.h"
 #endif	/* HAVE_CONFIG_H */
+#include <stdlib.h>
 #include <string.h>
 #include "plqu.h"
+#include "plqu_val.h"
 #include "nifty.h"
 
 #define PLQU_INIZ	(8U)
@@ -104,18 +106,17 @@ plqu_add(plqu_t q, plqu_val_t v)
 		q->z = nuz;
 	}
 	q->a[q->tail++ % q->z] = v;
+	q->sum = plqu_val_add(q->sum, v);
 	return q->tail;
 }
 
 plqu_val_t
 plqu_top(plqu_t q)
 {
-	plqu_val_t r;
+	plqu_val_t r = plqu_val_0;
 
 	if (LIKELY(q->head < q->tail)) {
 		r = q->a[q->head % q->z];
-	} else {
-		memset(&r, 0, sizeof(r));
 	}
 	return r;
 }
@@ -123,12 +124,10 @@ plqu_top(plqu_t q)
 plqu_val_t
 plqu_pop(plqu_t q)
 {
-	plqu_val_t r;
+	plqu_val_t r = plqu_val_0;
 
 	if (LIKELY(q->head < q->tail)) {
 		r = q->a[q->head++ % q->z];
-	} else {
-		memset(&r, 0, sizeof(r));
 	}
 	return r;
 }

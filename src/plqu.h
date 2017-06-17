@@ -36,10 +36,9 @@
  **/
 #if !defined INCLUDED_plqu_h_
 #define INCLUDED_plqu_h_
-#include <stdlib.h>
-#include <stdbool.h>
 
-typedef PLQU_VAL_T plqu_val_t;
+/* defines plqu_val_t, hopefully */
+#include "plqu_val.h"
 
 typedef size_t plqu_qid_t;
 typedef struct plqu_s *plqu_t;

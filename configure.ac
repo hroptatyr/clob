@@ -45,7 +45,6 @@ SXE_CHECK_DFP754
 ## configure our clobs
 AC_DEFINE_UNQUOTED([BTREE_KEY_T], [_Decimal64], [type of btree keys])
 AC_DEFINE_UNQUOTED([BTREE_VAL_T], [void*], [type of btree values])
-AC_DEFINE_UNQUOTED([PLQU_VAL_T], [_Decimal64], [type of plqu values])
 
 ## output
 AC_CONFIG_FILES([Makefile])
