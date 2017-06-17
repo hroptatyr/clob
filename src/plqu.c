@@ -72,13 +72,14 @@ free_plqu(plqu_t q)
 	return;
 }
 
-void
+int
 plqu_put(plqu_t q, plqu_qid_t i, plqu_val_t v)
 {
-	if (i > q->head && i <= q->tail) {
-		q->a[(i - 1U) % q->z] = v;
+	if (UNLIKELY(!(i > q->head && i <= q->tail))) {
+		return -1;
 	}
-	return;
+	q->a[(i - 1U) % q->z] = v;
+	return 0;
 }
 
 plqu_qid_t

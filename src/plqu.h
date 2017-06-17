@@ -47,7 +47,7 @@ typedef struct plqu_s *plqu_t;
 extern plqu_t make_plqu(void);
 extern void free_plqu(plqu_t);
 
-extern void plqu_put(plqu_t, plqu_qid_t, plqu_val_t);
+extern int plqu_put(plqu_t, plqu_qid_t, plqu_val_t);
 extern plqu_qid_t plqu_add(plqu_t, plqu_val_t);
 extern plqu_val_t plqu_top(plqu_t);
 extern plqu_val_t plqu_pop(plqu_t);
