@@ -379,6 +379,18 @@ btree_rem(btree_t t, btree_key_t k)
 	return w;
 }
 
+btree_val_t*
+btree_top(btree_t t, btree_key_t *k)
+{
+	/* go down them levels */
+	for (; t->innerp; t = t->val->t);
+	if (UNLIKELY(!t->n)) {
+		return NULL;
+	}
+	*k = *t->key;
+	return &t->val->v;
+}
+
 bool
 btree_iter_next(btree_iter_t *iter)
 {
