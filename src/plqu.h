@@ -36,13 +36,21 @@
  **/
 #if !defined INCLUDED_plqu_h_
 #define INCLUDED_plqu_h_
-
+#include <stdlib.h>
+#include <stdbool.h>
 /* defines plqu_val_t, hopefully */
 #include "plqu_val.h"
 
 typedef size_t plqu_qid_t;
 typedef struct plqu_s *plqu_t;
 
+typedef struct {
+	plqu_t q;
+	size_t i;
+	plqu_val_t v;
+} plqu_iter_t;
+
+
 extern plqu_t make_plqu(void);
 extern void free_plqu(plqu_t);
 
@@ -51,5 +59,7 @@ extern plqu_qid_t plqu_add(plqu_t, plqu_val_t);
 extern plqu_val_t plqu_top(plqu_t);
 extern plqu_val_t plqu_pop(plqu_t);
 extern plqu_val_t plqu_sum(plqu_t);
+
+extern bool plqu_iter_next(plqu_iter_t*);
 
 #endif	/* INCLUDED_plqu_h_ */

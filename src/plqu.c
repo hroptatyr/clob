@@ -144,4 +144,23 @@ plqu_sum(plqu_t q)
 	return q->sum;
 }
 
+
+bool
+plqu_iter_next(plqu_iter_t *iter)
+{
+	if (UNLIKELY(iter->q == NULL)) {
+		return false;
+	}
+	for (size_t i = iter->i; i < iter->q->z; i++) {
+		const size_t slot = (iter->q->head + i) % iter->q->z;
+		if (LIKELY(!plqu_val_0_p(iter->q->a[slot]))) {
+			/* good one */
+			iter->v = iter->q->a[slot];
+			iter->i = i + 1U;
+			return true;
+		}
+	}
+	return false;
+}
+
 /* plqu.c ends here */

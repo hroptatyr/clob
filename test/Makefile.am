@@ -22,12 +22,16 @@ check_PROGRAMS =
 CLEANFILES = $(check_PROGRAMS)
 
 clob_CFLAGS = -I$(top_srcdir)/src
-clob_LIBS = $(top_builddir)/src/libclob.a
+clob_LIBS = $(top_builddir)/src/libclob.a $(top_builddir)/src/libdfp.a
 
 
 check_PROGRAMS += clob_01
 TESTS += clob_01
 clob_01_LDADD = $(clob_LIBS)
+
+check_PROGRAMS += clob_02
+TESTS += clob_02
+clob_02_LDADD = $(clob_LIBS)
 
 check_PROGRAMS += plqu_01
 TESTS += plqu_01

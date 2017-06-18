@@ -35,6 +35,14 @@ main(void)
 
 	clob_prnt(c);
 
+	/* add marketable limit order */
+	i = clob_add(c, (clob_ord_t){TYPE_LMT, SIDE_ASK, 1.23227dd, 0.7dd, 0.0dd});
+	printf("%zu\n", i.qid);
+	i = clob_add(c, (clob_ord_t){TYPE_LMT, SIDE_BID, 1.23229dd, 0.3dd, 0.0dd});
+	printf("%zu\n", i.qid);
+
+	clob_prnt(c);
+
 	free_clob(c);
 	return 0;
 }

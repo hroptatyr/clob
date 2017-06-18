@@ -99,4 +99,6 @@ extern int clob_del(clob_t, clob_oid_t);
 
 extern clob_quo_t clob_top(clob_t, clob_type_t, clob_side_t);
 
+extern void clob_prnt(clob_t c);
+
 #endif	/* INCLUDED_clob_h_ */

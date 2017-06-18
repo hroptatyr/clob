@@ -37,10 +37,14 @@
 #if defined HAVE_CONFIG_H
 # include "config.h"
 #endif	/* HAVE_CONFIG_H */
+#include <dfp754_d64.h>
 #include "btree.h"
 #include "plqu.h"
 #include "clob.h"
 #include "nifty.h"
+
+#define pxtostr		d64tostr
+#define qxtostr		d64tostr
 
 
 clob_t
@@ -68,6 +72,7 @@ free_clob(clob_t c)
 clob_oid_t
 clob_add(clob_t c, clob_ord_t o)
 {
+	static metr_t m;
 	plqu_t q;
 	plqu_qid_t i;
 
@@ -87,7 +92,7 @@ clob_add(clob_t c, clob_ord_t o)
 		q = c.mid[o.sid];
 		break;
 	}
-	i = plqu_add(q, (plqu_val_t){o.vis, o.hid});
+	i = plqu_add(q, (plqu_val_t){o.vis, o.hid, ++m});
 	return (clob_oid_t){o.typ, o.sid, o.prc, .qid = i};
 }
 
@@ -139,6 +144,49 @@ clob_top(clob_t c, clob_type_t typ, clob_side_t sid)
 	}
 	r = plqu_sum(q);
 	return (clob_quo_t){p, r.vis};
+}
+
+
+#include <stdio.h>
+void
+clob_prnt(clob_t c)
+{
+	char buf[256];
+	size_t len;
+
+	puts("LMT/BID");
+	for (btree_iter_t i = {.t = c.lmt[SIDE_BID]}; btree_iter_next(&i);) {
+		len = pxtostr(buf, sizeof(buf), i.k);
+		buf[len++] = ' ';
+		for (plqu_iter_t j = {.q = i.v}; plqu_iter_next(&j);) {
+			size_t lem = len;
+
+			lem += qxtostr(buf + lem, sizeof(buf) - lem, j.v.vis);
+			buf[lem++] = '+';
+			lem += qxtostr(buf + lem, sizeof(buf) - lem, j.v.hid);
+			buf[lem++] = ' ';
+			lem += snprintf(buf + lem, sizeof(buf) - lem, "%zu", j.v.tim);
+			buf[lem++] = '\n';
+			fwrite(buf, 1, lem, stdout);
+		}
+	}
+	puts("LMT/ASK");
+	for (btree_iter_t i = {.t = c.lmt[SIDE_ASK]}; btree_iter_next(&i);) {
+		len = pxtostr(buf, sizeof(buf), i.k);
+		buf[len++] = ' ';
+		for (plqu_iter_t j = {.q = i.v}; plqu_iter_next(&j);) {
+			size_t lem = len;
+
+			lem += qxtostr(buf + lem, sizeof(buf) - lem, j.v.vis);
+			buf[lem++] = '+';
+			lem += qxtostr(buf + lem, sizeof(buf) - lem, j.v.hid);
+			buf[lem++] = ' ';
+			lem += snprintf(buf + lem, sizeof(buf) - lem, "%zu", j.v.tim);
+			buf[lem++] = '\n';
+			fwrite(buf, 1, lem, stdout);
+		}
+	}
+	return;
 }
 
 /* clob.c ends here */
