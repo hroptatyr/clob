@@ -47,6 +47,89 @@
 #define qxtostr		d64tostr
 
 
+#include <stdio.h>
+static void
+_unx_mkt_mkt(plqu_t m1, plqu_t m2, px_t ref)
+{
+	plqu_iter_t m1i = {.q = m1};
+	plqu_iter_t m2i = {.q = m2};
+	qx_t m1q, m2q;
+
+rwnd:
+	if (UNLIKELY(!plqu_iter_next(&m1i))) {
+		puts("NO PLQU1");
+		goto out;
+	} else if (UNLIKELY(!plqu_iter_next(&m2i))) {
+		puts("NO PLQU2");
+		goto out;
+	}
+
+redo:
+	m1q = m1i.v.vis + m1i.v.hid;
+	m2q = m2i.v.vis + m2i.v.hid;
+	if (m1q < m2q) {
+		/* fill market order fully */
+		printf("FULL %f v PART %f  @%f\n", (double)m1q, (double)m2q, (double)ref);
+		plqu_iter_put(m1i, plqu_val_0);
+		plqu_iter_put(m2i, m2i.v = plqu_val_sub(m2i.v, m1i.v));
+		if (plqu_iter_next(&m1i)) {
+			goto redo;
+		}
+	} else if (m1q > m2q) {
+		/* fill limit order fully */
+		printf("PART %f v FULL %f  @%f\n", (double)m1q, (double)m2q, (double)ref);
+		plqu_iter_put(m1i, m1i.v = plqu_val_sub(m1i.v, m2i.v));
+		plqu_iter_put(m2i, plqu_val_0);
+		if (plqu_iter_next(&m2i)) {
+			goto redo;
+		}
+	} else {
+		/* fill both fully, yay */
+		printf("FULL %f v FULL %f  @%f\n", (double)m1q, (double)m2q, (double)ref);
+		plqu_iter_put(m1i, plqu_val_0);
+		plqu_iter_put(m2i, plqu_val_0);
+		goto rwnd;
+	}
+out:
+	plqu_iter_set_top(m1i);
+	plqu_iter_set_top(m2i);
+	return;
+}
+
+static void
+_unx_mkt_lmt(plqu_t mkt, btree_t lmt)
+{
+	btree_iter_t lmti;
+	plqu_val_t lmtv;
+
+redo:
+	lmti = (btree_iter_t){.t = lmt};
+	if (UNLIKELY(!btree_iter_next(&lmti))) {
+		puts("NO BTREE");
+		return;
+	}
+	/* use MKTvMKT with reference price set to the limit price */
+	_unx_mkt_mkt(mkt, lmti.v, lmti.k);
+	/* sett if we need to descend another level */
+	if (plqu_val_0_p(plqu_sum(lmti.v))) {
+		btree_val_t v = btree_rem(lmt, lmti.k);
+		free_plqu(v);
+
+		if (!plqu_val_0_p(plqu_sum(mkt))) {
+			/* there's more */
+			goto redo;
+		}
+	}
+	return;
+}
+
+static void
+_unx_lmt_mkt(btree_t lmt, plqu_t mkt, px_t ref)
+{
+	return;
+}
+
+
 clob_t
 make_clob(void)
 {
@@ -99,9 +182,25 @@ clob_add(clob_t c, clob_ord_t o)
 		}
 		q = *v;
 		break;
+	case TYPE_STP:
+		v = btree_put(c.stp[o.sid], o.stp);
+		if (UNLIKELY(*v == NULL)) {
+			/* ooh, use one of them plqu's */
+			*v = make_plqu();
+		}
+		q = *v;
+		break;
 	case TYPE_MID:
 		o.lmt = 0;
 		q = c.mid[o.sid];
+		break;
+	case TYPE_MKT:
+		o.lmt = 0;
+		q = c.mkt[o.sid];
+		break;
+	case TYPE_PEG:
+		o.lmt = 0;
+		q = c.peg[o.sid];
 		break;
 	}
 	i = plqu_add(q, (plqu_val_t){o.vis, o.hid, ++m});
@@ -274,6 +373,16 @@ clob_prnt(clob_t c)
 		buf[lem++] = '\n';
 		fwrite(buf, 1, lem, stdout);
 	}
+	return;
+}
+
+
+/* uncrossing */
+void
+clob_unx_mkt_lmt(clob_t c)
+{
+	_unx_mkt_lmt(c.mkt[SIDE_ASK], c.lmt[SIDE_BID]);
+	_unx_mkt_lmt(c.mkt[SIDE_BID], c.lmt[SIDE_ASK]);
 	return;
 }
 

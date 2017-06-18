@@ -41,6 +41,31 @@ main(void)
 	i = clob_add(c, (clob_ord_t){TYPE_LMT, SIDE_BID, 0.3dd, 0.0dd, .lmt = 1.23229dd});
 	printf("%zu\n", i.qid);
 
+	/* some market orders */
+	i = clob_add(c, (clob_ord_t){TYPE_MKT, SIDE_ASK, 0.2dd, 0.0dd});
+	printf("%zu\n", i.qid);
+	i = clob_add(c, (clob_ord_t){TYPE_MKT, SIDE_ASK, 0.2dd, 0.0dd});
+	printf("%zu\n", i.qid);
+	i = clob_add(c, (clob_ord_t){TYPE_MKT, SIDE_ASK, 0.2dd, 0.0dd});
+	printf("%zu\n", i.qid);
+	i = clob_add(c, (clob_ord_t){TYPE_MKT, SIDE_ASK, 0.2dd, 0.0dd});
+	printf("%zu\n", i.qid);
+	i = clob_add(c, (clob_ord_t){TYPE_MKT, SIDE_BID, 0.3dd, 0.0dd});
+	printf("%zu\n", i.qid);
+
+#if 0
+	i = clob_add(c, (clob_ord_t){TYPE_MKT, SIDE_ASK, 0.2dd, 0.0dd});
+	printf("%zu\n", i.qid);
+	i = clob_add(c, (clob_ord_t){TYPE_MKT, SIDE_ASK, 0.2dd, 0.0dd});
+	printf("%zu\n", i.qid);
+	i = clob_add(c, (clob_ord_t){TYPE_MKT, SIDE_ASK, 0.2dd, 0.0dd});
+	printf("%zu\n", i.qid);
+#endif
+
+	clob_prnt(c);
+
+	clob_unx_mkt_lmt(c);
+
 	clob_prnt(c);
 
 	free_clob(c);

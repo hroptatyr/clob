@@ -108,4 +108,8 @@ extern clob_quo_t clob_top(clob_t, clob_type_t, clob_side_t);
 
 extern void clob_prnt(clob_t c);
 
+/* experimental */
+/* match active market orders against passive limit orders */
+extern void clob_unx_mkt_lmt(clob_t c);
+
 #endif	/* INCLUDED_clob_h_ */

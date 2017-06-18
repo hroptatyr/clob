@@ -84,7 +84,8 @@ plqu_put(plqu_t q, plqu_qid_t i, plqu_val_t v)
 	}
 	const size_t slot = (i - 1U) % q->z;
 	q->sum = plqu_val_sub(q->sum, q->a[slot]);
-	q->sum = plqu_val_add(q->sum, q->a[slot] = v);
+	q->a[slot] = v;
+	q->sum = plqu_val_add(q->sum, q->a[slot]);
 	return 0;
 }
 
@@ -161,6 +162,32 @@ plqu_iter_next(plqu_iter_t *iter)
 		}
 	}
 	return false;
+}
+
+int
+plqu_iter_put(plqu_iter_t iter, plqu_val_t v)
+{
+	if (UNLIKELY(iter.q == NULL)) {
+		;
+	} else if (UNLIKELY(!iter.i || iter.i > iter.q->z)) {
+		;
+	} else {
+		return plqu_put(iter.q, iter.q->head + iter.i, v);
+	}
+	return -1;
+}
+
+int
+plqu_iter_set_top(plqu_iter_t iter)
+{
+	if (UNLIKELY(iter.q == NULL)) {
+		return -1;
+	} else if (UNLIKELY(!iter.i || iter.i > iter.q->z)) {
+		return -1;
+	}
+	/* otherwise index becomes head */
+	iter.q->head = iter.i - 1U;
+	return 0;
 }
 
 /* plqu.c ends here */
