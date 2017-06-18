@@ -48,7 +48,10 @@ typedef _Decimal64 qx_t;
 
 typedef enum {
 	TYPE_LMT,
+	TYPE_STP,
 	TYPE_MID,
+	TYPE_MKT,
+	TYPE_PEG,
 } clob_type_t;
 
 typedef enum {
@@ -59,15 +62,19 @@ typedef enum {
 
 typedef struct {
 	void *lmt[NSIDES];
+	void *stp[NSIDES];
 	void *mid[NSIDES];
+	void *mkt[NSIDES];
+	void *peg[NSIDES];
 } clob_t;
 
 typedef struct {
 	clob_type_t typ;
 	clob_side_t sid;
-	px_t prc;
 	qx_t vis;
 	qx_t hid;
+	px_t lmt;
+	px_t stp;
 } clob_ord_t;
 
 typedef struct {

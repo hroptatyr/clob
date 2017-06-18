@@ -53,8 +53,14 @@ make_clob(void)
 	clob_t r = {
 		.lmt[SIDE_ASK] = make_btree(false),
 		.lmt[SIDE_BID] = make_btree(true),
+		.stp[SIDE_ASK] = make_btree(false),
+		.stp[SIDE_BID] = make_btree(true),
 		.mid[SIDE_ASK] = make_plqu(),
 		.mid[SIDE_BID] = make_plqu(),
+		.mkt[SIDE_ASK] = make_plqu(),
+		.mkt[SIDE_BID] = make_plqu(),
+		.peg[SIDE_ASK] = make_plqu(),
+		.peg[SIDE_BID] = make_plqu(),
 	};
 	return r;
 }
@@ -64,8 +70,14 @@ free_clob(clob_t c)
 {
 	free_btree(c.lmt[SIDE_ASK]);
 	free_btree(c.lmt[SIDE_BID]);
+	free_btree(c.stp[SIDE_ASK]);
+	free_btree(c.stp[SIDE_BID]);
 	free_plqu(c.mid[SIDE_ASK]);
 	free_plqu(c.mid[SIDE_BID]);
+	free_plqu(c.mkt[SIDE_ASK]);
+	free_plqu(c.mkt[SIDE_BID]);
+	free_plqu(c.peg[SIDE_ASK]);
+	free_plqu(c.peg[SIDE_BID]);
 	return;
 }
 
@@ -80,7 +92,7 @@ clob_add(clob_t c, clob_ord_t o)
 		btree_val_t *v;
 
 	case TYPE_LMT:
-		v = btree_put(c.lmt[o.sid], o.prc);
+		v = btree_put(c.lmt[o.sid], o.lmt);
 		if (UNLIKELY(*v == NULL)) {
 			/* ooh, use one of them plqu's */
 			*v = make_plqu();
@@ -88,12 +100,12 @@ clob_add(clob_t c, clob_ord_t o)
 		q = *v;
 		break;
 	case TYPE_MID:
-		o.prc = 0;
+		o.lmt = 0;
 		q = c.mid[o.sid];
 		break;
 	}
 	i = plqu_add(q, (plqu_val_t){o.vis, o.hid, ++m});
-	return (clob_oid_t){o.typ, o.sid, o.prc, .qid = i};
+	return (clob_oid_t){o.typ, o.sid, o.lmt, .qid = i};
 }
 
 int
@@ -185,6 +197,82 @@ clob_prnt(clob_t c)
 			buf[lem++] = '\n';
 			fwrite(buf, 1, lem, stdout);
 		}
+	}
+	puts("STP/BID");
+	for (btree_iter_t i = {.t = c.stp[SIDE_BID]}; btree_iter_next(&i);) {
+		len = pxtostr(buf, sizeof(buf), i.k);
+		buf[len++] = ' ';
+		for (plqu_iter_t j = {.q = i.v}; plqu_iter_next(&j);) {
+			size_t lem = len;
+
+			lem += qxtostr(buf + lem, sizeof(buf) - lem, j.v.vis);
+			buf[lem++] = '+';
+			lem += qxtostr(buf + lem, sizeof(buf) - lem, j.v.hid);
+			buf[lem++] = ' ';
+			lem += snprintf(buf + lem, sizeof(buf) - lem, "%zu", j.v.tim);
+			buf[lem++] = '\n';
+			fwrite(buf, 1, lem, stdout);
+		}
+	}
+	puts("STP/ASK");
+	for (btree_iter_t i = {.t = c.stp[SIDE_ASK]}; btree_iter_next(&i);) {
+		len = pxtostr(buf, sizeof(buf), i.k);
+		buf[len++] = ' ';
+		for (plqu_iter_t j = {.q = i.v}; plqu_iter_next(&j);) {
+			size_t lem = len;
+
+			lem += qxtostr(buf + lem, sizeof(buf) - lem, j.v.vis);
+			buf[lem++] = '+';
+			lem += qxtostr(buf + lem, sizeof(buf) - lem, j.v.hid);
+			buf[lem++] = ' ';
+			lem += snprintf(buf + lem, sizeof(buf) - lem, "%zu", j.v.tim);
+			buf[lem++] = '\n';
+			fwrite(buf, 1, lem, stdout);
+		}
+	}
+	puts("MKT/BID");
+	for (plqu_iter_t i = {.q = c.mkt[SIDE_BID]}; plqu_iter_next(&i);) {
+		size_t lem = 0U;
+		lem += qxtostr(buf + lem, sizeof(buf) - lem, i.v.vis);
+		buf[lem++] = '+';
+		lem += qxtostr(buf + lem, sizeof(buf) - lem, i.v.hid);
+		buf[lem++] = ' ';
+		lem += snprintf(buf + lem, sizeof(buf) - lem, "%zu", i.v.tim);
+		buf[lem++] = '\n';
+		fwrite(buf, 1, lem, stdout);
+	}
+	puts("MKT/ASK");
+	for (plqu_iter_t i = {.q = c.mkt[SIDE_ASK]}; plqu_iter_next(&i);) {
+		size_t lem = 0U;
+		lem += qxtostr(buf + lem, sizeof(buf) - lem, i.v.vis);
+		buf[lem++] = '+';
+		lem += qxtostr(buf + lem, sizeof(buf) - lem, i.v.hid);
+		buf[lem++] = ' ';
+		lem += snprintf(buf + lem, sizeof(buf) - lem, "%zu", i.v.tim);
+		buf[lem++] = '\n';
+		fwrite(buf, 1, lem, stdout);
+	}
+	puts("MID/BID");
+	for (plqu_iter_t i = {.q = c.mid[SIDE_BID]}; plqu_iter_next(&i);) {
+		size_t lem = 0U;
+		lem += qxtostr(buf + lem, sizeof(buf) - lem, i.v.vis);
+		buf[lem++] = '+';
+		lem += qxtostr(buf + lem, sizeof(buf) - lem, i.v.hid);
+		buf[lem++] = ' ';
+		lem += snprintf(buf + lem, sizeof(buf) - lem, "%zu", i.v.tim);
+		buf[lem++] = '\n';
+		fwrite(buf, 1, lem, stdout);
+	}
+	puts("MID/ASK");
+	for (plqu_iter_t i = {.q = c.mid[SIDE_ASK]}; plqu_iter_next(&i);) {
+		size_t lem = 0U;
+		lem += qxtostr(buf + lem, sizeof(buf) - lem, i.v.vis);
+		buf[lem++] = '+';
+		lem += qxtostr(buf + lem, sizeof(buf) - lem, i.v.hid);
+		buf[lem++] = ' ';
+		lem += snprintf(buf + lem, sizeof(buf) - lem, "%zu", i.v.tim);
+		buf[lem++] = '\n';
+		fwrite(buf, 1, lem, stdout);
 	}
 	return;
 }
