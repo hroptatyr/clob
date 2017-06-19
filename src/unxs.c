@@ -39,6 +39,13 @@
 #endif	/* HAVE_CONFIG_H */
 #include <stdlib.h>
 #include <stdio.h>
+#if defined HAVE_DFP754_H
+# include <dfp754.h>
+#elif defined HAVE_DFP_STDLIB_H
+# include <dfp/stdlib.h>
+#elif defined HAVE_DECIMAL_H
+# include <decimal.h>
+#endif
 #include "btree.h"
 #include "btree_val.h"
 #include "plqu.h"
@@ -58,76 +65,111 @@ plqu_sum(plqu_t q)
 	return sum;
 }
 
-static void
-_unx_mkt_mkt(plqu_t m1, plqu_t m2, px_t ref)
+static size_t
+_unxs_plqu2(unxs_exe_t *restrict x, size_t n, plqu_t m1, plqu_t m2, px_t ref)
 {
+/* match up order from M1 and M2 assuming they're opposite sides */
 	plqu_iter_t m1i = {.q = m1};
 	plqu_iter_t m2i = {.q = m2};
 	qx_t m1q, m2q;
+	size_t m = 0U;
 
 rwnd:
 	if (UNLIKELY(!plqu_iter_next(&m1i))) {
-		puts("NO PLQU1");
+		/* plqu1 is empty */
 		goto out;
 	} else if (UNLIKELY(!plqu_iter_next(&m2i))) {
-		puts("NO PLQU2");
+		/* plqu2 is empty */
 		goto out;
 	}
 
 redo:
-	m1q = m1i.v.vis + m1i.v.hid;
-	m2q = m2i.v.vis + m2i.v.hid;
+	m1q = plqu_val_tot(m1i.v);
+	m2q = plqu_val_tot(m2i.v);
 	if (m1q < m2q) {
-		/* fill market order fully */
-		printf("FULL %f v PART %f  @%f\n", (double)m1q, (double)m2q, (double)ref);
-		plqu_iter_put(m1i, plqu_val_nil);
+		/* FULL M1 v PART M2 */
 		plqu_iter_put(m2i, m2i.v = plqu_val_exe(m2i.v, m1i.v));
+		plqu_iter_put(m1i, plqu_val_nil);
+		x[m++] = (unxs_exe_t){ref, m1q};
+		if (UNLIKELY(m >= n)) {
+			/* queue is full, sorry */
+			goto out;
+		}
 		if (plqu_iter_next(&m1i)) {
 			goto redo;
 		}
 	} else if (m1q > m2q) {
-		/* fill limit order fully */
-		printf("PART %f v FULL %f  @%f\n", (double)m1q, (double)m2q, (double)ref);
+		/* PART M1 v FULL M2 */
 		plqu_iter_put(m1i, m1i.v = plqu_val_exe(m1i.v, m2i.v));
 		plqu_iter_put(m2i, plqu_val_nil);
+		x[m++] = (unxs_exe_t){ref, m2q};
+		if (UNLIKELY(m >= n)) {
+			/* queue is full, sorry */
+			goto out;
+		}
 		if (plqu_iter_next(&m2i)) {
 			goto redo;
 		}
 	} else {
-		/* fill both fully, yay */
-		printf("FULL %f v FULL %f  @%f\n", (double)m1q, (double)m2q, (double)ref);
+		/* FULL v FULL, how lucky can we get */
 		plqu_iter_put(m1i, plqu_val_nil);
 		plqu_iter_put(m2i, plqu_val_nil);
+		x[m++] = (unxs_exe_t){ref, m1q};
+		if (UNLIKELY(m >= n)) {
+			/* queue is full, sorry */
+			goto out;
+		}
 		goto rwnd;
 	}
 out:
 	plqu_iter_set_top(m1i);
 	plqu_iter_set_top(m2i);
-	return;
+	return m;
 }
 
-static void
-_unx_mkt_lmt(plqu_t mkt, btree_t lmt)
+/* auction helper */
+static px_t besp;
+static px_t besn;
+static qx_t besq;
+static qx_t bhng;
+
+static inline void
+aucp_init(void)
 {
-	btree_iter_t lmti;
+	besq = 0.dd;
+	bhng = INFD64;
+	besn = 1.dd;
+}
 
-redo:
-	lmti = (btree_iter_t){.t = lmt};
-	if (UNLIKELY(!btree_iter_next(&lmti))) {
-		puts("NO BTREE");
-		return;
-	}
-	/* use MKTvMKT with reference price set to the limit price */
-	_unx_mkt_mkt(mkt, lmti.v->q, lmti.k);
-	/* maintain lmt sum */
-	with (plqu_val_t sum = plqu_sum(lmti.v->q)) {
-		if (plqu_val_nil_p(lmti.v->sum = sum)) {
-			btree_val_t v = btree_rem(lmt, lmti.k);
-			free_plqu(v.q);
+static inline void
+aucp_push(px_t p, qx_t b, qx_t a)
+{
+	qx_t tmp = min(b, a);
+	qx_t hng = b - a;
 
-			if (!plqu_val_nil_p(plqu_sum(mkt))) {
-				/* there's more */
-				goto redo;
+	if (tmp > besq) {
+	bang:
+		besp = p;
+		besq = tmp;
+		bhng = hng;
+		besn = 1.dd;
+	} else if (tmp == besq) {
+		/* see who's got less hang */
+		qx_t ahng = fabsd64(hng);
+		qx_t abhng = fabsd64(bhng);
+
+		if (ahng < abhng) {
+			goto bang;
+		} else if (ahng == abhng) {
+			/* prefer new one if hng < 0 */
+			if (hng > 0.dd) {
+				goto bang;
+			} else if (hng == 0.dd) {
+				/* add up for meaning */
+				besp += p;
+				besq = tmp;
+				bhng = hng;
+				besn += 1.dd;
 			}
 		}
 	}
@@ -135,35 +177,101 @@ redo:
 }
 
 
-void
-clob_unx_mkt_lmt(clob_t c)
+size_t
+unxs_auction(unxs_exe_t *restrict x, size_t n, clob_t c)
 {
-	_unx_mkt_lmt(c.mkt[SIDE_ASK], c.lmt[SIDE_BID]);
-	_unx_mkt_lmt(c.mkt[SIDE_BID], c.lmt[SIDE_ASK]);
-	return;
+	/* calc  */
+	btree_iter_t aski;
+	btree_iter_t bidi;
+	px_t ask, bid;
+	size_t m = 0U;
+
+	aski = (btree_iter_t){.t = c.lmt[SIDE_ASK]};
+	if (UNLIKELY(!btree_iter_next(&aski))) {
+		/* no asks */
+		return 0U;
+	}
+	bidi = (btree_iter_t){.t = c.lmt[SIDE_BID]};
+	if (UNLIKELY(!btree_iter_next(&bidi))) {
+		/* no bids */
+		return 0U;
+	}
+	/* track overlap region */
+	ask = aski.k;
+	bid = bidi.k;
+
+	/* see if there's an overlap */
+	if (LIKELY(ask > bid)) {
+		/* no overlap */
+		return 0U;
+	}
+
+	/* determine cum vol and keep track of levels */
+	px_t bids[16U];
+	qx_t bszs[16U];
+	size_t bi = countof(bids);
+	qx_t bsz = 0.dd;
+
+	do {
+		bi--;
+		bids[bi] = bidi.k;
+		bsz += bidi.v->sum.vis + bidi.v->sum.hid;
+		bszs[bi] = bsz;
+	} while (btree_iter_next(&bidi) && bidi.k >= ask);
+
+	/* now cumulate asks and calculate execution */
+	size_t ai = bi;
+	qx_t asz = 0.dd;
+	aucp_init();
+
+	do {
+		for (; ai < countof(bids) && aski.k > bids[ai]; ai++) {
+			aucp_push(bids[ai], bszs[ai], asz);
+		}
+
+		asz += aski.v->sum.vis + aski.v->sum.hid;
+
+		aucp_push(aski.k, bszs[ai], asz);
+	} while (btree_iter_next(&aski) && aski.k <= bid);
+
+	for (; ai < countof(bids) && aski.k > bids[ai]; ai++) {
+		aucp_push(bids[ai], bszs[ai], asz);
+	}
+
+	besp /= besn;
+	printf("ALL @ %f %f %f\n", (double)besp, (double)besq, (double)bhng);
+
+	aski = (btree_iter_t){.t = c.lmt[SIDE_ASK]};
+	bidi = (btree_iter_t){.t = c.lmt[SIDE_BID]};
+
+	btree_iter_next(&aski);
+	btree_iter_next(&bidi);
+
+	do {
+		plqu_t bq = bidi.v->q;
+		plqu_t aq = aski.v->q;
+
+		/* let the plqu matcher do his magic */
+		m += _unxs_plqu2(x + m, n - m, bq, aq, besp);
+		/* maintain lmt sum */
+		with (plqu_val_t sum = plqu_sum(bq)) {
+			if (plqu_val_nil_p(bidi.v->sum = sum)) {
+				btree_t bt = c.lmt[SIDE_BID];
+				btree_val_t v = btree_rem(bt, bidi.k);
+				free_plqu(v.q);
+				btree_iter_next(&bidi);
+			}
+		}
+		with (plqu_val_t sum = plqu_sum(aq)) {
+			if (plqu_val_nil_p(aski.v->sum = sum)) {
+				btree_t at = c.lmt[SIDE_ASK];
+				btree_val_t v = btree_rem(at, aski.k);
+				free_plqu(v.q);
+				btree_iter_next(&aski);
+			}
+		}
+	} while (m < n && bidi.k >= besp && aski.k <= besp);
+	return m;
 }
 
-void
-clob_unx_lmt_lmt(clob_t c)
-{
-	return;
-}
-
-void
-clob_unx_mkt_mid(clob_t c)
-{
-	px_t mid = clob_mid(c);
-	_unx_mkt_mkt(c.mkt[SIDE_ASK], c.mid[SIDE_BID], mid);
-	_unx_mkt_mkt(c.mkt[SIDE_BID], c.mid[SIDE_ASK], mid);
-	return;
-}
-
-void
-clob_unx_mid_mid(clob_t c)
-{
-	px_t mid = clob_mid(c);
-	_unx_mkt_mkt(c.mid[SIDE_ASK], c.mid[SIDE_BID], mid);
-	return;
-}
-
-/* unxs ends here */
+/* unxs.c ends here */
