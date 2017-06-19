@@ -23,16 +23,18 @@ plqu_val_nil_p(plqu_val_t v)
 
 
 /* not used by plqu but nice to define here */
+#include "nifty.h"
+
 static inline __attribute__((pure, const)) plqu_val_t
 plqu_val_add(plqu_val_t v1, plqu_val_t v2)
 {
-	return (plqu_val_t){v1.vis + v2.vis, v1.hid + v2.hid};
+	return (plqu_val_t){v1.vis + v2.vis, v1.hid + v2.hid, min(v1.tim, v2.tim)};
 }
 
 static inline __attribute__((pure, const)) plqu_val_t
 plqu_val_sub(plqu_val_t v1, plqu_val_t v2)
 {
-	return (plqu_val_t){v1.vis - v2.vis, v1.hid - v2.hid};
+	return (plqu_val_t){v1.vis - v2.vis, v1.hid - v2.hid, min(v1.tim, v2.tim)};
 }
 
 #endif	/* INCLUDED_plqu_h_ */

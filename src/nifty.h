@@ -97,4 +97,7 @@ deconst(const void *cp)
 	return tmp.p;
 }
 
+#define max(x, y)	_Generic((x) + (y), default: (x) >= (y) ? (x) : (y))
+#define min(x, y)	_Generic((x) + (y), default: (x) <= (y) ? (x) : (y))
+
 #endif	/* INCLUDED_nifty_h_ */
