@@ -1,5 +1,6 @@
 /*** plqu_val.h -- values of price level queues ***/
 #pragma once
+#include <stdbool.h>
 
 /* metronome type */
 typedef size_t metr_t;
@@ -11,22 +12,24 @@ typedef struct {
 	metr_t tim;
 } plqu_val_t;
 
-#define plqu_val_0	((plqu_val_t){0.dd, 0.dd})
+#define plqu_val_nil	((plqu_val_t){0.dd})
 
-static inline __attribute__((pure, const)) int
-plqu_val_0_p(plqu_val_t x)
+static inline bool
+plqu_val_nil_p(plqu_val_t v)
 {
-	return x.vis == 0.dd && x.hid == 0.dd;
+	return v.vis <= 0.dd;
+}
+
+
+/* not used by plqu but nice to define here */
+static inline __attribute__((pure, const)) plqu_val_t
+plqu_val_add(plqu_val_t v1, plqu_val_t v2)
+{
+	return (plqu_val_t){v1.vis + v2.vis, v1.hid + v2.hid};
 }
 
 static inline __attribute__((pure, const)) plqu_val_t
-plqu_val_add(plqu_val_t x, plqu_val_t y)
+plqu_val_sub(plqu_val_t v1, plqu_val_t v2)
 {
-	return (plqu_val_t){x.vis + y.vis, x.hid + y.hid};
-}
-
-static inline __attribute__((pure, const)) plqu_val_t
-plqu_val_sub(plqu_val_t x, plqu_val_t y)
-{
-	return (plqu_val_t){x.vis - y.vis, x.hid - y.hid};
+	return (plqu_val_t){v1.vis - v2.vis, v1.hid - v2.hid};
 }

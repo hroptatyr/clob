@@ -40,12 +40,24 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "btree.h"
+#include "btree_val.h"
 #include "plqu.h"
+#include "plqu_val.h"
 #include "clob.h"
 #include "unxs.h"
 #include "nifty.h"
 
 
+static plqu_val_t
+plqu_sum(plqu_t q)
+{
+	plqu_val_t sum = plqu_val_nil;
+	for (plqu_iter_t i = {.q = q}; plqu_iter_next(&i);) {
+		sum = plqu_val_add(sum, i.v);
+	}
+	return sum;
+}
+
 static void
 _unx_mkt_mkt(plqu_t m1, plqu_t m2, px_t ref)
 {
@@ -68,7 +80,7 @@ redo:
 	if (m1q < m2q) {
 		/* fill market order fully */
 		printf("FULL %f v PART %f  @%f\n", (double)m1q, (double)m2q, (double)ref);
-		plqu_iter_put(m1i, plqu_val_0);
+		plqu_iter_put(m1i, plqu_val_nil);
 		plqu_iter_put(m2i, m2i.v = plqu_val_sub(m2i.v, m1i.v));
 		if (plqu_iter_next(&m1i)) {
 			goto redo;
@@ -77,15 +89,15 @@ redo:
 		/* fill limit order fully */
 		printf("PART %f v FULL %f  @%f\n", (double)m1q, (double)m2q, (double)ref);
 		plqu_iter_put(m1i, m1i.v = plqu_val_sub(m1i.v, m2i.v));
-		plqu_iter_put(m2i, plqu_val_0);
+		plqu_iter_put(m2i, plqu_val_nil);
 		if (plqu_iter_next(&m2i)) {
 			goto redo;
 		}
 	} else {
 		/* fill both fully, yay */
 		printf("FULL %f v FULL %f  @%f\n", (double)m1q, (double)m2q, (double)ref);
-		plqu_iter_put(m1i, plqu_val_0);
-		plqu_iter_put(m2i, plqu_val_0);
+		plqu_iter_put(m1i, plqu_val_nil);
+		plqu_iter_put(m2i, plqu_val_nil);
 		goto rwnd;
 	}
 out:
@@ -106,15 +118,17 @@ redo:
 		return;
 	}
 	/* use MKTvMKT with reference price set to the limit price */
-	_unx_mkt_mkt(mkt, lmti.v, lmti.k);
-	/* sett if we need to descend another level */
-	if (plqu_val_0_p(plqu_sum(lmti.v))) {
-		btree_val_t v = btree_rem(lmt, lmti.k);
-		free_plqu(v);
+	_unx_mkt_mkt(mkt, lmti.v.q, lmti.k);
+	/* maintain lmt sum */
+	with (plqu_val_t sum = plqu_sum(lmti.v.q)) {
+		if (plqu_val_nil_p(lmti.v.sum = sum)) {
+			btree_val_t v = btree_rem(lmt, lmti.k);
+			free_plqu(v.q);
 
-		if (!plqu_val_0_p(plqu_sum(mkt))) {
-			/* there's more */
-			goto redo;
+			if (!plqu_val_nil_p(plqu_sum(mkt))) {
+				/* there's more */
+				goto redo;
+			}
 		}
 	}
 	return;

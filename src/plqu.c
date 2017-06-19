@@ -48,7 +48,6 @@
 struct plqu_s {
 	size_t z;
 	plqu_val_t *a;
-	plqu_val_t sum;
 	size_t head;
 	size_t tail;
 };
@@ -60,7 +59,6 @@ make_plqu(void)
 	struct plqu_s *r = malloc(sizeof(*r));
 	r->z = PLQU_INIZ;
 	r->a = malloc(PLQU_INIZ * sizeof(*r));
-	r->sum = plqu_val_0;
 	r->head = 0U;
 	r->tail = 0U;
 	return r;
@@ -76,6 +74,16 @@ free_plqu(plqu_t q)
 	return;
 }
 
+plqu_val_t
+plqu_get(plqu_t q, plqu_qid_t i)
+{
+	if (UNLIKELY(!(i > q->head && i <= q->tail))) {
+		return plqu_val_nil;
+	}
+	const size_t slot = (i - 1U) % q->z;
+	return q->a[slot];
+}
+
 int
 plqu_put(plqu_t q, plqu_qid_t i, plqu_val_t v)
 {
@@ -83,9 +91,7 @@ plqu_put(plqu_t q, plqu_qid_t i, plqu_val_t v)
 		return -1;
 	}
 	const size_t slot = (i - 1U) % q->z;
-	q->sum = plqu_val_sub(q->sum, q->a[slot]);
 	q->a[slot] = v;
-	q->sum = plqu_val_add(q->sum, q->a[slot]);
 	return 0;
 }
 
@@ -111,17 +117,18 @@ plqu_add(plqu_t q, plqu_val_t v)
 		q->z = nuz;
 	}
 	q->a[q->tail++ % q->z] = v;
-	q->sum = plqu_val_add(q->sum, v);
 	return q->tail;
 }
 
 plqu_val_t
 plqu_top(plqu_t q)
 {
-	plqu_val_t r = plqu_val_0;
+	plqu_val_t r;
 
 	if (LIKELY(q->head < q->tail)) {
 		r = q->a[q->head % q->z];
+	} else {
+		r = plqu_val_nil;
 	}
 	return r;
 }
@@ -129,20 +136,15 @@ plqu_top(plqu_t q)
 plqu_val_t
 plqu_pop(plqu_t q)
 {
-	plqu_val_t r = plqu_val_0;
+	plqu_val_t r;
 
 	if (LIKELY(q->head < q->tail)) {
 		const size_t slot = q->head++ % q->z;
 		r = q->a[slot];
-		q->sum = plqu_val_sub(q->sum, r);
+	} else {
+		r = plqu_val_nil;
 	}
 	return r;
-}
-
-plqu_val_t
-plqu_sum(plqu_t q)
-{
-	return q->sum;
 }
 
 
@@ -154,7 +156,7 @@ plqu_iter_next(plqu_iter_t *iter)
 	}
 	for (size_t i = iter->i; i < iter->q->z; i++) {
 		const size_t slot = (iter->q->head + i) % iter->q->z;
-		if (LIKELY(!plqu_val_0_p(iter->q->a[slot]))) {
+		if (LIKELY(!plqu_val_nil_p(iter->q->a[slot]))) {
 			/* good one */
 			iter->v = iter->q->a[slot];
 			iter->i = i + 1U;

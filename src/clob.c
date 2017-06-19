@@ -39,7 +39,9 @@
 #endif	/* HAVE_CONFIG_H */
 #include <dfp754_d64.h>
 #include "btree.h"
+#include "btree_val.h"
 #include "plqu.h"
+#include "plqu_val.h"
 #include "clob.h"
 #include "nifty.h"
 
@@ -85,43 +87,51 @@ clob_oid_t
 clob_add(clob_t c, clob_ord_t o)
 {
 	static metr_t m;
-	plqu_t q;
 	plqu_qid_t i;
+	px_t p;
 
 	switch (o.typ) {
-		btree_val_t *v;
+		btree_t t;
+		plqu_t q;
 
 	case TYPE_LMT:
-		v = btree_put(c.lmt[o.sid], o.lmt);
-		if (UNLIKELY(*v == NULL)) {
-			/* ooh, use one of them plqu's */
-			*v = make_plqu();
-		}
-		q = *v;
-		break;
+		p = o.lmt;
+		t = c.lmt[o.sid];
+		goto addv;
 	case TYPE_STP:
-		v = btree_put(c.stp[o.sid], o.stp);
-		if (UNLIKELY(*v == NULL)) {
-			/* ooh, use one of them plqu's */
-			*v = make_plqu();
-		}
-		q = *v;
-		break;
+		p = o.stp;
+		t = c.stp[o.sid];
+		goto addv;
+
 	case TYPE_MID:
-		o.lmt = 0;
+		p = 0;
 		q = c.mid[o.sid];
-		break;
+		goto addq;
 	case TYPE_MKT:
-		o.lmt = 0;
+		p = 0;
 		q = c.mkt[o.sid];
-		break;
+		goto addq;
 	case TYPE_PEG:
-		o.lmt = 0;
+		p = 0;
 		q = c.peg[o.sid];
+		goto addq;
+
+	addv:
+		with (btree_val_t *v = btree_put(t, p)) {
+			if (UNLIKELY(btree_val_nil_p(*v))) {
+				/* ooh, use one of them plqu's */
+				*v = (btree_val_t){make_plqu(), plqu_val_nil};
+			}
+			/* maintain the sum */
+			v->sum = plqu_val_add(v->sum, (plqu_val_t){o.vis, o.hid});
+			/* set queue variable for plqu stuff */
+			q = v->q;
+		}
+	addq:
+		i = plqu_add(q, (plqu_val_t){o.vis, o.hid, ++m});
 		break;
 	}
-	i = plqu_add(q, (plqu_val_t){o.vis, o.hid, ++m});
-	return (clob_oid_t){o.typ, o.sid, o.lmt, .qid = i};
+	return (clob_oid_t){o.typ, o.sid, p, .qid = i};
 }
 
 int
@@ -130,20 +140,40 @@ clob_del(clob_t c, clob_oid_t o)
 	plqu_t q;
 
 	switch (o.typ) {
-		btree_val_t *v;
+		btree_t t;
 
 	case TYPE_LMT:
-		v = btree_get(c.lmt[o.sid], o.prc);
-		if (UNLIKELY(*v == NULL)) {
-			return -1;
+		t = c.lmt[o.sid];
+		goto delt;
+	case TYPE_STP:
+		t = c.stp[o.sid];
+		goto delt;
+
+	delt:
+		with (btree_val_t *v = btree_get(t, o.prc)) {
+			if (UNLIKELY(btree_val_nil_p(*v))) {
+				return -1;
+			}
+			q = v->q;
+
+			/* maintain the sum */
+			with (plqu_val_t w = plqu_get(q, o.qid)) {
+				v->sum = plqu_val_sub(v->sum, w);
+			}
 		}
-		q = *v;
 		break;
+
 	case TYPE_MID:
 		q = c.mid[o.sid];
 		break;
+	case TYPE_MKT:
+		q = c.mid[o.sid];
+		break;
+	case TYPE_PEG:
+		q = c.mid[o.sid];
+		break;
 	}
-	return plqu_put(q, o.qid, plqu_val_0);
+	return plqu_put(q, o.qid, plqu_val_nil);
 }
 
 px_t
@@ -167,7 +197,7 @@ clob_prnt(clob_t c)
 	for (btree_iter_t i = {.t = c.lmt[SIDE_BID]}; btree_iter_next(&i);) {
 		len = pxtostr(buf, sizeof(buf), i.k);
 		buf[len++] = ' ';
-		for (plqu_iter_t j = {.q = i.v}; plqu_iter_next(&j);) {
+		for (plqu_iter_t j = {.q = i.v.q}; plqu_iter_next(&j);) {
 			size_t lem = len;
 
 			lem += qxtostr(buf + lem, sizeof(buf) - lem, j.v.vis);
@@ -183,7 +213,7 @@ clob_prnt(clob_t c)
 	for (btree_iter_t i = {.t = c.lmt[SIDE_ASK]}; btree_iter_next(&i);) {
 		len = pxtostr(buf, sizeof(buf), i.k);
 		buf[len++] = ' ';
-		for (plqu_iter_t j = {.q = i.v}; plqu_iter_next(&j);) {
+		for (plqu_iter_t j = {.q = i.v.q}; plqu_iter_next(&j);) {
 			size_t lem = len;
 
 			lem += qxtostr(buf + lem, sizeof(buf) - lem, j.v.vis);
@@ -199,7 +229,7 @@ clob_prnt(clob_t c)
 	for (btree_iter_t i = {.t = c.stp[SIDE_BID]}; btree_iter_next(&i);) {
 		len = pxtostr(buf, sizeof(buf), i.k);
 		buf[len++] = ' ';
-		for (plqu_iter_t j = {.q = i.v}; plqu_iter_next(&j);) {
+		for (plqu_iter_t j = {.q = i.v.q}; plqu_iter_next(&j);) {
 			size_t lem = len;
 
 			lem += qxtostr(buf + lem, sizeof(buf) - lem, j.v.vis);
@@ -215,7 +245,7 @@ clob_prnt(clob_t c)
 	for (btree_iter_t i = {.t = c.stp[SIDE_ASK]}; btree_iter_next(&i);) {
 		len = pxtostr(buf, sizeof(buf), i.k);
 		buf[len++] = ' ';
-		for (plqu_iter_t j = {.q = i.v}; plqu_iter_next(&j);) {
+		for (plqu_iter_t j = {.q = i.v.q}; plqu_iter_next(&j);) {
 			size_t lem = len;
 
 			lem += qxtostr(buf + lem, sizeof(buf) - lem, j.v.vis);
