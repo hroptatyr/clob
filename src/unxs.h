@@ -34,7 +34,8 @@
  * IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  **/
-#pragma once
+#if !defined INCLUDED_unxs_h_
+#define INCLUDED_unxs_h_
 #include "clob.h"
 
 /* match active market orders against passive limit orders */
@@ -45,3 +46,5 @@ extern void clob_unx_lmt_lmt(clob_t c);
 
 /* match active mid orders against passive mid orders */
 extern void clob_unx_mid_mid(clob_t c);
+
+#endif	/* INCLUDED_unxs_h_ */

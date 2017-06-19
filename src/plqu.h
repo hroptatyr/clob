@@ -34,7 +34,8 @@
  * IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  **/
-#pragma once
+#if !defined INCLUDED_plqu_h_
+#define INCLUDED_plqu_h_
 #include <stdlib.h>
 #include <stdbool.h>
 /* defines plqu_val_t, hopefully */
@@ -62,3 +63,5 @@ extern plqu_val_t plqu_pop(plqu_t);
 extern bool plqu_iter_next(plqu_iter_t*);
 extern int plqu_iter_put(plqu_iter_t, plqu_val_t);
 extern int plqu_iter_set_top(plqu_iter_t);
+
+#endif	/* INCLUDED_plqu_h_ */

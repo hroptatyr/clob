@@ -1,5 +1,6 @@
 /*** plqu_val.h -- values of price level queues ***/
-#pragma once
+#if !defined INCLUDED_plqu_val_h_
+#define INCLUDED_plqu_val_h_
 #include <stdbool.h>
 
 /* metronome type */
@@ -33,3 +34,5 @@ plqu_val_sub(plqu_val_t v1, plqu_val_t v2)
 {
 	return (plqu_val_t){v1.vis - v2.vis, v1.hid - v2.hid};
 }
+
+#endif	/* INCLUDED_plqu_h_ */

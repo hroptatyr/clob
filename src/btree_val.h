@@ -1,5 +1,6 @@
 /*** btree_val.h -- values and keys of btrees ***/
-#pragma once
+#if !defined INCLUDED_btree_val_h_
+#define INCLUDED_btree_val_h_
 #include <stdbool.h>
 #include "plqu.h"
 #include "plqu_val.h"
@@ -21,3 +22,4 @@ btree_val_nil_p(btree_val_t v)
 	return v.q == NULL;
 }
 
+#endif	/* INCLUDED_btree_val_h_ */
