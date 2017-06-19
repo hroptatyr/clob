@@ -70,7 +70,8 @@ node_free_p(btree_t t)
  * and we say a btree cell can be pruned if all of its children can be pruned */
 	size_t nul;
 	if (!t->innerp) {
-		for (nul = 0U; nul < t->n && t->val[nul].v == NULL; nul++);
+		for (nul = 0U; nul < t->n &&
+			     btree_val_nil_p(t->val[nul].v); nul++);
 		return nul >= t->n;
 	}
 	/* otherwise recur */
@@ -246,7 +247,7 @@ leaf_add(btree_t t, btree_key_t k, bool *splitp)
 		goto out;
 	}
 	/* otherwise do a scan to see if we have spare items */
-	for (nul = 0U; nul < t->n && t->val[nul].v != NULL; nul++);
+	for (nul = 0U; nul < t->n && !btree_val_nil_p(t->val[nul].v); nul++);
 
 	if (nul > i) {
 		/* spare item is far to the right */
@@ -269,7 +270,7 @@ leaf_add(btree_t t, btree_key_t k, bool *splitp)
 	}
 	t->n += !(nul < t->n);
 	t->key[i] = k;
-	t->val[i].v = NULL;
+	t->val[i].v = btree_val_nil;
 out:
 	*splitp = t->n >= countof(t->key) - 1U;
 	return &t->val[i].v;
@@ -371,11 +372,13 @@ btree_put(btree_t t, btree_key_t k)
 btree_val_t
 btree_rem(btree_t t, btree_key_t k)
 {
-	btree_val_t *vp, w = NULL;
+	btree_val_t *vp, w;
 
 	if ((vp = btree_get(t, k)) != NULL) {
 		w = *vp;
-		*vp = NULL;
+		*vp = btree_val_nil;
+	} else {
+		w = btree_val_nil;
 	}
 	return w;
 }
@@ -401,7 +404,7 @@ btree_iter_next(btree_iter_t *iter)
 	for (; iter->t->innerp; iter->t = iter->t->val->t, iter->i = 0U);
 	do {
 		for (size_t i = iter->i; i < iter->t->n; i++) {
-			if (LIKELY(iter->t->val[i].v != NULL)) {
+			if (LIKELY(!btree_val_nil_p(iter->t->val[i].v))) {
 				/* good one */
 				iter->k = iter->t->key[i];
 				iter->v = iter->t->val[i].v;
