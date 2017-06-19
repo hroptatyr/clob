@@ -45,6 +45,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include "btree.h"
+#include "btree_val.h"
 #include "nifty.h"
 
 typedef union {

@@ -38,9 +38,8 @@
 #define INCLUDED_btree_h_
 #include <stdlib.h>
 #include <stdbool.h>
-
-typedef BTREE_KEY_T btree_key_t;
-typedef BTREE_VAL_T btree_val_t;
+/* defines btree_key_t and btree_val_t, hopefully */
+#include "btree_val.h"
 
 typedef struct btree_s *btree_t;
 

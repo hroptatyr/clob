@@ -42,10 +42,6 @@ AC_CONFIG_LINKS([GNUmakefile:GNUmakefile])
 ## check for decimals
 SXE_CHECK_DFP754
 
-## configure our clobs
-AC_DEFINE_UNQUOTED([BTREE_KEY_T], [_Decimal64], [type of btree keys])
-AC_DEFINE_UNQUOTED([BTREE_VAL_T], [void*], [type of btree values])
-
 ## output
 AC_CONFIG_FILES([Makefile])
 AC_CONFIG_FILES([build-aux/Makefile])
