@@ -200,14 +200,14 @@ _prnt_btree(btree_t t)
 		len = pxtostr(buf, sizeof(buf), i.k);
 		buf[len++] = ' ';
 		lem = len;
-		lem += qxtostr(buf + lem, sizeof(buf) - lem, i.v.sum.vis);
+		lem += qxtostr(buf + lem, sizeof(buf) - lem, i.v->sum.vis);
 		buf[lem++] = '+';
-		lem += qxtostr(buf + lem, sizeof(buf) - lem, i.v.sum.hid);
+		lem += qxtostr(buf + lem, sizeof(buf) - lem, i.v->sum.hid);
 		buf[lem++] = '\n';
 		fwrite(buf, 1, lem, stdout);
 
 		memset(buf, ' ', len);
-		for (plqu_iter_t j = {.q = i.v.q}; plqu_iter_next(&j);) {
+		for (plqu_iter_t j = {.q = i.v->q}; plqu_iter_next(&j);) {
 			lem = len;
 			lem += qxtostr(buf + lem, sizeof(buf) - lem, j.v.vis);
 			buf[lem++] = '+';

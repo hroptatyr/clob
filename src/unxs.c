@@ -118,10 +118,10 @@ redo:
 		return;
 	}
 	/* use MKTvMKT with reference price set to the limit price */
-	_unx_mkt_mkt(mkt, lmti.v.q, lmti.k);
+	_unx_mkt_mkt(mkt, lmti.v->q, lmti.k);
 	/* maintain lmt sum */
-	with (plqu_val_t sum = plqu_sum(lmti.v.q)) {
-		if (plqu_val_nil_p(lmti.v.sum = sum)) {
+	with (plqu_val_t sum = plqu_sum(lmti.v->q)) {
+		if (plqu_val_nil_p(lmti.v->sum = sum)) {
 			btree_val_t v = btree_rem(lmt, lmti.k);
 			free_plqu(v.q);
 

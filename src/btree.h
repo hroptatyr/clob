@@ -47,7 +47,7 @@ typedef struct {
 	btree_t t;
 	size_t i;
 	btree_key_t k;
-	btree_val_t v;
+	btree_val_t *v;
 } btree_iter_t;
 
 

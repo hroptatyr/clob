@@ -18,7 +18,7 @@ typedef struct {
 static inline bool
 plqu_val_nil_p(plqu_val_t v)
 {
-	return v.vis <= 0.dd;
+	return v.vis + v.hid <= 0.dd;
 }
 
 

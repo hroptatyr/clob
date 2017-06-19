@@ -407,7 +407,7 @@ btree_iter_next(btree_iter_t *iter)
 			if (LIKELY(!btree_val_nil_p(iter->t->val[i].v))) {
 				/* good one */
 				iter->k = iter->t->key[i];
-				iter->v = iter->t->val[i].v;
+				iter->v = &iter->t->val[i].v;
 				iter->i = i + 1U;
 				return true;
 			}
