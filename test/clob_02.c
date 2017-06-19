@@ -64,7 +64,10 @@ main(void)
 
 	clob_prnt(c);
 
+	puts("MKT/LMT");
 	clob_unx_mkt_lmt(c);
+	puts("MID/MID");
+	clob_unx_mid_mid(c);
 
 	clob_prnt(c);
 

@@ -1,4 +1,4 @@
-/*** clob.h -- central limit order book
+/*** unxs.h -- uncrossing schemes
  *
  * Copyright (C) 2016-2017 Sebastian Freundt
  *
@@ -34,80 +34,14 @@
  * IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  **/
-#if !defined INCLUDED_clob_h_
-#define INCLUDED_clob_h_
-#include <stdlib.h>
-#include <stdbool.h>
-#include "dfp754_d64.h"
+#pragma once
+#include "clob.h"
 
-typedef _Decimal64 px_t;
-typedef _Decimal64 qx_t;
+/* match active market orders against passive limit orders */
+extern void clob_unx_mkt_lmt(clob_t c);
 
-#define NANPX	NAND64
-#define NANQX	NAND64
+/* match marketable limit orders against passive limit orders */
+extern void clob_unx_lmt_lmt(clob_t c);
 
-typedef enum {
-	TYPE_LMT,
-	TYPE_STP,
-	TYPE_MID,
-	TYPE_MKT,
-	TYPE_PEG,
-} clob_type_t;
-
-typedef enum {
-	SIDE_ASK,
-	SIDE_BID,
-	NSIDES,
-} clob_side_t;
-
-typedef struct {
-	void *lmt[NSIDES];
-	void *stp[NSIDES];
-	void *mid[NSIDES];
-	void *mkt[NSIDES];
-	void *peg[NSIDES];
-} clob_t;
-
-typedef struct {
-	clob_type_t typ;
-	clob_side_t sid;
-	qx_t vis;
-	qx_t hid;
-	px_t lmt;
-	px_t stp;
-} clob_ord_t;
-
-typedef struct {
-	clob_type_t typ;
-	clob_side_t sid;
-	px_t prc;
-	size_t qid;
-} clob_oid_t;
-
-typedef struct {
-	px_t p;
-	/* only the visible bit */
-	qx_t q;
-} clob_quo_t;
-
-
-/**
- * Instantiate central limit order book.
- * DESCP indicates whether to sort descendingly. */
-extern clob_t make_clob(void);
-
-/**
- * Deinstantiate clob object and free associated resources. */
-extern void free_clob(clob_t);
-
-extern clob_oid_t clob_add(clob_t, clob_ord_t);
-
-extern int clob_del(clob_t, clob_oid_t);
-
-extern px_t clob_mid(clob_t);
-
-extern clob_quo_t clob_top(clob_t, clob_type_t, clob_side_t);
-
-extern void clob_prnt(clob_t c);
-
-#endif	/* INCLUDED_clob_h_ */
+/* match active mid orders against passive mid orders */
+extern void clob_unx_mid_mid(clob_t c);
