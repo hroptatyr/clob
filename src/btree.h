@@ -34,8 +34,7 @@
  * IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  **/
-#if !defined INCLUDED_btree_h_
-#define INCLUDED_btree_h_
+#pragma once
 #include <stdlib.h>
 #include <stdbool.h>
 /* defines btree_key_t and btree_val_t, hopefully */
@@ -60,5 +59,3 @@ extern btree_val_t btree_rem(btree_t, btree_key_t);
 extern btree_val_t *btree_top(btree_t, btree_key_t*);
 
 extern bool btree_iter_next(btree_iter_t*);
-
-#endif	/* INCLUDED_btree_h_ */

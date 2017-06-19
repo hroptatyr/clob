@@ -34,8 +34,7 @@
  * IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  **/
-#if !defined INCLUDED_clob_h_
-#define INCLUDED_clob_h_
+#pragma once
 #include <stdlib.h>
 #include <stdbool.h>
 #include "dfp754_d64.h"
@@ -109,5 +108,3 @@ extern px_t clob_mid(clob_t);
 extern clob_quo_t clob_top(clob_t, clob_type_t, clob_side_t);
 
 extern void clob_prnt(clob_t c);
-
-#endif	/* INCLUDED_clob_h_ */
