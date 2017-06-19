@@ -187,120 +187,80 @@ clob_mid(clob_t c)
 
 
 #include <stdio.h>
+#include <string.h>
+
+static void
+_prnt_btree(btree_t t)
+{
+	char buf[256U];
+
+	for (btree_iter_t i = {.t = t}; btree_iter_next(&i);) {
+		size_t lem, len;
+
+		len = pxtostr(buf, sizeof(buf), i.k);
+		buf[len++] = ' ';
+		lem = len;
+		lem += qxtostr(buf + lem, sizeof(buf) - lem, i.v.sum.vis);
+		buf[lem++] = '+';
+		lem += qxtostr(buf + lem, sizeof(buf) - lem, i.v.sum.hid);
+		buf[lem++] = '\n';
+		fwrite(buf, 1, lem, stdout);
+
+		memset(buf, ' ', len);
+		for (plqu_iter_t j = {.q = i.v.q}; plqu_iter_next(&j);) {
+			lem = len;
+			lem += qxtostr(buf + lem, sizeof(buf) - lem, j.v.vis);
+			buf[lem++] = '+';
+			lem += qxtostr(buf + lem, sizeof(buf) - lem, j.v.hid);
+			buf[lem++] = ' ';
+			lem += snprintf(buf + lem, sizeof(buf) - lem, "%zu", j.v.tim);
+			buf[lem++] = '\n';
+			fwrite(buf, 1, lem, stdout);
+		}
+	}
+}
+
+static void
+_prnt_plqu(plqu_t q)
+{
+	char buf[256U];
+
+	for (plqu_iter_t i = {.q = q}; plqu_iter_next(&i);) {
+		size_t lem = 0U;
+		lem += qxtostr(buf + lem, sizeof(buf) - lem, i.v.vis);
+		buf[lem++] = '+';
+		lem += qxtostr(buf + lem, sizeof(buf) - lem, i.v.hid);
+		buf[lem++] = ' ';
+		lem += snprintf(buf + lem, sizeof(buf) - lem, "%zu", i.v.tim);
+		buf[lem++] = '\n';
+		fwrite(buf, 1, lem, stdout);
+	}
+	return;
+}
+
 void
 clob_prnt(clob_t c)
 {
-	char buf[256];
-	size_t len;
-
 	puts("LMT/BID");
-	for (btree_iter_t i = {.t = c.lmt[SIDE_BID]}; btree_iter_next(&i);) {
-		len = pxtostr(buf, sizeof(buf), i.k);
-		buf[len++] = ' ';
-		for (plqu_iter_t j = {.q = i.v.q}; plqu_iter_next(&j);) {
-			size_t lem = len;
-
-			lem += qxtostr(buf + lem, sizeof(buf) - lem, j.v.vis);
-			buf[lem++] = '+';
-			lem += qxtostr(buf + lem, sizeof(buf) - lem, j.v.hid);
-			buf[lem++] = ' ';
-			lem += snprintf(buf + lem, sizeof(buf) - lem, "%zu", j.v.tim);
-			buf[lem++] = '\n';
-			fwrite(buf, 1, lem, stdout);
-		}
-	}
+	_prnt_btree(c.lmt[SIDE_BID]);
 	puts("LMT/ASK");
-	for (btree_iter_t i = {.t = c.lmt[SIDE_ASK]}; btree_iter_next(&i);) {
-		len = pxtostr(buf, sizeof(buf), i.k);
-		buf[len++] = ' ';
-		for (plqu_iter_t j = {.q = i.v.q}; plqu_iter_next(&j);) {
-			size_t lem = len;
-
-			lem += qxtostr(buf + lem, sizeof(buf) - lem, j.v.vis);
-			buf[lem++] = '+';
-			lem += qxtostr(buf + lem, sizeof(buf) - lem, j.v.hid);
-			buf[lem++] = ' ';
-			lem += snprintf(buf + lem, sizeof(buf) - lem, "%zu", j.v.tim);
-			buf[lem++] = '\n';
-			fwrite(buf, 1, lem, stdout);
-		}
-	}
+	_prnt_btree(c.lmt[SIDE_ASK]);
 	puts("STP/BID");
-	for (btree_iter_t i = {.t = c.stp[SIDE_BID]}; btree_iter_next(&i);) {
-		len = pxtostr(buf, sizeof(buf), i.k);
-		buf[len++] = ' ';
-		for (plqu_iter_t j = {.q = i.v.q}; plqu_iter_next(&j);) {
-			size_t lem = len;
-
-			lem += qxtostr(buf + lem, sizeof(buf) - lem, j.v.vis);
-			buf[lem++] = '+';
-			lem += qxtostr(buf + lem, sizeof(buf) - lem, j.v.hid);
-			buf[lem++] = ' ';
-			lem += snprintf(buf + lem, sizeof(buf) - lem, "%zu", j.v.tim);
-			buf[lem++] = '\n';
-			fwrite(buf, 1, lem, stdout);
-		}
-	}
+	_prnt_btree(c.stp[SIDE_BID]);
 	puts("STP/ASK");
-	for (btree_iter_t i = {.t = c.stp[SIDE_ASK]}; btree_iter_next(&i);) {
-		len = pxtostr(buf, sizeof(buf), i.k);
-		buf[len++] = ' ';
-		for (plqu_iter_t j = {.q = i.v.q}; plqu_iter_next(&j);) {
-			size_t lem = len;
-
-			lem += qxtostr(buf + lem, sizeof(buf) - lem, j.v.vis);
-			buf[lem++] = '+';
-			lem += qxtostr(buf + lem, sizeof(buf) - lem, j.v.hid);
-			buf[lem++] = ' ';
-			lem += snprintf(buf + lem, sizeof(buf) - lem, "%zu", j.v.tim);
-			buf[lem++] = '\n';
-			fwrite(buf, 1, lem, stdout);
-		}
-	}
+	_prnt_btree(c.stp[SIDE_ASK]);
 	puts("MKT/BID");
-	for (plqu_iter_t i = {.q = c.mkt[SIDE_BID]}; plqu_iter_next(&i);) {
-		size_t lem = 0U;
-		lem += qxtostr(buf + lem, sizeof(buf) - lem, i.v.vis);
-		buf[lem++] = '+';
-		lem += qxtostr(buf + lem, sizeof(buf) - lem, i.v.hid);
-		buf[lem++] = ' ';
-		lem += snprintf(buf + lem, sizeof(buf) - lem, "%zu", i.v.tim);
-		buf[lem++] = '\n';
-		fwrite(buf, 1, lem, stdout);
-	}
+	_prnt_plqu(c.mkt[SIDE_BID]);
 	puts("MKT/ASK");
-	for (plqu_iter_t i = {.q = c.mkt[SIDE_ASK]}; plqu_iter_next(&i);) {
-		size_t lem = 0U;
-		lem += qxtostr(buf + lem, sizeof(buf) - lem, i.v.vis);
-		buf[lem++] = '+';
-		lem += qxtostr(buf + lem, sizeof(buf) - lem, i.v.hid);
-		buf[lem++] = ' ';
-		lem += snprintf(buf + lem, sizeof(buf) - lem, "%zu", i.v.tim);
-		buf[lem++] = '\n';
-		fwrite(buf, 1, lem, stdout);
-	}
+	_prnt_plqu(c.mkt[SIDE_ASK]);
 	puts("MID/BID");
-	for (plqu_iter_t i = {.q = c.mid[SIDE_BID]}; plqu_iter_next(&i);) {
-		size_t lem = 0U;
-		lem += qxtostr(buf + lem, sizeof(buf) - lem, i.v.vis);
-		buf[lem++] = '+';
-		lem += qxtostr(buf + lem, sizeof(buf) - lem, i.v.hid);
-		buf[lem++] = ' ';
-		lem += snprintf(buf + lem, sizeof(buf) - lem, "%zu", i.v.tim);
-		buf[lem++] = '\n';
-		fwrite(buf, 1, lem, stdout);
-	}
+	_prnt_plqu(c.mid[SIDE_BID]);
 	puts("MID/ASK");
-	for (plqu_iter_t i = {.q = c.mid[SIDE_ASK]}; plqu_iter_next(&i);) {
-		size_t lem = 0U;
-		lem += qxtostr(buf + lem, sizeof(buf) - lem, i.v.vis);
-		buf[lem++] = '+';
-		lem += qxtostr(buf + lem, sizeof(buf) - lem, i.v.hid);
-		buf[lem++] = ' ';
-		lem += snprintf(buf + lem, sizeof(buf) - lem, "%zu", i.v.tim);
-		buf[lem++] = '\n';
-		fwrite(buf, 1, lem, stdout);
-	}
+	_prnt_plqu(c.mid[SIDE_ASK]);
+	puts("PEG/BID");
+	_prnt_plqu(c.peg[SIDE_BID]);
+	puts("PEG/ASK");
+	_prnt_plqu(c.peg[SIDE_ASK]);
 	return;
 }
 
