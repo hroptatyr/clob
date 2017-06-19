@@ -81,14 +81,14 @@ redo:
 		/* fill market order fully */
 		printf("FULL %f v PART %f  @%f\n", (double)m1q, (double)m2q, (double)ref);
 		plqu_iter_put(m1i, plqu_val_nil);
-		plqu_iter_put(m2i, m2i.v = plqu_val_sub(m2i.v, m1i.v));
+		plqu_iter_put(m2i, m2i.v = plqu_val_exe(m2i.v, m1i.v));
 		if (plqu_iter_next(&m1i)) {
 			goto redo;
 		}
 	} else if (m1q > m2q) {
 		/* fill limit order fully */
 		printf("PART %f v FULL %f  @%f\n", (double)m1q, (double)m2q, (double)ref);
-		plqu_iter_put(m1i, m1i.v = plqu_val_sub(m1i.v, m2i.v));
+		plqu_iter_put(m1i, m1i.v = plqu_val_exe(m1i.v, m2i.v));
 		plqu_iter_put(m2i, plqu_val_nil);
 		if (plqu_iter_next(&m2i)) {
 			goto redo;
