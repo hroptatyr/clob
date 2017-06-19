@@ -83,12 +83,6 @@ typedef struct {
 	size_t qid;
 } clob_oid_t;
 
-typedef struct {
-	px_t p;
-	/* only the visible bit */
-	qx_t q;
-} clob_quo_t;
-
 
 /**
  * Instantiate central limit order book.
@@ -104,7 +98,5 @@ extern clob_oid_t clob_add(clob_t, clob_ord_t);
 extern int clob_del(clob_t, clob_oid_t);
 
 extern px_t clob_mid(clob_t);
-
-extern clob_quo_t clob_top(clob_t, clob_type_t, clob_side_t);
 
 extern void clob_prnt(clob_t c);

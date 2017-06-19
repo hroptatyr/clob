@@ -155,34 +155,6 @@ clob_mid(clob_t c)
 	return (a + b) / 2.dd;
 }
 
-clob_quo_t
-clob_top(clob_t c, clob_type_t typ, clob_side_t sid)
-{
-	plqu_t q;
-	px_t p;
-	plqu_val_t r;
-
-	switch (typ) {
-		btree_key_t k;
-		btree_val_t *v;
-
-	case TYPE_LMT:
-		v = btree_top(c.lmt[sid], &k);
-		if (UNLIKELY(*v == NULL)) {
-			return (clob_quo_t){NANPX, NANQX};
-		}
-		p = k;
-		q = *v;
-		break;
-	case TYPE_MID:
-		p = 0;
-		q = c.mid[sid];
-		break;
-	}
-	r = plqu_sum(q);
-	return (clob_quo_t){p, r.vis};
-}
-
 
 #include <stdio.h>
 void
