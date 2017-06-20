@@ -14,12 +14,12 @@ typedef struct {
 	metr_t tim;
 } plqu_val_t;
 
-#define plqu_val_nil	((plqu_val_t){0.dd})
+#define plqu_val_nil	((plqu_val_t){.tim = 0U})
 
 static inline bool
 plqu_val_nil_p(plqu_val_t v)
 {
-	return v.vis + v.hid <= 0.dd;
+	return v.tim == 0U;
 }
 
 
