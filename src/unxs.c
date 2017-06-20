@@ -51,6 +51,7 @@
 #include "plqu.h"
 #include "plqu_val.h"
 #include "clob.h"
+#include "clob_val.h"
 #include "unxs.h"
 #include "nifty.h"
 
@@ -133,7 +134,7 @@ static px_t besn;
 static qx_t besq;
 static qx_t bhng;
 
-static inline void
+static void
 aucp_init(void)
 {
 	besq = 0.dd;
@@ -141,7 +142,7 @@ aucp_init(void)
 	besn = 1.dd;
 }
 
-static inline void
+static void
 aucp_push(px_t p, qx_t b, qx_t a)
 {
 	qx_t tmp = min(b, a);
@@ -176,9 +177,8 @@ aucp_push(px_t p, qx_t b, qx_t a)
 	return;
 }
 
-
-size_t
-unxs_auction(unxs_exe_t *restrict x, size_t n, clob_t c)
+static px_t
+_unxs_auction_prc(clob_t c)
 {
 	static px_t *bids;
 	static qx_t *bszs;
@@ -187,17 +187,16 @@ unxs_auction(unxs_exe_t *restrict x, size_t n, clob_t c)
 	btree_iter_t aski;
 	btree_iter_t bidi;
 	px_t ask, bid;
-	size_t m = 0U;
 
 	aski = (btree_iter_t){.t = c.lmt[SIDE_ASK]};
 	if (UNLIKELY(!btree_iter_next(&aski))) {
 		/* no asks */
-		return 0U;
+		return NANPX;
 	}
 	bidi = (btree_iter_t){.t = c.lmt[SIDE_BID]};
 	if (UNLIKELY(!btree_iter_next(&bidi))) {
 		/* no bids */
-		return 0U;
+		return NANPX;
 	}
 	/* track overlap region */
 	ask = aski.k;
@@ -206,7 +205,7 @@ unxs_auction(unxs_exe_t *restrict x, size_t n, clob_t c)
 	/* see if there's an overlap */
 	if (LIKELY(ask > bid)) {
 		/* no overlap */
-		return 0U;
+		return NANPX;
 	}
 
 	/* determine cum vol and keep track of levels */
@@ -249,6 +248,21 @@ unxs_auction(unxs_exe_t *restrict x, size_t n, clob_t c)
 
 	besp /= besn;
 	printf("ALL @ %f %f %f\n", (double)besp, (double)besq, (double)bhng);
+	return besp;
+}
+
+
+size_t
+unxs_auction(unxs_exe_t *restrict x, size_t n, clob_t c)
+{
+	btree_iter_t aski;
+	btree_iter_t bidi;
+	px_t aucp;
+	size_t m = 0U;
+
+	if (isnandpx(aucp = _unxs_auction_prc(c))) {
+		return 0U;
+	}
 
 	aski = (btree_iter_t){.t = c.lmt[SIDE_ASK]};
 	bidi = (btree_iter_t){.t = c.lmt[SIDE_BID]};
@@ -261,7 +275,7 @@ unxs_auction(unxs_exe_t *restrict x, size_t n, clob_t c)
 		plqu_t aq = aski.v->q;
 
 		/* let the plqu matcher do his magic */
-		m += _unxs_plqu2(x + m, n - m, bq, aq, besp);
+		m += _unxs_plqu2(x + m, n - m, bq, aq, aucp);
 		/* maintain lmt sum */
 		with (plqu_val_t sum = plqu_sum(bq)) {
 			if (plqu_val_nil_p(bidi.v->sum = sum)) {
@@ -279,7 +293,7 @@ unxs_auction(unxs_exe_t *restrict x, size_t n, clob_t c)
 				btree_iter_next(&aski);
 			}
 		}
-	} while (m < n && bidi.k >= besp && aski.k <= besp);
+	} while (m < n && bidi.k >= aucp && aski.k <= aucp);
 	return m;
 }
 
