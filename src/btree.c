@@ -331,6 +331,13 @@ free_btree(btree_t t)
 			/* descend */
 			free_btree(t->val[i].t);
 		}
+	} else {
+		/* free values */
+		for (size_t i = 0U; i < t->n; i++) {
+			if (!btree_val_nil_p(t->val[i].v)) {
+				free_btree_val(t->val[i].v);
+			}
+		}
 	}
 	free(t);
 	return;

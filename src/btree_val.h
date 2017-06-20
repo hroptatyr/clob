@@ -23,4 +23,11 @@ btree_val_nil_p(btree_val_t v)
 	return v.q == NULL;
 }
 
+static inline void
+free_btree_val(btree_val_t v)
+{
+	free_plqu(v.q);
+	return;
+}
+
 #endif	/* INCLUDED_btree_val_h_ */
