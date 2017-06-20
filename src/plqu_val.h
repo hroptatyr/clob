@@ -2,15 +2,15 @@
 #if !defined INCLUDED_plqu_val_h_
 #define INCLUDED_plqu_val_h_
 #include <stdbool.h>
-#include "nifty.h"
-
-/* metronome type */
-typedef size_t metr_t;
+#include "clob_val.h"
 
 /* quantities with hidden liquidity*/
 typedef struct {
-	_Decimal64 vis;
-	_Decimal64 hid;
+	/* visible liquidity */
+	qx_t vis;
+	/* hidden liquidity */
+	qx_t hid;
+	/* metronome stamp, strictly increasing */
 	metr_t tim;
 } plqu_val_t;
 
@@ -25,6 +25,12 @@ plqu_val_nil_p(plqu_val_t v)
 
 /* not used by plqu but nice to define here */
 #include "nifty.h"
+
+static inline __attribute__((pure, const)) qx_t
+plqu_val_tot(plqu_val_t v)
+{
+	return v.vis + v.hid;
+}
 
 static inline __attribute__((pure, const)) plqu_val_t
 plqu_val_add(plqu_val_t v1, plqu_val_t v2)
@@ -42,8 +48,8 @@ static inline __attribute__((pure, const)) plqu_val_t
 plqu_val_exe(plqu_val_t v1, plqu_val_t v2)
 {
 /* V1 is executed against V2, use up hidden liquidity of V1 first */
-	_Decimal64 nuh = min(v1.hid, v2.vis + v2.hid);
-	_Decimal64 nuv = max(0.dd, v2.vis + v2.hid - v1.hid);
+	qx_t nuh = min(v1.hid, v2.vis + v2.hid);
+	qx_t nuv = max(0.dd, v2.vis + v2.hid - v1.hid);
 	return (plqu_val_t){v1.vis - nuv, v1.hid - nuh, min(v1.tim, v2.tim)};
 }
 

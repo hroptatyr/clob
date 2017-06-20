@@ -28,9 +28,9 @@ libdfp_a_CPPFLAGS += $(dfp754_CFLAGS)
 
 noinst_LIBRARIES += libclob.a
 libclob_a_SOURCES =
-libclob_a_SOURCES += btree.c btree.h
+libclob_a_SOURCES += btree.c btree.h btree_val.h
 libclob_a_SOURCES += plqu.c plqu.h plqu_val.h
-libclob_a_SOURCES += clob.c clob.h
+libclob_a_SOURCES += clob.c clob.h clob_val.h
 libclob_a_SOURCES += unxs.c unxs.h
 libclob_a_CPPFLAGS = $(AM_CPPFLAGS)
 libclob_a_CPPFLAGS += $(dfp754_CFLAGS)

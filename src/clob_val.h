@@ -1,4 +1,4 @@
-/*** clob.h -- central limit order book
+/*** clob_val.h -- basic types
  *
  * Copyright (C) 2016-2017 Sebastian Freundt
  *
@@ -34,68 +34,18 @@
  * IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  **/
-#if !defined INCLUDED_clob_h_
-#define INCLUDED_clob_h_
+#if !defined INCLUDED_clob_val_h_
+#define INCLUDED_clob_val_h_
 #include <stdlib.h>
-#include <stdbool.h>
-#include "clob_val.h"
+#include "dfp754_d64.h"
 
-typedef size_t clob_qid_t;
+typedef _Decimal64 px_t;
+typedef _Decimal64 qx_t;
 
-typedef enum {
-	TYPE_LMT,
-	TYPE_STP,
-	TYPE_MID,
-	TYPE_MKT,
-	TYPE_PEG,
-} clob_type_t;
+#define NANPX	NAND64
+#define NANQX	NAND64
 
-typedef enum {
-	SIDE_ASK,
-	SIDE_BID,
-	NSIDES,
-} clob_side_t;
+/* metronome type */
+typedef size_t metr_t;
 
-typedef struct {
-	void *lmt[NSIDES];
-	void *stp[NSIDES];
-	void *mid[NSIDES];
-	void *mkt[NSIDES];
-	void *peg[NSIDES];
-} clob_t;
-
-typedef struct {
-	clob_type_t typ;
-	clob_side_t sid;
-	qx_t vis;
-	qx_t hid;
-	px_t lmt;
-	px_t stp;
-} clob_ord_t;
-
-typedef struct {
-	clob_type_t typ;
-	clob_side_t sid;
-	px_t prc;
-	clob_qid_t qid;
-} clob_oid_t;
-
-
-/**
- * Instantiate central limit order book.
- * DESCP indicates whether to sort descendingly. */
-extern clob_t make_clob(void);
-
-/**
- * Deinstantiate clob object and free associated resources. */
-extern void free_clob(clob_t);
-
-extern clob_oid_t clob_add(clob_t, clob_ord_t);
-
-extern int clob_del(clob_t, clob_oid_t);
-
-extern px_t clob_mid(clob_t);
-
-extern void clob_prnt(clob_t c);
-
-#endif	/* INCLUDED_clob_h_ */
+#endif	/* INCLUDED_clob_val_h_ */
