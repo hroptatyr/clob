@@ -153,17 +153,15 @@ plqu_iter_next(plqu_iter_t *iter)
 {
 	if (UNLIKELY(iter->q == NULL)) {
 		return false;
+	} else if (UNLIKELY(iter->q->head + iter->i >= iter->q->tail)) {
+		return false;
 	}
-	for (size_t i = iter->i; i < iter->q->z; i++) {
-		const size_t slot = (iter->q->head + i) % iter->q->z;
-		if (LIKELY(!plqu_val_nil_p(iter->q->a[slot]))) {
-			/* good one */
-			iter->v = iter->q->a[slot];
-			iter->i = i + 1U;
-			return true;
-		}
+	/* otherwise it'll work */
+	with (const size_t slot = (iter->q->head + iter->i) % iter->q->z) {
+		iter->v = iter->q->a[slot];
+		iter->i++;
 	}
-	return false;
+	return true;
 }
 
 int
