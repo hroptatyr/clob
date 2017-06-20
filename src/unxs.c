@@ -180,6 +180,9 @@ aucp_push(px_t p, qx_t b, qx_t a)
 size_t
 unxs_auction(unxs_exe_t *restrict x, size_t n, clob_t c)
 {
+	static px_t *bids;
+	static qx_t *bszs;
+	static size_t bidz;
 	/* calc  */
 	btree_iter_t aski;
 	btree_iter_t bidi;
@@ -207,36 +210,42 @@ unxs_auction(unxs_exe_t *restrict x, size_t n, clob_t c)
 	}
 
 	/* determine cum vol and keep track of levels */
-	px_t bids[16U];
-	qx_t bszs[16U];
-	size_t bi = countof(bids);
+	size_t bi = 0U;
 	qx_t bsz = 0.dd;
 
 	do {
-		bi--;
+		if (UNLIKELY(bi >= bidz)) {
+			/* running out of bid space, resize */
+			size_t nuz = (bidz * 2U) ?: 256U;
+			bids = realloc(bids, nuz * sizeof(*bids));
+			bszs = realloc(bszs, nuz * sizeof(*bszs));
+			bidz = nuz;
+		}
 		bids[bi] = bidi.k;
-		bsz += bidi.v->sum.vis + bidi.v->sum.hid;
+		bsz += plqu_val_tot(bidi.v->sum);
 		bszs[bi] = bsz;
+		bi++;
 	} while (btree_iter_next(&bidi) && bidi.k >= ask);
 
 	/* now cumulate asks and calculate execution */
-	size_t ai = bi;
+	size_t ai = bi - 1U;
 	qx_t asz = 0.dd;
 	aucp_init();
 
 	do {
-		for (; ai < countof(bids) && aski.k > bids[ai]; ai++) {
+		for (; aski.k > bids[ai]; ai--) {
 			aucp_push(bids[ai], bszs[ai], asz);
 		}
 
-		asz += aski.v->sum.vis + aski.v->sum.hid;
+		asz += plqu_val_tot(aski.v->sum);
 
+		/* AI is guaranteed to be >= 0 */
 		aucp_push(aski.k, bszs[ai], asz);
 	} while (btree_iter_next(&aski) && aski.k <= bid);
 
-	for (; ai < countof(bids) && aski.k > bids[ai]; ai++) {
+	do {
 		aucp_push(bids[ai], bszs[ai], asz);
-	}
+	} while (ai-- > 0U && aski.k > bids[ai]);
 
 	besp /= besn;
 	printf("ALL @ %f %f %f\n", (double)besp, (double)besq, (double)bhng);
