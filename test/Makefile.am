@@ -65,4 +65,14 @@ check_PROGRAMS += plqu_01
 TESTS += plqu_01
 plqu_01_LDADD = $(clob_LIBS)
 
+
+check_PROGRAMS += clob_stress_01
+clob_stress_01_LDADD = $(clob_LIBS)
+
+check_PROGRAMS += clob_stress_02
+clob_stress_02_LDADD = $(clob_LIBS)
+
+check_PROGRAMS += clob_stress_03
+clob_stress_03_LDADD = $(clob_LIBS)
+
 ## Makefile.am ends here
