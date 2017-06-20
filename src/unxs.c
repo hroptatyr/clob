@@ -187,6 +187,7 @@ _unxs_auction_prc(clob_t c)
 	btree_iter_t aski;
 	btree_iter_t bidi;
 	px_t ask, bid;
+	qx_t asz, bsz;
 
 	aski = (btree_iter_t){.t = c.lmt[SIDE_ASK]};
 	if (UNLIKELY(!btree_iter_next(&aski))) {
@@ -202,18 +203,20 @@ _unxs_auction_prc(clob_t c)
 	ask = aski.k;
 	bid = bidi.k;
 
+	asz = plqu_val_tot(plqu_sum(c.mkt[SIDE_SHRT]));
+	bsz = plqu_val_tot(plqu_sum(c.mkt[SIDE_LONG]));
+
 	/* see if there's an overlap */
-	if (LIKELY(ask > bid)) {
+	if (LIKELY(ask > bid && !(asz > 0.dd && bsz > 0.dd))) {
 		/* no overlap */
 		return NANPX;
 	}
 
 	/* determine cum vol and keep track of levels */
 	size_t bi = 0U;
-	qx_t bsz = 0.dd;
 
 	do {
-		if (UNLIKELY(bi >= bidz)) {
+		if (UNLIKELY(++bi >= bidz)) {
 			/* running out of bid space, resize */
 			size_t nuz = (bidz * 2U) ?: 256U;
 			bids = realloc(bids, nuz * sizeof(*bids));
@@ -223,28 +226,31 @@ _unxs_auction_prc(clob_t c)
 		bids[bi] = bidi.k;
 		bsz += plqu_val_tot(bidi.v->sum);
 		bszs[bi] = bsz;
-		bi++;
 	} while (btree_iter_next(&bidi) && bidi.k >= ask);
+	/* set very first element */
+	bids[0U] = bids[1U];
+	bszs[0U] = bszs[1U];
 
 	/* now cumulate asks and calculate execution */
-	size_t ai = bi - 1U;
-	qx_t asz = 0.dd;
+	size_t ai = bi;
+
 	aucp_init();
 
 	do {
-		for (; aski.k > bids[ai]; ai--) {
+		for (; ai > 0U && aski.k > bids[ai]; ai--) {
 			aucp_push(bids[ai], bszs[ai], asz);
 		}
 
 		asz += plqu_val_tot(aski.v->sum);
 
-		/* AI is guaranteed to be >= 0 */
 		aucp_push(aski.k, bszs[ai], asz);
 	} while (btree_iter_next(&aski) && aski.k <= bid);
 
-	do {
-		aucp_push(bids[ai], bszs[ai], asz);
-	} while (ai-- > 0U && aski.k > bids[ai]);
+	if (ai) {
+		do {
+			aucp_push(bids[ai], bszs[ai], asz);
+		} while (--ai && aski.k > bids[ai]);
+	}
 
 	besp /= besn;
 	printf("ALL @ %f %f %f\n", (double)besp, (double)besq, (double)bhng);
@@ -261,6 +267,7 @@ unxs_auction(unxs_exe_t *restrict x, size_t n, clob_t c)
 	size_t m = 0U;
 
 	if (isnandpx(aucp = _unxs_auction_prc(c))) {
+		puts("NO AUCTION PRICE");
 		return 0U;
 	}
 

@@ -61,6 +61,19 @@ check_PROGRAMS += unxs_xetra_05
 TESTS += unxs_xetra_05
 unxs_xetra_05_LDADD = $(clob_LIBS)
 
+check_PROGRAMS += unxs_xetra_06
+TESTS += unxs_xetra_06
+unxs_xetra_06_LDADD = $(clob_LIBS)
+
+check_PROGRAMS += unxs_xetra_07
+TESTS += unxs_xetra_07
+unxs_xetra_07_LDADD = $(clob_LIBS)
+
+check_PROGRAMS += unxs_xetra_08
+TESTS += unxs_xetra_08
+unxs_xetra_08_LDADD = $(clob_LIBS)
+
+
 check_PROGRAMS += plqu_01
 TESTS += plqu_01
 plqu_01_LDADD = $(clob_LIBS)
