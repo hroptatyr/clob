@@ -36,8 +36,15 @@
  **/
 #if !defined INCLUDED_unxs_h_
 #define INCLUDED_unxs_h_
+#include <stdlib.h>
 #include "clob.h"
 
+typedef struct {
+	px_t prc;
+	qx_t qty;
+} unxs_exe_t;
+
+
 /* match active market orders against passive limit orders */
 extern void clob_unx_mkt_lmt(clob_t c);
 
@@ -46,5 +53,10 @@ extern void clob_unx_lmt_lmt(clob_t c);
 
 /* match active mid orders against passive mid orders */
 extern void clob_unx_mid_mid(clob_t c);
+
+/**
+ * Uncross the book using the auction model.
+ * At most N executions are stored in X. */
+extern size_t unxs_auction(unxs_exe_t *restrict x, size_t n, clob_t c);
 
 #endif	/* INCLUDED_unxs_h_ */

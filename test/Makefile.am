@@ -33,8 +33,63 @@ check_PROGRAMS += clob_02
 TESTS += clob_02
 clob_02_LDADD = $(clob_LIBS)
 
+check_PROGRAMS += clob_03
+TESTS += clob_03
+clob_03_LDADD = $(clob_LIBS)
+
+check_PROGRAMS += clob_04
+TESTS += clob_04
+clob_04_LDADD = $(clob_LIBS)
+
+check_PROGRAMS += unxs_xetra_01
+TESTS += unxs_xetra_01
+unxs_xetra_01_LDADD = $(clob_LIBS)
+
+check_PROGRAMS += unxs_xetra_02
+TESTS += unxs_xetra_02
+unxs_xetra_02_LDADD = $(clob_LIBS)
+
+check_PROGRAMS += unxs_xetra_03
+TESTS += unxs_xetra_03
+unxs_xetra_03_LDADD = $(clob_LIBS)
+
+check_PROGRAMS += unxs_xetra_04
+TESTS += unxs_xetra_04
+unxs_xetra_04_LDADD = $(clob_LIBS)
+
+check_PROGRAMS += unxs_xetra_05
+TESTS += unxs_xetra_05
+unxs_xetra_05_LDADD = $(clob_LIBS)
+
+check_PROGRAMS += unxs_xetra_06
+TESTS += unxs_xetra_06
+unxs_xetra_06_LDADD = $(clob_LIBS)
+
+check_PROGRAMS += unxs_xetra_07
+TESTS += unxs_xetra_07
+unxs_xetra_07_LDADD = $(clob_LIBS)
+
+check_PROGRAMS += unxs_xetra_08
+TESTS += unxs_xetra_08
+unxs_xetra_08_LDADD = $(clob_LIBS)
+
+check_PROGRAMS += unxs_xetra_09
+TESTS += unxs_xetra_09
+unxs_xetra_09_LDADD = $(clob_LIBS)
+
+
 check_PROGRAMS += plqu_01
 TESTS += plqu_01
 plqu_01_LDADD = $(clob_LIBS)
+
+
+check_PROGRAMS += clob_stress_01
+clob_stress_01_LDADD = $(clob_LIBS)
+
+check_PROGRAMS += clob_stress_02
+clob_stress_02_LDADD = $(clob_LIBS)
+
+check_PROGRAMS += clob_stress_03
+clob_stress_03_LDADD = $(clob_LIBS)
 
 ## Makefile.am ends here

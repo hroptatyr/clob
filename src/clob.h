@@ -52,9 +52,13 @@ typedef enum {
 
 typedef enum {
 	SIDE_ASK,
+	SIDE_SHRT = SIDE_ASK,
 	SIDE_BID,
+	SIDE_LONG = SIDE_BID,
 	NSIDES,
 } clob_side_t;
+
+_Static_assert(NSIDES == 2U, "more than 2 sides");
 
 typedef struct {
 	void *lmt[NSIDES];
