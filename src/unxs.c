@@ -162,15 +162,14 @@ aucp_push(px_t p, qx_t b, qx_t a)
 		if (ahng < abhng) {
 			goto bang;
 		} else if (ahng == abhng) {
-			/* prefer new one if hng < 0 */
-			if (hng > 0.dd) {
-				goto bang;
-			} else if (hng == 0.dd) {
+			if (hng == 0.dd || -hng == bhng) {
 				/* add up for meaning */
 				besp += p;
 				besq = tmp;
-				bhng = hng;
+				bhng = -hng;
 				besn += 1.dd;
+			} else if (hng > 0.dd) {
+				goto bang;
 			}
 		}
 	}
