@@ -4,7 +4,7 @@
  *
  * Author:  Sebastian Freundt <freundt@ga-group.nl>
  *
- * This file is part of books.
+ * This file is part of clob.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -37,8 +37,10 @@
 #if defined HAVE_CONFIG_H
 # include "config.h"
 #endif	/* HAVE_CONFIG_H */
+#include <stdlib.h>
 #include <string.h>
 #include "plqu.h"
+#include "plqu_val.h"
 #include "nifty.h"
 
 #define PLQU_INIZ	(8U)
@@ -72,13 +74,25 @@ free_plqu(plqu_t q)
 	return;
 }
 
-void
+plqu_val_t
+plqu_get(plqu_t q, plqu_qid_t i)
+{
+	if (UNLIKELY(!(i > q->head && i <= q->tail))) {
+		return plqu_val_nil;
+	}
+	const size_t slot = (i - 1U) % q->z;
+	return q->a[slot];
+}
+
+int
 plqu_put(plqu_t q, plqu_qid_t i, plqu_val_t v)
 {
-	if (i > q->head && i <= q->tail) {
-		q->a[(i - 1U) % q->z] = v;
+	if (UNLIKELY(!(i > q->head && i <= q->tail))) {
+		return -1;
 	}
-	return;
+	const size_t slot = (i - 1U) % q->z;
+	q->a[slot] = v;
+	return 0;
 }
 
 plqu_qid_t
@@ -114,7 +128,7 @@ plqu_top(plqu_t q)
 	if (LIKELY(q->head < q->tail)) {
 		r = q->a[q->head % q->z];
 	} else {
-		memset(&r, 0, sizeof(r));
+		r = plqu_val_nil;
 	}
 	return r;
 }
@@ -125,11 +139,56 @@ plqu_pop(plqu_t q)
 	plqu_val_t r;
 
 	if (LIKELY(q->head < q->tail)) {
-		r = q->a[q->head++ % q->z];
+		const size_t slot = q->head++ % q->z;
+		r = q->a[slot];
 	} else {
-		memset(&r, 0, sizeof(r));
+		r = plqu_val_nil;
 	}
 	return r;
+}
+
+
+bool
+plqu_iter_next(plqu_iter_t *iter)
+{
+	if (UNLIKELY(iter->q == NULL)) {
+		return false;
+	}
+	while (iter->q->head + iter->i < iter->q->tail) {
+		const size_t slot = (iter->q->head + iter->i++) % iter->q->z;
+		if (LIKELY(!plqu_val_nil_p(iter->q->a[slot]))) {
+			/* good one */
+			iter->v = iter->q->a[slot];
+			return true;
+		}
+	}
+	return false;
+}
+
+int
+plqu_iter_put(plqu_iter_t iter, plqu_val_t v)
+{
+	if (UNLIKELY(iter.q == NULL)) {
+		;
+	} else if (UNLIKELY(!iter.i || iter.i > iter.q->z)) {
+		;
+	} else {
+		return plqu_put(iter.q, iter.q->head + iter.i, v);
+	}
+	return -1;
+}
+
+int
+plqu_iter_set_top(plqu_iter_t iter)
+{
+	if (UNLIKELY(iter.q == NULL)) {
+		return -1;
+	} else if (UNLIKELY(!iter.i || iter.i > iter.q->z)) {
+		return -1;
+	}
+	/* otherwise index becomes head */
+	iter.q->head = iter.i - 1U;
+	return 0;
 }
 
 /* plqu.c ends here */

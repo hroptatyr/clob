@@ -1,4 +1,4 @@
-/*** btree.h -- simple b+tree impl
+/*** unxs.h -- uncrossing schemes
  *
  * Copyright (C) 2016-2017 Sebastian Freundt
  *
@@ -34,31 +34,17 @@
  * IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  **/
-#if !defined INCLUDED_btree_h_
-#define INCLUDED_btree_h_
-#include <stdlib.h>
-#include <stdbool.h>
-/* defines btree_key_t and btree_val_t, hopefully */
-#include "btree_val.h"
+#if !defined INCLUDED_unxs_h_
+#define INCLUDED_unxs_h_
+#include "clob.h"
 
-typedef struct btree_s *btree_t;
+/* match active market orders against passive limit orders */
+extern void clob_unx_mkt_lmt(clob_t c);
 
-typedef struct {
-	btree_t t;
-	size_t i;
-	btree_key_t k;
-	btree_val_t *v;
-} btree_iter_t;
+/* match marketable limit orders against passive limit orders */
+extern void clob_unx_lmt_lmt(clob_t c);
 
-
-extern btree_t make_btree(bool descp);
-extern void free_btree(btree_t);
+/* match active mid orders against passive mid orders */
+extern void clob_unx_mid_mid(clob_t c);
 
-extern btree_val_t *btree_get(btree_t, btree_key_t);
-extern btree_val_t *btree_put(btree_t, btree_key_t);
-extern btree_val_t btree_rem(btree_t, btree_key_t);
-extern btree_val_t *btree_top(btree_t, btree_key_t*);
-
-extern bool btree_iter_next(btree_iter_t*);
-
-#endif	/* INCLUDED_btree_h_ */
+#endif	/* INCLUDED_unxs_h_ */

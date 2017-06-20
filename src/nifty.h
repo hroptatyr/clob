@@ -4,7 +4,7 @@
  *
  * Author:  Sebastian Freundt <freundt@ga-group.nl>
  *
- * This file is part of books.
+ * This file is part of clob.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -96,5 +96,8 @@ deconst(const void *cp)
 	} tmp = {cp};
 	return tmp.p;
 }
+
+#define max(x, y)	_Generic((x) + (y), default: (x) >= (y) ? (x) : (y))
+#define min(x, y)	_Generic((x) + (y), default: (x) <= (y) ? (x) : (y))
 
 #endif	/* INCLUDED_nifty_h_ */

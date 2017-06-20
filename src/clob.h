@@ -1,4 +1,4 @@
-/*** btree.h -- simple b+tree impl
+/*** clob.h -- central limit order book
  *
  * Copyright (C) 2016-2017 Sebastian Freundt
  *
@@ -34,31 +34,68 @@
  * IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  **/
-#if !defined INCLUDED_btree_h_
-#define INCLUDED_btree_h_
+#if !defined INCLUDED_clob_h_
+#define INCLUDED_clob_h_
 #include <stdlib.h>
 #include <stdbool.h>
-/* defines btree_key_t and btree_val_t, hopefully */
-#include "btree_val.h"
+#include "clob_val.h"
 
-typedef struct btree_s *btree_t;
+typedef size_t clob_qid_t;
+
+typedef enum {
+	TYPE_LMT,
+	TYPE_STP,
+	TYPE_MID,
+	TYPE_MKT,
+	TYPE_PEG,
+} clob_type_t;
+
+typedef enum {
+	SIDE_ASK,
+	SIDE_BID,
+	NSIDES,
+} clob_side_t;
 
 typedef struct {
-	btree_t t;
-	size_t i;
-	btree_key_t k;
-	btree_val_t *v;
-} btree_iter_t;
+	void *lmt[NSIDES];
+	void *stp[NSIDES];
+	void *mid[NSIDES];
+	void *mkt[NSIDES];
+	void *peg[NSIDES];
+} clob_t;
+
+typedef struct {
+	clob_type_t typ;
+	clob_side_t sid;
+	qx_t vis;
+	qx_t hid;
+	px_t lmt;
+	px_t stp;
+} clob_ord_t;
+
+typedef struct {
+	clob_type_t typ;
+	clob_side_t sid;
+	px_t prc;
+	clob_qid_t qid;
+} clob_oid_t;
 
 
-extern btree_t make_btree(bool descp);
-extern void free_btree(btree_t);
+/**
+ * Instantiate central limit order book.
+ * DESCP indicates whether to sort descendingly. */
+extern clob_t make_clob(void);
 
-extern btree_val_t *btree_get(btree_t, btree_key_t);
-extern btree_val_t *btree_put(btree_t, btree_key_t);
-extern btree_val_t btree_rem(btree_t, btree_key_t);
-extern btree_val_t *btree_top(btree_t, btree_key_t*);
+/**
+ * Deinstantiate clob object and free associated resources. */
+extern void free_clob(clob_t);
 
-extern bool btree_iter_next(btree_iter_t*);
+extern clob_oid_t clob_add(clob_t, clob_ord_t);
 
-#endif	/* INCLUDED_btree_h_ */
+extern int clob_del(clob_t, clob_oid_t);
+
+extern px_t clob_mid(clob_t);
+
+extern void clob_prnt(clob_t c);
+
+#endif	/* INCLUDED_clob_h_ */

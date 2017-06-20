@@ -1,4 +1,4 @@
-/*** btree.h -- simple b+tree impl
+/*** clob_val.h -- basic types
  *
  * Copyright (C) 2016-2017 Sebastian Freundt
  *
@@ -34,31 +34,18 @@
  * IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  **/
-#if !defined INCLUDED_btree_h_
-#define INCLUDED_btree_h_
+#if !defined INCLUDED_clob_val_h_
+#define INCLUDED_clob_val_h_
 #include <stdlib.h>
-#include <stdbool.h>
-/* defines btree_key_t and btree_val_t, hopefully */
-#include "btree_val.h"
+#include "dfp754_d64.h"
 
-typedef struct btree_s *btree_t;
+typedef _Decimal64 px_t;
+typedef _Decimal64 qx_t;
 
-typedef struct {
-	btree_t t;
-	size_t i;
-	btree_key_t k;
-	btree_val_t *v;
-} btree_iter_t;
+#define NANPX	NAND64
+#define NANQX	NAND64
 
-
-extern btree_t make_btree(bool descp);
-extern void free_btree(btree_t);
+/* metronome type */
+typedef size_t metr_t;
 
-extern btree_val_t *btree_get(btree_t, btree_key_t);
-extern btree_val_t *btree_put(btree_t, btree_key_t);
-extern btree_val_t btree_rem(btree_t, btree_key_t);
-extern btree_val_t *btree_top(btree_t, btree_key_t*);
-
-extern bool btree_iter_next(btree_iter_t*);
-
-#endif	/* INCLUDED_btree_h_ */
+#endif	/* INCLUDED_clob_val_h_ */

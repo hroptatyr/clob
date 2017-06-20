@@ -154,8 +154,8 @@ quantexpd32(_Decimal32 x)
 }
 #endif	/* !HAVE_DFP754_*_LITERALS */
 
+#define NAND32		((union {uint32_t u; _Decimal32 x;}){NAND32_U}.x)
 #if !defined HAVE_NAND32
-# define NAND32		((union {uint32_t u; _Decimal32 x;}){NAND32_U}.x)
 inline __attribute__((pure, const)) _Decimal32
 nand32(char *__tagp __attribute__((unused)))
 {
