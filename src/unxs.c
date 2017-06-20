@@ -252,7 +252,7 @@ _unxs_auction_prc(clob_t c)
 		} while (--ai && aski.k > bids[ai]);
 	}
 
-	besp /= besn;
+	besp = quantizepx(besp / besn, besp);
 	printf("ALL @ %f %f %f\n", (double)besp, (double)besq, (double)bhng);
 	return besp;
 }

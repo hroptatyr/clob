@@ -48,6 +48,9 @@ typedef _Decimal64 qx_t;
 #define isnandpx	isnand64
 #define isnandqx	isnand64
 
+#define quantizepx	quantized64
+#define quantizeqx	quantized64
+
 /* metronome type */
 typedef size_t metr_t;
 
