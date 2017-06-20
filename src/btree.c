@@ -57,6 +57,7 @@ struct btree_s {
 	uint32_t n;
 	uint32_t innerp:1;
 	uint32_t descp:1;
+	uint32_t splitp:1;
 	btree_key_t key[63U + 1U/*spare*/];
 	btree_ual_t val[64U];
 	btree_t next;
@@ -362,6 +363,11 @@ btree_put(btree_t t, btree_key_t k)
 	btree_val_t *vp;
 	bool splitp;
 
+	if (UNLIKELY(t->splitp)) {
+		/* root got split, bollocks */
+		root_split(t);
+	}
+
 	/* check if root has leaves */
 	if (!t->innerp) {
 		vp = leaf_add(t, k, &splitp);
@@ -369,10 +375,7 @@ btree_put(btree_t t, btree_key_t k)
 		vp = twig_add(t, k, &splitp);
 	}
 
-	if (UNLIKELY(splitp)) {
-		/* root got split, bollocks */
-		root_split(t);
-	}
+	t->splitp = splitp;
 	return vp;
 }
 
