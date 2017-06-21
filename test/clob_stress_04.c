@@ -3,6 +3,7 @@
 #include "btree.h"
 #include "btree_val.h"
 #include "unxs.h"
+#include "mmod-auction.h"
 #include "nifty.h"
 
 
@@ -23,7 +24,8 @@ main(void)
 	clob_prnt(c);
 	{
 		unxs_exe_t x[100000U];
-		size_t n = unxs_auction(x, countof(x), c);
+		mmod_auc_t auc = mmod_auction(c);
+		size_t n = unxs_mass(x, countof(x), c, auc.prc, auc.qty);
 		btree_key_t a, b;
 
 

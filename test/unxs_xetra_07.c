@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "clob.h"
 #include "unxs.h"
+#include "mmod-auction.h"
 #include "nifty.h"
 
 
@@ -21,8 +22,11 @@ main(void)
 
 	{
 		unxs_exe_t x[16U];
+		mmod_auc_t a;
+
 		puts("UNX AUCTION");
-		unxs_auction(x, countof(x), c);
+		a = mmod_auction(c);
+		unxs_mass(x, countof(x), c, a.prc, a.qty);
 	}
 
 	clob_prnt(c);

@@ -1,4 +1,4 @@
-/*** unxs.h -- uncrossing schemes
+/*** mmod-auction.h -- auction market model
  *
  * Copyright (C) 2016-2017 Sebastian Freundt
  *
@@ -34,21 +34,23 @@
  * IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  **/
-#if !defined INCLUDED_unxs_h_
-#define INCLUDED_unxs_h_
+#if !defined INCLUDED_mmod_auction_h_
+#define INCLUDED_mmod_auction_h_
 #include <stdlib.h>
 #include "clob.h"
 #include "clob_val.h"
 
 typedef struct {
+	/** theo auction price */
 	px_t prc;
+	/** theo auction volume */
 	qx_t qty;
-} unxs_exe_t;
+	/** market imbalance */
+	qx_t imb;
+} mmod_auc_t;
 
 /**
- * Uncross the book C at price P for a quantity of at most Q.
- * At most N executions are stored in X. */
-extern size_t
-unxs_mass(unxs_exe_t *restrict x, size_t n, clob_t c, px_t p, qx_t q);
+ * Determine the market in the book using the auction model. */
+extern mmod_auc_t mmod_auction(clob_t c);
 
-#endif	/* INCLUDED_unxs_h_ */
+#endif	/* INCLUDED_mmod_auction_h_ */
