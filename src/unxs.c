@@ -130,7 +130,7 @@ out:
 
 
 size_t
-unxs_mass(unxs_exe_t *restrict x, size_t n, clob_t c, px_t p, qx_t q)
+unxs_mass_bi(unxs_exe_t *restrict x, size_t n, clob_t c, px_t p, qx_t q)
 {
 	btree_iter_t aski;
 	btree_iter_t bidi;
@@ -175,6 +175,92 @@ unxs_mass(unxs_exe_t *restrict x, size_t n, clob_t c, px_t p, qx_t q)
 			}
 		}
 	} while (m < n && bidi.k >= p && aski.k <= p);
+	return m;
+}
+
+size_t
+unxs_mass_sc(unxs_exe_t *restrict x, size_t n, clob_t c, px_t p, qx_t q)
+{
+	size_t m = 0U;
+	qx_t Q;
+
+	if (UNLIKELY(isnandpx(p))) {
+		/* no price? */
+		return 0U;
+	} else if (UNLIKELY(q <= 0.dd)) {
+		/* no volume? */
+		return 0U;
+	}
+
+	Q = 0.dd;
+	for (btree_iter_t i = {.t = c.lmt[SIDE_ASK]};
+	     m < n && Q < q && btree_iter_next(&i) && i.k <= p;) {
+		plqu_iter_t qi = {.q = i.v->q};
+		qx_t f;
+
+		for (; m < n && Q < q && plqu_iter_next(&qi); m++, Q += f) {
+			f = plqu_val_tot(qi.v);
+
+			if (UNLIKELY(Q + f > q)) {
+				/* partial fill the last guy */
+				goto partial_a;
+			}
+			/* otherwise fill him fully */
+			x[m] = (unxs_exe_t){p, f};
+		}
+		/* either M >= N or Q >= q or no next */
+		if (LIKELY(!plqu_iter_next(&qi))) {
+			/* aaah, discard price level */
+			btree_val_t v = btree_rem(i.t, i.k);
+			free_plqu(v.q);
+		} else if (UNLIKELY(m >= n || Q >= q)) {
+			plqu_iter_set_top(qi);
+			i.v->sum = plqu_sum(i.v->q);
+		} else if (0) {
+		partial_a:
+			printf("PARTIAL %f %f %f\n", (double)f, (double)Q, (double)q);
+			f = q - Q;
+			qi.v = plqu_val_exe(qi.v, (plqu_val_t){f});
+			plqu_iter_put(qi, qi.v);
+			x[m++] = (unxs_exe_t){p, f};
+			plqu_iter_set_top(qi);
+		}
+	}
+
+	Q = 0.dd;
+	for (btree_iter_t i = {.t = c.lmt[SIDE_BID]};
+	     m < n && Q < q && btree_iter_next(&i) && i.k >= p;) {
+		plqu_iter_t qi = {.q = i.v->q};
+		qx_t f;
+
+		for (; m < n && Q < q && plqu_iter_next(&qi); m++, Q += f) {
+			f = plqu_val_tot(qi.v);
+
+			if (UNLIKELY(Q + f > q)) {
+				/* partial fill the last guy */
+				goto partial_b;
+			}
+			/* otherwise fill him fully */
+			x[m] = (unxs_exe_t){p, f};
+		}
+		/* either M >= N or Q >= q or no next */
+		if (LIKELY(!plqu_iter_next(&qi))) {
+			/* aaah, discard price level */
+			btree_val_t v = btree_rem(i.t, i.k);
+			free_plqu(v.q);
+		} else if (UNLIKELY(m >= n || Q >= q)) {
+			plqu_iter_set_top(qi);
+			i.v->sum = plqu_sum(i.v->q);
+		} else if (0) {
+		partial_b:
+			printf("PARTIAL %f %f %f\n", (double)f, (double)Q, (double)q);
+			f = q - Q;
+			qi.v = plqu_val_exe(qi.v, (plqu_val_t){f});
+			plqu_iter_put(qi, qi.v);
+			x[m++] = (unxs_exe_t){p, f};
+			plqu_iter_set_top(qi);
+		}
+	}
 	return m;
 }
 

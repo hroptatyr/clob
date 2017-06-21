@@ -25,9 +25,10 @@ main(void)
 	{
 		unxs_exe_t x[100000U];
 		mmod_auc_t auc = mmod_auction(c);
-		size_t n = unxs_mass(x, countof(x), c, auc.prc, auc.qty);
+		size_t n = unxs_mass_sc(x, countof(x), c, auc.prc, auc.qty);
 		btree_key_t a, b;
 
+		printf("AUC %f %f %f\n", (double)auc.prc, (double)auc.qty, (double)auc.imb);
 
 		printf("TOT SUB %f %f\n", (double)tot[0], (double)tot[1]);
 		btree_top(c.lmt[SIDE_ASK], &a);
@@ -40,7 +41,7 @@ main(void)
 		printf("TRA\t%f\t%f\t%zu\n", (double)x->prc, (double)q, n);
 		printf("QUO\t%f\t%f\n", (double)b, (double)a);
 	}
-	//clob_prnt(c);
+	clob_prnt(c);
 
 	free_clob(c);
 	return 0;

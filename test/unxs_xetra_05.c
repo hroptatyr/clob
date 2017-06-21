@@ -26,7 +26,7 @@ main(void)
 
 		puts("UNX AUCTION");
 		a = mmod_auction(c);
-		unxs_mass(x, countof(x), c, a.prc, a.qty);
+		unxs_mass_bi(x, countof(x), c, a.prc, a.qty);
 	}
 
 	clob_prnt(c);

@@ -30,7 +30,7 @@ main(void)
 
 		puts("UNX AUCTION");
 		a = mmod_auction(c);
-		n = unxs_mass(x, countof(x), c, a.prc, a.qty);
+		n = unxs_mass_bi(x, countof(x), c, a.prc, a.qty);
 
 		for (size_t i = 0U; i < n; i++) {
 			printf("%f @ %f\n", (double)x[i].qty, (double)x[i].prc);
