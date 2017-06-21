@@ -170,7 +170,7 @@ plqu_iter_put(plqu_iter_t iter, plqu_val_t v)
 {
 	if (UNLIKELY(iter.q == NULL)) {
 		;
-	} else if (UNLIKELY(!iter.i || iter.i > iter.q->z)) {
+	} else if (UNLIKELY(!iter.i || iter.q->head + iter.i > iter.q->tail)) {
 		;
 	} else {
 		return plqu_put(iter.q, iter.q->head + iter.i, v);
@@ -183,11 +183,11 @@ plqu_iter_set_top(plqu_iter_t iter)
 {
 	if (UNLIKELY(iter.q == NULL)) {
 		return -1;
-	} else if (UNLIKELY(!iter.i || iter.i > iter.q->z)) {
+	} else if (UNLIKELY(!iter.i)) {
 		return -1;
 	}
 	/* otherwise index becomes head */
-	iter.q->head = iter.i - 1U;
+	iter.q->head += iter.i - 1U;
 	return 0;
 }
 
