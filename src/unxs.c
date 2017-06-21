@@ -243,6 +243,9 @@ _unxs_auction_prc(clob_t c)
 		asz += plqu_val_tot(aski.v->sum);
 
 		aucp_push(aski.k, bszs[ai], asz);
+
+		/* prevent double push in the next iteration */
+		ai -= ai > 0U && bids[ai] == aski.k;
 	} while (btree_iter_next(&aski) && aski.k <= bid);
 
 	if (ai) {
