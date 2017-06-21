@@ -287,7 +287,7 @@ unxs_auction(unxs_exe_t *restrict x, size_t n, clob_t c)
 		m += _unxs_plqu2(x + m, n - m, bq, aq, aucp);
 		/* maintain lmt sum */
 		with (plqu_val_t sum = plqu_sum(bq)) {
-			if (plqu_val_nil_p(bidi.v->sum = sum)) {
+			if (plqu_val_tot(bidi.v->sum = sum) <= 0.dd) {
 				btree_t bt = c.lmt[SIDE_BID];
 				btree_val_t v = btree_rem(bt, bidi.k);
 				free_plqu(v.q);
@@ -295,7 +295,7 @@ unxs_auction(unxs_exe_t *restrict x, size_t n, clob_t c)
 			}
 		}
 		with (plqu_val_t sum = plqu_sum(aq)) {
-			if (plqu_val_nil_p(aski.v->sum = sum)) {
+			if (plqu_val_tot(aski.v->sum = sum) <= 0.dd) {
 				btree_t at = c.lmt[SIDE_ASK];
 				btree_val_t v = btree_rem(at, aski.k);
 				free_plqu(v.q);
