@@ -55,6 +55,11 @@
 #include "unxs.h"
 #include "nifty.h"
 
+typedef struct {
+	px_t p;
+	qx_t q;
+} pq_t;
+
 
 static plqu_val_t
 plqu_sum(plqu_t q)
@@ -132,13 +137,13 @@ out:
 static px_t besp;
 static px_t besn;
 static qx_t besq;
-static qx_t bhng;
+static qx_t bimb;
 
 static void
 aucp_init(void)
 {
 	besq = 0.dd;
-	bhng = INFD64;
+	bimb = INFD64;
 	besn = 1.dd;
 }
 
@@ -146,29 +151,29 @@ static void
 aucp_push(px_t p, qx_t b, qx_t a)
 {
 	qx_t tmp = min(b, a);
-	qx_t hng = b - a;
+	qx_t imb = b - a;
 
 	if (tmp > besq) {
 	bang:
 		besp = p;
 		besq = tmp;
-		bhng = hng;
+		bimb = imb;
 		besn = 1.dd;
 	} else if (tmp == besq) {
 		/* see who's got less hang */
-		qx_t ahng = fabsd64(hng);
-		qx_t abhng = fabsd64(bhng);
+		qx_t aimb = fabsd64(imb);
+		qx_t abimb = fabsd64(bimb);
 
-		if (ahng < abhng) {
+		if (aimb < abimb) {
 			goto bang;
-		} else if (ahng == abhng) {
-			if (hng == 0.dd || -hng == bhng) {
+		} else if (aimb == abimb) {
+			if (imb == 0.dd || -imb == bimb) {
 				/* add up for meaning */
 				besp += p;
 				besq = tmp;
-				bhng = 0;
+				bimb = 0;
 				besn += 1;
-			} else if (hng > 0.dd) {
+			} else if (imb > 0.dd) {
 				goto bang;
 			}
 		}
@@ -176,8 +181,8 @@ aucp_push(px_t p, qx_t b, qx_t a)
 	return;
 }
 
-static px_t
-_unxs_auction_prc(clob_t c)
+static pq_t
+_unxs_auction_pq(clob_t c)
 {
 	static px_t *bids;
 	static qx_t *bszs;
@@ -191,12 +196,12 @@ _unxs_auction_prc(clob_t c)
 	aski = (btree_iter_t){.t = c.lmt[SIDE_ASK]};
 	if (UNLIKELY(!btree_iter_next(&aski))) {
 		/* no asks */
-		return NANPX;
+		return (pq_t){NANPX};
 	}
 	bidi = (btree_iter_t){.t = c.lmt[SIDE_BID]};
 	if (UNLIKELY(!btree_iter_next(&bidi))) {
 		/* no bids */
-		return NANPX;
+		return (pq_t){NANPX};
 	}
 	/* track overlap region */
 	ask = aski.k;
@@ -208,7 +213,7 @@ _unxs_auction_prc(clob_t c)
 	/* see if there's an overlap */
 	if (LIKELY(ask > bid && !(asz > 0.dd && bsz > 0.dd))) {
 		/* no overlap */
-		return NANPX;
+		return (pq_t){NANPX};
 	}
 
 	/* determine cum vol and keep track of levels */
@@ -255,8 +260,7 @@ _unxs_auction_prc(clob_t c)
 	}
 
 	besp = quantizepx(besp / besn, besp);
-	printf("ALL @ %f %f %f\n", (double)besp, (double)besq, (double)bhng);
-	return besp;
+	return (pq_t){besp, besq};
 }
 
 
@@ -265,11 +269,15 @@ unxs_auction(unxs_exe_t *restrict x, size_t n, clob_t c)
 {
 	btree_iter_t aski;
 	btree_iter_t bidi;
-	px_t aucp;
+	pq_t auc;
 	size_t m = 0U;
 
-	if (isnandpx(aucp = _unxs_auction_prc(c))) {
+	auc = _unxs_auction_pq(c);
+	if (isnandpx(auc.p)) {
 		puts("NO AUCTION PRICE");
+		return 0U;
+	} else if (auc.q <= 0.dd) {
+		puts("NO AUCTION VOLUME");
 		return 0U;
 	}
 
@@ -284,7 +292,7 @@ unxs_auction(unxs_exe_t *restrict x, size_t n, clob_t c)
 		plqu_t aq = aski.v->q;
 
 		/* let the plqu matcher do his magic */
-		m += _unxs_plqu2(x + m, n - m, bq, aq, aucp);
+		m += _unxs_plqu2(x + m, n - m, bq, aq, auc.p);
 		/* maintain lmt sum */
 		with (plqu_val_t sum = plqu_sum(bq)) {
 			if (plqu_val_tot(bidi.v->sum = sum) <= 0.dd) {
@@ -302,7 +310,7 @@ unxs_auction(unxs_exe_t *restrict x, size_t n, clob_t c)
 				btree_iter_next(&aski);
 			}
 		}
-	} while (m < n && bidi.k >= aucp && aski.k <= aucp);
+	} while (m < n && bidi.k >= auc.p && aski.k <= auc.p);
 	return m;
 }
 
