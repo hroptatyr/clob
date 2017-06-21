@@ -166,8 +166,8 @@ aucp_push(px_t p, qx_t b, qx_t a)
 				/* add up for meaning */
 				besp += p;
 				besq = tmp;
-				bhng = -hng;
-				besn += 1.dd;
+				bhng = 0;
+				besn += 1;
 			} else if (hng > 0.dd) {
 				goto bang;
 			}
