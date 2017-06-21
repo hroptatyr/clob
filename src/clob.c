@@ -180,8 +180,18 @@ px_t
 clob_mid(clob_t c)
 {
 	btree_key_t b, a;
-	(void)btree_top(c.lmt[SIDE_ASK], &a);
-	(void)btree_top(c.lmt[SIDE_BID], &b);
+	btree_val_t *B, *A;
+
+	A = btree_top(c.lmt[SIDE_ASK], &a);
+	B = btree_top(c.lmt[SIDE_BID], &b);
+
+	if (UNLIKELY(A == NULL && B == NULL)) {
+		return NANPX;
+	} else if (UNLIKELY(A == NULL)) {
+		return b;
+	} else if (UNLIKELY(B == NULL)) {
+		return a;
+	}
 	return (a + b) / 2.dd;
 }
 

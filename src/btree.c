@@ -398,11 +398,16 @@ btree_top(btree_t t, btree_key_t *k)
 {
 	/* go down them levels */
 	for (; t->innerp; t = t->val->t);
-	if (UNLIKELY(!t->n)) {
-		return NULL;
-	}
-	*k = *t->key;
-	return &t->val->v;
+	do {
+		for (size_t i = 0U; i < t->n; i++) {
+			if (LIKELY(!btree_val_nil_p(t->val[i].v))) {
+				/* good one */
+				*k = t->key[i];
+				return &t->val[i].v;
+			}
+		}
+	} while ((t = t->next));
+	return NULL;
 }
 
 bool
