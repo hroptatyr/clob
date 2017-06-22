@@ -51,10 +51,14 @@ typedef enum {
 } clob_type_t;
 
 typedef enum {
-	SIDE_ASK,
+	SIDE_ASK = 0U,
 	SIDE_SHRT = SIDE_ASK,
-	SIDE_BID,
+	SIDE_SELLER = SIDE_ASK,
+	SIDE_MAKER = SIDE_ASK,
+	SIDE_BID = 1U,
 	SIDE_LONG = SIDE_BID,
+	SIDE_BUYER = SIDE_BID,
+	SIDE_TAKER = SIDE_BID,
 	NSIDES,
 } clob_side_t;
 

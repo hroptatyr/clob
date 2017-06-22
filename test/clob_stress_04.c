@@ -23,7 +23,7 @@ main(void)
 
 	clob_prnt(c);
 	{
-		unxs_exe_t x[100000U];
+		unxs_exsc_t x[100000U];
 		mmod_auc_t auc = mmod_auction(c);
 		size_t n = unxs_mass_sc(x, countof(x), c, auc.prc, auc.qty);
 		btree_key_t a, b;
@@ -36,9 +36,9 @@ main(void)
 
 		qx_t q = 0.dd;
 		for (size_t i = 0U; i < n; i++) {
-			q += x[i].qty;
+			q += x[i].x.qty;
 		}
-		printf("TRA\t%f\t%f\t%zu\n", (double)x->prc, (double)q, n);
+		printf("TRA\t%f\t%f\t%zu\n", (double)x->x.prc, (double)q, n);
 		printf("QUO\t%f\t%f\n", (double)b, (double)a);
 	}
 	clob_prnt(c);

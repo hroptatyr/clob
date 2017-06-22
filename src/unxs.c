@@ -67,7 +67,7 @@ plqu_qty(plqu_t q)
 }
 
 static size_t
-_unxs_plqu_bi(unxs_exe_t *restrict x, size_t n, plqu_t m1, plqu_t m2, px_t ref)
+_unxs_plqu_bi(unxs_exbi_t *restrict x, size_t n, plqu_t m1, plqu_t m2, px_t ref)
 {
 /* match up order from M1 and M2 assuming they're opposite sides */
 	plqu_iter_t m1i = {.q = m1};
@@ -91,7 +91,7 @@ redo:
 		/* FULL M1 v PART M2 */
 		plqu_iter_put(m2i, m2i.v = plqu_val_exe(m2i.v, m1i.v));
 		plqu_iter_put(m1i, plqu_val_nil);
-		x[m++] = (unxs_exe_t){ref, m1q};
+		x[m++] = (unxs_exbi_t){{ref, m1q}};
 		if (UNLIKELY(m >= n)) {
 			/* queue is full, sorry */
 			goto out;
@@ -103,7 +103,7 @@ redo:
 		/* PART M1 v FULL M2 */
 		plqu_iter_put(m1i, m1i.v = plqu_val_exe(m1i.v, m2i.v));
 		plqu_iter_put(m2i, plqu_val_nil);
-		x[m++] = (unxs_exe_t){ref, m2q};
+		x[m++] = (unxs_exbi_t){{ref, m2q}};
 		if (UNLIKELY(m >= n)) {
 			/* queue is full, sorry */
 			goto out;
@@ -115,7 +115,7 @@ redo:
 		/* FULL v FULL, how lucky can we get */
 		plqu_iter_put(m1i, plqu_val_nil);
 		plqu_iter_put(m2i, plqu_val_nil);
-		x[m++] = (unxs_exe_t){ref, m1q};
+		x[m++] = (unxs_exbi_t){{ref, m1q}};
 		if (UNLIKELY(m >= n)) {
 			/* queue is full, sorry */
 			goto out;
@@ -129,7 +129,7 @@ out:
 }
 
 static size_t
-_unxs_plqu_sc(unxs_exe_t *restrict x, size_t n, plqu_t q, px_t ref, qx_t max)
+_unxs_plqu_sc(unxs_exsc_t *restrict x, size_t n, plqu_t q, px_t ref, qx_t max)
 {
 	plqu_iter_t i = {.q = q};
 	size_t m = 0U;
@@ -147,11 +147,11 @@ _unxs_plqu_sc(unxs_exe_t *restrict x, size_t n, plqu_t q, px_t ref, qx_t max)
 			i.v = plqu_val_exe(i.v, (plqu_val_t){fil, 0.dd});
 			plqu_iter_put(i, i.v);
 			/* fill him and out */
-			x[m++] = (unxs_exe_t){ref, fil};
+			x[m++] = (unxs_exsc_t){{ref, fil}};
 			break;
 		}
 		/* otherwise fill him fully */
-		x[m] = (unxs_exe_t){ref, fil};
+		x[m] = (unxs_exsc_t){{ref, fil}};
 	}
 	plqu_iter_set_top(i);
 	return m;
@@ -159,7 +159,7 @@ _unxs_plqu_sc(unxs_exe_t *restrict x, size_t n, plqu_t q, px_t ref, qx_t max)
 
 
 size_t
-unxs_mass_bi(unxs_exe_t *restrict x, size_t n, clob_t c, px_t p, qx_t q)
+unxs_mass_bi(unxs_exbi_t *restrict x, size_t n, clob_t c, px_t p, qx_t q)
 {
 	btree_iter_t aski;
 	btree_iter_t bidi;
@@ -208,7 +208,7 @@ unxs_mass_bi(unxs_exe_t *restrict x, size_t n, clob_t c, px_t p, qx_t q)
 }
 
 size_t
-unxs_mass_sc(unxs_exe_t *restrict x, size_t n, clob_t c, px_t p, qx_t q)
+unxs_mass_sc(unxs_exsc_t *restrict x, size_t n, clob_t c, px_t p, qx_t q)
 {
 	size_t m = 0U;
 	qx_t Q;
