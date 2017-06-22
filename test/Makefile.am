@@ -21,8 +21,8 @@ batch_tests =
 check_PROGRAMS =
 CLEANFILES = $(check_PROGRAMS)
 
-clob_CFLAGS = -I$(top_srcdir)/src
-clob_LIBS = $(top_builddir)/src/libclob.a $(top_builddir)/src/libdfp.a
+clob_CFLAGS = -I$(top_srcdir)/src $(dfp754_CFLAGS)
+clob_LIBS = $(top_builddir)/src/libclob.a $(top_builddir)/src/libdfp.a $(dfp754_LIBS)
 
 
 check_PROGRAMS += clob_01
@@ -76,6 +76,43 @@ unxs_xetra_08_LDADD = $(clob_LIBS)
 check_PROGRAMS += unxs_xetra_09
 TESTS += unxs_xetra_09
 unxs_xetra_09_LDADD = $(clob_LIBS)
+
+
+check_PROGRAMS += mmod_auction_xetra_01
+TESTS += mmod_auction_xetra_01
+mmod_auction_xetra_01_LDADD = $(clob_LIBS)
+
+check_PROGRAMS += mmod_auction_xetra_02
+TESTS += mmod_auction_xetra_02
+mmod_auction_xetra_02_LDADD = $(clob_LIBS)
+
+check_PROGRAMS += mmod_auction_xetra_03
+TESTS += mmod_auction_xetra_03
+mmod_auction_xetra_03_LDADD = $(clob_LIBS)
+
+check_PROGRAMS += mmod_auction_xetra_04
+TESTS += mmod_auction_xetra_04
+mmod_auction_xetra_04_LDADD = $(clob_LIBS)
+
+check_PROGRAMS += mmod_auction_xetra_05
+TESTS += mmod_auction_xetra_05
+mmod_auction_xetra_05_LDADD = $(clob_LIBS)
+
+check_PROGRAMS += mmod_auction_xetra_06
+TESTS += mmod_auction_xetra_06
+mmod_auction_xetra_06_LDADD = $(clob_LIBS)
+
+check_PROGRAMS += mmod_auction_xetra_07
+TESTS += mmod_auction_xetra_07
+mmod_auction_xetra_07_LDADD = $(clob_LIBS)
+
+check_PROGRAMS += mmod_auction_xetra_08
+TESTS += mmod_auction_xetra_08
+mmod_auction_xetra_08_LDADD = $(clob_LIBS)
+
+check_PROGRAMS += mmod_auction_xetra_09
+TESTS += mmod_auction_xetra_09
+mmod_auction_xetra_09_LDADD = $(clob_LIBS)
 
 
 check_PROGRAMS += plqu_01
