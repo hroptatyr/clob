@@ -23,22 +23,9 @@ main(void)
 
 	clob_prnt(c);
 
-	{
-		unxs_exe_t x[16U];
-		mmod_auc_t a;
-		size_t n;
-
-		puts("UNX AUCTION");
-		a = mmod_auction(c);
-		n = unxs_mass(x, countof(x), c, a.prc, a.qty);
-
-		for (size_t i = 0U; i < n; i++) {
-			printf("%f @ %f\n", (double)x[i].qty, (double)x[i].prc);
-		}
-	}
-
-	clob_prnt(c);
+	mmod_auc_t auc = mmod_auction(c);
+	printf("AUCTION %f @ %f ~%f\n", (double)auc.qty, (double)auc.prc, (double)auc.imb);
 
 	free_clob(c);
-	return 0;
+	return auc.prc != 198.dd || auc.qty != 700.dd || auc.imb != 100.dd;
 }
