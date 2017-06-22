@@ -103,7 +103,7 @@ plqu_add(plqu_t q, plqu_val_t v)
 		const size_t nuz = q->z * 2U;
 		void *tmp = realloc(q->a, nuz * sizeof(*q->a));
 		if (UNLIKELY(tmp == NULL)) {
-			return -1ULL;
+			return 0ULL;
 		}
 		/* otherwise resize */
 		q->a = tmp;
@@ -165,6 +165,13 @@ plqu_iter_next(plqu_iter_t *iter)
 	/* set iter past tail */
 	iter->i = iter->q->tail + 1U;
 	return false;
+}
+
+plqu_qid_t
+plqu_iter_qid(plqu_iter_t iter)
+{
+	plqu_qid_t cand = iter.q->head + iter.i;
+	return cand <= iter.q->tail ? cand : 0ULL;
 }
 
 int

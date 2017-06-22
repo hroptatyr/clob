@@ -61,6 +61,7 @@ extern plqu_val_t plqu_top(plqu_t);
 extern plqu_val_t plqu_pop(plqu_t);
 
 extern bool plqu_iter_next(plqu_iter_t*);
+extern plqu_qid_t plqu_iter_qid(plqu_iter_t);
 extern int plqu_iter_put(plqu_iter_t, plqu_val_t);
 extern int plqu_iter_set_top(plqu_iter_t);
 
