@@ -42,8 +42,8 @@
 typedef _Decimal64 px_t;
 typedef _Decimal64 qx_t;
 
-#define NANPX	NAND64
-#define NANQX	NAND64
+#define NANPX		NAND64
+#define NANQX		NAND64
 
 #define isnandpx	isnand64
 #define isnandqx	isnand64
@@ -53,5 +53,44 @@ typedef _Decimal64 qx_t;
 
 /* metronome type */
 typedef size_t metr_t;
+
+typedef struct {
+	/** display quantity */
+	qx_t dis;
+	/** hidden quantity */
+	qx_t hid;
+} qty_t;
+
+#define qty0		((qty_t){0.dd, 0.dd})
+
+
+#include "nifty.h"
+
+static inline __attribute__((pure, const)) qx_t
+qty(qty_t v)
+{
+	return v.dis + v.hid;
+}
+
+static inline __attribute__((pure, const)) qty_t
+qty_add(qty_t v1, qty_t v2)
+{
+	return (qty_t){v1.dis + v2.dis, v1.hid + v2.hid};
+}
+
+static inline __attribute__((pure, const)) qty_t
+qty_sub(qty_t v1, qty_t v2)
+{
+	return (qty_t){v1.dis - v2.dis, v1.hid - v2.hid};
+}
+
+static inline __attribute__((pure, const)) qty_t
+qty_exe(qty_t v1, qty_t v2)
+{
+/* V1 is executed against V2, use up hidden liquidity of V1 first */
+	qx_t nuh = min(v1.hid, v2.dis + v2.hid);
+	qx_t nuv = max(0.dd, v2.dis + v2.hid - v1.hid);
+	return (qty_t){v1.dis - nuv, v1.hid - nuh};
+}
 
 #endif	/* INCLUDED_clob_val_h_ */

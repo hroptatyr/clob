@@ -56,12 +56,12 @@
 #include "nifty.h"
 
 
-static plqu_val_t
-plqu_sum(plqu_t q)
+static qty_t
+plqu_qty(plqu_t q)
 {
-	plqu_val_t sum = plqu_val_nil;
+	qty_t sum = qty0;
 	for (plqu_iter_t i = {.q = q}; plqu_iter_next(&i);) {
-		sum = plqu_val_add(sum, i.v);
+		sum = qty_add(sum, i.v.qty);
 	}
 	return sum;
 }
@@ -85,8 +85,8 @@ rwnd:
 	}
 
 redo:
-	m1q = plqu_val_tot(m1i.v);
-	m2q = plqu_val_tot(m2i.v);
+	m1q = qty(m1i.v.qty);
+	m2q = qty(m2i.v.qty);
 	if (m1q < m2q) {
 		/* FULL M1 v PART M2 */
 		plqu_iter_put(m2i, m2i.v = plqu_val_exe(m2i.v, m1i.v));
@@ -137,7 +137,7 @@ _unxs_plqu_sc(unxs_exe_t *restrict x, size_t n, plqu_t q, px_t ref, qx_t max)
 	qx_t fil;
 
 	for (; plqu_iter_next(&i) && m < n && F < max; m++, F += fil) {
-		fil = plqu_val_tot(i.v);
+		fil = qty(i.v.qty);
 
 		if (UNLIKELY(F + fil > max)) {
 			/* partial fill the last guy,
@@ -187,16 +187,16 @@ unxs_mass_bi(unxs_exe_t *restrict x, size_t n, clob_t c, px_t p, qx_t q)
 		/* let the plqu matcher do his magic */
 		m += _unxs_plqu_bi(x + m, n - m, bq, aq, p);
 		/* maintain lmt sum */
-		with (plqu_val_t sum = plqu_sum(bq)) {
-			if (plqu_val_tot(bidi.v->sum = sum) <= 0.dd) {
+		with (qty_t sum = plqu_qty(bq)) {
+			if (qty(bidi.v->sum = sum) <= 0.dd) {
 				btree_t bt = c.lmt[SIDE_BID];
 				btree_val_t v = btree_rem(bt, bidi.k);
 				free_plqu(v.q);
 				btree_iter_next(&bidi);
 			}
 		}
-		with (plqu_val_t sum = plqu_sum(aq)) {
-			if (plqu_val_tot(aski.v->sum = sum) <= 0.dd) {
+		with (qty_t sum = plqu_qty(aq)) {
+			if (qty(aski.v->sum = sum) <= 0.dd) {
 				btree_t at = c.lmt[SIDE_ASK];
 				btree_val_t v = btree_rem(at, aski.k);
 				free_plqu(v.q);
@@ -224,14 +224,14 @@ unxs_mass_sc(unxs_exe_t *restrict x, size_t n, clob_t c, px_t p, qx_t q)
 	Q = 0.dd;
 	for (btree_iter_t i = {.t = c.lmt[SIDE_ASK]};
 	     m < n && Q < q && btree_iter_next(&i) && i.k <= p;) {
-		qx_t before = plqu_val_tot(i.v->sum);
+		qx_t before = qty(i.v->sum);
 		qx_t after;
 
 		/* set the executor free */
 		m += _unxs_plqu_sc(x + m, n - m, i.v->q, p, q - Q);
 		/* maintain lmt sum */
-		with (plqu_val_t sum = plqu_sum(i.v->q)) {
-			if ((after = plqu_val_tot(i.v->sum = sum)) <= 0.dd) {
+		with (qty_t sum = plqu_qty(i.v->q)) {
+			if ((after = qty(i.v->sum = sum)) <= 0.dd) {
 				btree_val_t v = btree_rem(i.t, i.k);
 				free_plqu(v.q);
 			}
@@ -243,14 +243,14 @@ unxs_mass_sc(unxs_exe_t *restrict x, size_t n, clob_t c, px_t p, qx_t q)
 	Q = 0.dd;
 	for (btree_iter_t i = {.t = c.lmt[SIDE_BID]};
 	     m < n && Q < q && btree_iter_next(&i) && i.k >= p;) {
-		qx_t before = plqu_val_tot(i.v->sum);
+		qx_t before = qty(i.v->sum);
 		qx_t after;
 
 		/* set the executor free */
 		m += _unxs_plqu_sc(x + m, n - m, i.v->q, p, q - Q);
 		/* maintain lmt sum */
-		with (plqu_val_t sum = plqu_sum(i.v->q)) {
-			if ((after = plqu_val_tot(i.v->sum = sum)) <= 0.dd) {
+		with (qty_t sum = plqu_qty(i.v->q)) {
+			if ((after = qty(i.v->sum = sum)) <= 0.dd) {
 				btree_val_t v = btree_rem(i.t, i.k);
 				free_plqu(v.q);
 			}

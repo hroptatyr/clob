@@ -120,15 +120,15 @@ clob_add(clob_t c, clob_ord_t o)
 		with (btree_val_t *v = btree_put(t, p)) {
 			if (UNLIKELY(btree_val_nil_p(*v))) {
 				/* ooh, use one of them plqu's */
-				*v = (btree_val_t){make_plqu(), plqu_val_nil};
+				*v = (btree_val_t){make_plqu(), qty0};
 			}
 			/* maintain the sum */
-			v->sum = plqu_val_add(v->sum, (plqu_val_t){o.vis, o.hid});
+			v->sum = qty_add(v->sum, (qty_t)o.qty);
 			/* set queue variable for plqu stuff */
 			q = v->q;
 		}
 	addq:
-		i = plqu_add(q, (plqu_val_t){o.vis, o.hid, ++m});
+		i = plqu_add(q, (plqu_val_t){o.qty, ++m});
 		break;
 	}
 	return (clob_oid_t){o.typ, o.sid, p, .qid = i};
@@ -158,7 +158,7 @@ clob_del(clob_t c, clob_oid_t o)
 
 			/* maintain the sum */
 			with (plqu_val_t w = plqu_get(q, o.qid)) {
-				v->sum = plqu_val_sub(v->sum, w);
+				v->sum = qty_sub(v->sum, w.qty);
 			}
 		}
 		break;
@@ -210,7 +210,7 @@ _prnt_btree(btree_t t)
 		len = pxtostr(buf, sizeof(buf), i.k);
 		buf[len++] = ' ';
 		lem = len;
-		lem += qxtostr(buf + lem, sizeof(buf) - lem, i.v->sum.vis);
+		lem += qxtostr(buf + lem, sizeof(buf) - lem, i.v->sum.dis);
 		buf[lem++] = '+';
 		lem += qxtostr(buf + lem, sizeof(buf) - lem, i.v->sum.hid);
 		buf[lem++] = '\n';
@@ -219,9 +219,9 @@ _prnt_btree(btree_t t)
 		memset(buf, ' ', len);
 		for (plqu_iter_t j = {.q = i.v->q}; plqu_iter_next(&j);) {
 			lem = len;
-			lem += qxtostr(buf + lem, sizeof(buf) - lem, j.v.vis);
+			lem += qxtostr(buf + lem, sizeof(buf) - lem, j.v.qty.dis);
 			buf[lem++] = '+';
-			lem += qxtostr(buf + lem, sizeof(buf) - lem, j.v.hid);
+			lem += qxtostr(buf + lem, sizeof(buf) - lem, j.v.qty.hid);
 			buf[lem++] = ' ';
 			lem += snprintf(buf + lem, sizeof(buf) - lem, "%zu", j.v.tim);
 			buf[lem++] = '\n';
@@ -237,9 +237,9 @@ _prnt_plqu(plqu_t q)
 
 	for (plqu_iter_t i = {.q = q}; plqu_iter_next(&i);) {
 		size_t lem = 0U;
-		lem += qxtostr(buf + lem, sizeof(buf) - lem, i.v.vis);
+		lem += qxtostr(buf + lem, sizeof(buf) - lem, i.v.qty.dis);
 		buf[lem++] = '+';
-		lem += qxtostr(buf + lem, sizeof(buf) - lem, i.v.hid);
+		lem += qxtostr(buf + lem, sizeof(buf) - lem, i.v.qty.hid);
 		buf[lem++] = ' ';
 		lem += snprintf(buf + lem, sizeof(buf) - lem, "%zu", i.v.tim);
 		buf[lem++] = '\n';
