@@ -17,7 +17,7 @@ main(void)
 		if (!((i - 1U) % 100U)) {
 			unxs_exe_t x[100000U];
 			mmod_auc_t a = mmod_auction(c);
-			size_t n = unxs_mass(x, countof(x), c, a.prc, a.qty);
+			size_t n = unxs_mass_bi(x, countof(x), c, a.prc, a.qty);
 			//clob_prnt(c);
 		}
 	}

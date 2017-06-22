@@ -50,7 +50,7 @@ plqu_val_exe(plqu_val_t v1, plqu_val_t v2)
 /* V1 is executed against V2, use up hidden liquidity of V1 first */
 	qx_t nuh = min(v1.hid, v2.vis + v2.hid);
 	qx_t nuv = max(0.dd, v2.vis + v2.hid - v1.hid);
-	return (plqu_val_t){v1.vis - nuv, v1.hid - nuh, min(v1.tim, v2.tim)};
+	return (plqu_val_t){v1.vis - nuv, v1.hid - nuh, v1.tim};
 }
 
 static inline __attribute__((pure, const)) plqu_val_t

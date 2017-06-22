@@ -67,7 +67,7 @@ plqu_sum(plqu_t q)
 }
 
 static size_t
-_unxs_plqu2(unxs_exe_t *restrict x, size_t n, plqu_t m1, plqu_t m2, px_t ref)
+_unxs_plqu_bi(unxs_exe_t *restrict x, size_t n, plqu_t m1, plqu_t m2, px_t ref)
 {
 /* match up order from M1 and M2 assuming they're opposite sides */
 	plqu_iter_t m1i = {.q = m1};
@@ -128,9 +128,38 @@ out:
 	return m;
 }
 
+static size_t
+_unxs_plqu_sc(unxs_exe_t *restrict x, size_t n, plqu_t q, px_t ref, qx_t max)
+{
+	plqu_iter_t i = {.q = q};
+	size_t m = 0U;
+	qx_t F = 0.dd;
+	qx_t fil;
+
+	for (; plqu_iter_next(&i) && m < n && F < max; m++, F += fil) {
+		fil = plqu_val_tot(i.v);
+
+		if (UNLIKELY(F + fil > max)) {
+			/* partial fill the last guy,
+			 * we're checking F < max in the for-check first
+			 * so we can just finish the loop body as planned */
+			fil = max - F;
+			i.v = plqu_val_exe(i.v, (plqu_val_t){fil, 0.dd});
+			plqu_iter_put(i, i.v);
+			/* fill him and out */
+			x[m++] = (unxs_exe_t){ref, fil};
+			break;
+		}
+		/* otherwise fill him fully */
+		x[m] = (unxs_exe_t){ref, fil};
+	}
+	plqu_iter_set_top(i);
+	return m;
+}
+
 
 size_t
-unxs_mass(unxs_exe_t *restrict x, size_t n, clob_t c, px_t p, qx_t q)
+unxs_mass_bi(unxs_exe_t *restrict x, size_t n, clob_t c, px_t p, qx_t q)
 {
 	btree_iter_t aski;
 	btree_iter_t bidi;
@@ -156,7 +185,7 @@ unxs_mass(unxs_exe_t *restrict x, size_t n, clob_t c, px_t p, qx_t q)
 		plqu_t aq = aski.v->q;
 
 		/* let the plqu matcher do his magic */
-		m += _unxs_plqu2(x + m, n - m, bq, aq, p);
+		m += _unxs_plqu_bi(x + m, n - m, bq, aq, p);
 		/* maintain lmt sum */
 		with (plqu_val_t sum = plqu_sum(bq)) {
 			if (plqu_val_tot(bidi.v->sum = sum) <= 0.dd) {
@@ -175,6 +204,60 @@ unxs_mass(unxs_exe_t *restrict x, size_t n, clob_t c, px_t p, qx_t q)
 			}
 		}
 	} while (m < n && bidi.k >= p && aski.k <= p);
+	return m;
+}
+
+size_t
+unxs_mass_sc(unxs_exe_t *restrict x, size_t n, clob_t c, px_t p, qx_t q)
+{
+	size_t m = 0U;
+	qx_t Q;
+
+	if (UNLIKELY(isnandpx(p))) {
+		/* no price? */
+		return 0U;
+	} else if (UNLIKELY(q <= 0.dd)) {
+		/* no volume? */
+		return 0U;
+	}
+
+	Q = 0.dd;
+	for (btree_iter_t i = {.t = c.lmt[SIDE_ASK]};
+	     m < n && Q < q && btree_iter_next(&i) && i.k <= p;) {
+		qx_t before = plqu_val_tot(i.v->sum);
+		qx_t after;
+
+		/* set the executor free */
+		m += _unxs_plqu_sc(x + m, n - m, i.v->q, p, q - Q);
+		/* maintain lmt sum */
+		with (plqu_val_t sum = plqu_sum(i.v->q)) {
+			if ((after = plqu_val_tot(i.v->sum = sum)) <= 0.dd) {
+				btree_val_t v = btree_rem(i.t, i.k);
+				free_plqu(v.q);
+			}
+		}
+		/* also up our Q */
+		Q += before - after;
+	}
+
+	Q = 0.dd;
+	for (btree_iter_t i = {.t = c.lmt[SIDE_BID]};
+	     m < n && Q < q && btree_iter_next(&i) && i.k >= p;) {
+		qx_t before = plqu_val_tot(i.v->sum);
+		qx_t after;
+
+		/* set the executor free */
+		m += _unxs_plqu_sc(x + m, n - m, i.v->q, p, q - Q);
+		/* maintain lmt sum */
+		with (plqu_val_t sum = plqu_sum(i.v->q)) {
+			if ((after = plqu_val_tot(i.v->sum = sum)) <= 0.dd) {
+				btree_val_t v = btree_rem(i.t, i.k);
+				free_plqu(v.q);
+			}
+		}
+		/* also up our Q */
+		Q += before - after;
+	}
 	return m;
 }
 

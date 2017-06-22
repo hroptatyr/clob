@@ -57,7 +57,7 @@ main(void)
 		mmod_auc_t a = mmod_auction(c);
 
 		puts("UNX AUCTION");
-		unxs_mass(x, countof(x), c, a.prc, a.qty);
+		unxs_mass_bi(x, countof(x), c, a.prc, a.qty);
 	}
 
 	clob_prnt(c);
