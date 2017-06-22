@@ -129,7 +129,9 @@ out:
 }
 
 static size_t
-_unxs_plqu_sc(unxs_exsc_t *restrict x, size_t n, plqu_t q, px_t ref, qx_t max)
+_unxs_plqu_sc(
+	unxs_exsc_t *restrict x, size_t n, plqu_t q, px_t ref, qx_t max,
+	clob_oid_t proto)
 {
 	plqu_iter_t i = {.q = q};
 	size_t m = 0U;
@@ -137,6 +139,7 @@ _unxs_plqu_sc(unxs_exsc_t *restrict x, size_t n, plqu_t q, px_t ref, qx_t max)
 	qx_t fil;
 
 	for (; plqu_iter_next(&i) && m < n && F < max; m++, F += fil) {
+		proto.qid = plqu_iter_qid(i);
 		fil = qty(i.v.qty);
 
 		if (UNLIKELY(F + fil > max)) {
@@ -147,11 +150,11 @@ _unxs_plqu_sc(unxs_exsc_t *restrict x, size_t n, plqu_t q, px_t ref, qx_t max)
 			i.v = plqu_val_exe(i.v, (plqu_val_t){fil, 0.dd});
 			plqu_iter_put(i, i.v);
 			/* fill him and out */
-			x[m++] = (unxs_exsc_t){{ref, fil}};
+			x[m++] = (unxs_exsc_t){{ref, fil}, proto};
 			break;
 		}
 		/* otherwise fill him fully */
-		x[m] = (unxs_exsc_t){{ref, fil}};
+		x[m] = (unxs_exsc_t){{ref, fil}, proto};
 	}
 	plqu_iter_set_top(i);
 	return m;
@@ -210,6 +213,7 @@ unxs_mass_bi(unxs_exbi_t *restrict x, size_t n, clob_t c, px_t p, qx_t q)
 size_t
 unxs_mass_sc(unxs_exsc_t *restrict x, size_t n, clob_t c, px_t p, qx_t q)
 {
+	clob_oid_t proto = {TYPE_LMT};
 	size_t m = 0U;
 	qx_t Q;
 
@@ -222,13 +226,14 @@ unxs_mass_sc(unxs_exsc_t *restrict x, size_t n, clob_t c, px_t p, qx_t q)
 	}
 
 	Q = 0.dd;
-	for (btree_iter_t i = {.t = c.lmt[SIDE_ASK]};
-	     m < n && Q < q && btree_iter_next(&i) && i.k <= p;) {
+	proto.sid = SIDE_ASK;
+	for (btree_iter_t i = {.t = c.lmt[proto.sid]};
+	     m < n && Q < q && btree_iter_next(&i) && (proto.prc = i.k) <= p;) {
 		qx_t before = qty(i.v->sum);
 		qx_t after;
 
 		/* set the executor free */
-		m += _unxs_plqu_sc(x + m, n - m, i.v->q, p, q - Q);
+		m += _unxs_plqu_sc(x + m, n - m, i.v->q, p, q - Q, proto);
 		/* maintain lmt sum */
 		with (qty_t sum = plqu_qty(i.v->q)) {
 			if ((after = qty(i.v->sum = sum)) <= 0.dd) {
@@ -241,13 +246,14 @@ unxs_mass_sc(unxs_exsc_t *restrict x, size_t n, clob_t c, px_t p, qx_t q)
 	}
 
 	Q = 0.dd;
-	for (btree_iter_t i = {.t = c.lmt[SIDE_BID]};
-	     m < n && Q < q && btree_iter_next(&i) && i.k >= p;) {
+	proto.sid = SIDE_BID;
+	for (btree_iter_t i = {.t = c.lmt[proto.sid]};
+	     m < n && Q < q && btree_iter_next(&i) && (proto.prc = i.k) >= p;) {
 		qx_t before = qty(i.v->sum);
 		qx_t after;
 
 		/* set the executor free */
-		m += _unxs_plqu_sc(x + m, n - m, i.v->q, p, q - Q);
+		m += _unxs_plqu_sc(x + m, n - m, i.v->q, p, q - Q, proto);
 		/* maintain lmt sum */
 		with (qty_t sum = plqu_qty(i.v->q)) {
 			if ((after = qty(i.v->sum = sum)) <= 0.dd) {
