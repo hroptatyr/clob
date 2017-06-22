@@ -14,7 +14,7 @@ main(void)
 
 	/* xetra example 6 */
 	clob_add(c, (clob_ord_t){TYPE_MKT, SIDE_LONG, 200.dd, 0.0dd});
-	clob_add(c, (clob_ord_t){TYPE_MKT, SIDE_SHRT, 100.dd, 0.0dd});
+	clob_add(c, (clob_ord_t){TYPE_MKT, SIDE_SHORT, 100.dd, 0.0dd});
 	clob_add(c, (clob_ord_t){TYPE_LMT, SIDE_ASK, 0.dd, 0.0dd, .lmt = 202.0dd});
 	clob_add(c, (clob_ord_t){TYPE_LMT, SIDE_BID, 0.dd, 0.0dd, .lmt = 199.0dd});
 

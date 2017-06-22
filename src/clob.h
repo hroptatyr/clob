@@ -52,7 +52,7 @@ typedef enum {
 
 typedef enum {
 	SIDE_ASK = 0U,
-	SIDE_SHRT = SIDE_ASK,
+	SIDE_SHORT = SIDE_ASK,
 	SIDE_SELLER = SIDE_ASK,
 	SIDE_MAKER = SIDE_ASK,
 	SIDE_BID = 1U,
