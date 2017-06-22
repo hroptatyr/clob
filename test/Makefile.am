@@ -132,4 +132,7 @@ clob_stress_03_LDADD = $(clob_LIBS)
 check_PROGRAMS += clob_stress_04
 clob_stress_04_LDADD = $(clob_LIBS)
 
+check_PROGRAMS += clob_stress_05
+clob_stress_05_LDADD = $(clob_LIBS)
+
 ## Makefile.am ends here

@@ -224,7 +224,7 @@ unxs_mass_bi(unxs_exbi_t *restrict x, size_t n, clob_t c, px_t p, qx_t q)
 size_t
 unxs_mass_sc(unxs_exsc_t *restrict x, size_t n, clob_t c, px_t p, qx_t q)
 {
-	clob_oid_t proto = {TYPE_LMT};
+	clob_oid_t proto = {};
 	size_t m = 0U;
 	qx_t Q;
 
@@ -237,7 +237,21 @@ unxs_mass_sc(unxs_exsc_t *restrict x, size_t n, clob_t c, px_t p, qx_t q)
 	}
 
 	Q = 0.dd;
-	proto.sid = SIDE_ASK;
+	proto = (clob_oid_t){TYPE_MKT, SIDE_SHORT, .prc = NANPX};
+	/* market orders have the highest priority */
+	with (plqu_t pq = c.mkt[proto.sid]) {
+		qx_t before = qty(plqu_qty(pq));
+		qx_t after;
+
+		/* set the executor free */
+		m += _unxs_plqu_sc(x + m, n - m, pq, p, q - Q, proto);
+		/* what's left? */
+		after = qty(plqu_qty(pq));
+		/* up our Q */
+		Q += before - after;
+	}
+	/* and now limit orders */
+	proto = (clob_oid_t){TYPE_LMT, SIDE_ASK};
 	for (btree_iter_t i = {.t = c.lmt[proto.sid]};
 	     m < n && Q < q && btree_iter_next(&i) && (proto.prc = i.k) <= p;) {
 		qx_t before = qty(i.v->sum);
@@ -257,7 +271,21 @@ unxs_mass_sc(unxs_exsc_t *restrict x, size_t n, clob_t c, px_t p, qx_t q)
 	}
 
 	Q = 0.dd;
-	proto.sid = SIDE_BID;
+	proto = (clob_oid_t){TYPE_MKT, SIDE_LONG};
+	/* market orders have the highest priority */
+	with (plqu_t pq = c.mkt[proto.sid]) {
+		qx_t before = qty(plqu_qty(pq));
+		qx_t after;
+
+		/* set the executor free */
+		m += _unxs_plqu_sc(x + m, n - m, pq, p, q - Q, proto);
+		/* what's left? */
+		after = qty(plqu_qty(pq));
+		/* up the Q */
+		Q += before - after;
+	}
+	/* and limit orders again */
+	proto = (clob_oid_t){TYPE_LMT, SIDE_LONG};
 	for (btree_iter_t i = {.t = c.lmt[proto.sid]};
 	     m < n && Q < q && btree_iter_next(&i) && (proto.prc = i.k) >= p;) {
 		qx_t before = qty(i.v->sum);
