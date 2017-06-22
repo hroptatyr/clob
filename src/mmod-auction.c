@@ -67,14 +67,14 @@ static qx_t *bszs;
 static size_t bidz;
 
 
-static plqu_val_t
-plqu_sum(plqu_t q)
+static qx_t
+plqu_qx(plqu_t q)
 {
-	plqu_val_t sum = plqu_val_nil;
+	qty_t sum = qty0;
 	for (plqu_iter_t i = {.q = q}; plqu_iter_next(&i);) {
-		sum = plqu_val_add(sum, i.v);
+		sum = qty_add(sum, i.v.qty);
 	}
-	return sum;
+	return qty(sum);
 }
 
 static void
@@ -142,8 +142,8 @@ mmod_auction(clob_t c)
 	ask = aski.k;
 	bid = bidi.k;
 
-	asz = plqu_val_tot(plqu_sum(c.mkt[SIDE_SHRT]));
-	bsz = plqu_val_tot(plqu_sum(c.mkt[SIDE_LONG]));
+	asz = plqu_qx(c.mkt[SIDE_SHRT]);
+	bsz = plqu_qx(c.mkt[SIDE_LONG]);
 
 	/* see if there's an overlap */
 	if (LIKELY(ask > bid && !(asz > 0.dd && bsz > 0.dd))) {
@@ -163,7 +163,7 @@ mmod_auction(clob_t c)
 			bidz = nuz;
 		}
 		bids[bi] = bidi.k;
-		bsz += plqu_val_tot(bidi.v->sum);
+		bsz += qty(bidi.v->sum);
 		bszs[bi] = bsz;
 	} while (btree_iter_next(&bidi) && bidi.k >= ask);
 	/* set very first element */
@@ -180,7 +180,7 @@ mmod_auction(clob_t c)
 			_push(bids[ai], bszs[ai], asz);
 		}
 
-		asz += plqu_val_tot(aski.v->sum);
+		asz += qty(aski.v->sum);
 
 		_push(aski.k, bszs[ai], asz);
 

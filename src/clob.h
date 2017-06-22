@@ -71,8 +71,7 @@ typedef struct {
 typedef struct {
 	clob_type_t typ;
 	clob_side_t sid;
-	qx_t vis;
-	qx_t hid;
+	qty_t qty;
 	px_t lmt;
 	px_t stp;
 } clob_ord_t;
