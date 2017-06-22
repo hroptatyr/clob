@@ -162,6 +162,8 @@ plqu_iter_next(plqu_iter_t *iter)
 			return true;
 		}
 	}
+	/* set iter past tail */
+	iter->i = iter->q->tail + 1U;
 	return false;
 }
 
