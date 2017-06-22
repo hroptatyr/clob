@@ -53,7 +53,7 @@ unxs_mass_bi(unxs_exe_t *restrict x, size_t n, clob_t c, px_t p, qx_t q);
 
 /**
  * Uncross the book C at price P for a quantity of at most Q
- * and assuming a single contra firm.
+ * and assuming a single contrarian.
  * At most N executions are stored in X. */
 extern size_t
 unxs_mass_sc(unxs_exe_t *restrict x, size_t n, clob_t c, px_t p, qx_t q);
