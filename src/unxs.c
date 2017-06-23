@@ -98,6 +98,37 @@ _unxs_plqu_sc(
 	return m;
 }
 
+static size_t
+_unxs_order(
+	unxs_exbi_t *restrict x, size_t n, clob_ord_t *restrict o,
+	plqu_t q, px_t r, clob_oid_t maker, clob_oid_t taker)
+{
+	plqu_iter_t qi = {.q = q};
+	qx_t oq = qty(o->qty);
+	size_t m = 0U;
+
+	for (; m < n && plqu_iter_next(&qi) && oq > 0.dd; oq = qty(o->qty)) {
+		qx_t mq = qty(qi.v.qty);
+
+		maker.qid = plqu_iter_qid(qi);
+		if (mq <= oq) {
+			/* full maker ~ partial taker */
+			x[m++] = (unxs_exbi_t){{r, mq}, {maker, taker}};
+			o->qty = qty_exe(o->qty, mq);
+		} else {
+			/* partial maker ~ full taker */
+			x[m++] = (unxs_exbi_t){{r, oq}, {maker, taker}};
+			qi.v.qty = qty_exe(qi.v.qty, oq);
+			plqu_iter_put(qi, qi.v);
+			/* let everyone know there's nothing left */
+			o->qty = qty0;
+			break;
+		}
+	}
+	plqu_iter_set_top(qi);
+	return m;
+}
+
 
 size_t
 unxs_mass_sc(unxs_exsc_t *restrict x, size_t n, clob_t c, px_t p, qx_t q)
@@ -181,6 +212,63 @@ unxs_mass_sc(unxs_exsc_t *restrict x, size_t n, clob_t c, px_t p, qx_t q)
 		/* also up our Q */
 		Q += before - after;
 	}
+	return m;
+}
+
+size_t
+unxs_order(unxs_exbi_t *restrict x, size_t n, clob_t c, clob_ord_t o, px_t r)
+{
+	clob_oid_t maker, taker;
+	size_t m = 0U;
+
+	maker = (clob_oid_t){.sid = clob_contra_side(o.sid), .prc = NANPX};
+	taker = (clob_oid_t){o.typ, o.sid, .prc = NANPX};
+
+	switch (o.typ) {
+		btree_iter_t ti;
+		plqu_iter_t qi;
+		bool lmtp;
+
+	case TYPE_LMT:
+
+	case TYPE_MKT:
+		/* execute against contra market first, then contra limit */
+		ti = (btree_iter_t){.t = c.lmt[maker.sid]};
+		if (LIKELY((lmtp = btree_iter_next(&ti)))) {
+			/* aaah, reference price we need not */
+			r = ti.k;
+		} else if (UNLIKELY(isnandpx(r))) {
+			/* can't execute against NAN reference price */
+			return 0U;
+		}
+		/* get markets ready */
+		maker.typ = TYPE_MKT;
+		m += _unxs_order(
+			x + m, n - m, &o, c.mkt[maker.sid], r, maker, taker);
+	more:
+		if (qty(o.qty) <= 0.dd) {
+			return m;
+		} else if (!lmtp) {
+			goto rest;
+		}
+		/* otherwise dive into limits */
+		maker.typ = TYPE_LMT;
+		m += _unxs_order(x + m, n - m, &o, ti.v->q, r, maker, taker);
+		/* maintain the sum */
+		with (qty_t sum = plqu_qty(qi.q)) {
+			if (qty(ti.v->sum = sum) <= 0.dd) {
+				btree_val_t v = btree_rem(ti.t, ti.k);
+				free_plqu(v.q);
+				lmtp = btree_iter_next(&ti);
+			}
+		}
+		goto more;
+	}
+rest:
+	/* put the rest on the queue and bugger off*/
+	maker = clob_add(c, o);
+	/* what if M >= N? */
+	x[m++] = (unxs_exbi_t){{NANPX, qty(o.qty)}, {maker}};
 	return m;
 }
 

@@ -105,4 +105,12 @@ extern px_t clob_mid(clob_t);
 
 extern void clob_prnt(clob_t c);
 
+
+/* convenience */
+static inline __attribute__((pure, const)) clob_side_t
+clob_contra_side(clob_side_t s)
+{
+	return (clob_side_t)((unsigned int)s ^ 1U);
+}
+
 #endif	/* INCLUDED_clob_h_ */
