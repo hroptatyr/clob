@@ -94,7 +94,8 @@ redo:
 	m2q = qty(m2i.v.qty);
 	if (m1q < m2q) {
 		/* FULL M1 v PART M2 */
-		plqu_iter_put(m2i, m2i.v = plqu_val_exe(m2i.v, m1i.v));
+		m2i.v.qty = qty_exe(m2i.v.qty, m1q);
+		plqu_iter_put(m2i, m2i.v);
 		plqu_iter_put(m1i, plqu_val_nil);
 		x[m++] = (unxs_exbi_t){{ref, m1q}, {m1o, m2o}};
 		if (UNLIKELY(m >= n)) {
@@ -107,7 +108,8 @@ redo:
 		}
 	} else if (m1q > m2q) {
 		/* PART M1 v FULL M2 */
-		plqu_iter_put(m1i, m1i.v = plqu_val_exe(m1i.v, m2i.v));
+		m1i.v.qty = qty_exe(m1i.v.qty, m2q);
+		plqu_iter_put(m1i, m1i.v);
 		plqu_iter_put(m2i, plqu_val_nil);
 		x[m++] = (unxs_exbi_t){{ref, m2q}, {m2o, m1o}};
 		if (UNLIKELY(m >= n)) {
@@ -154,7 +156,7 @@ _unxs_plqu_sc(
 			 * we're checking F < max in the for-check first
 			 * so we can just finish the loop body as planned */
 			fil = max - F;
-			i.v = plqu_val_exe(i.v, (plqu_val_t){fil, 0.dd});
+			i.v.qty = qty_exe(i.v.qty, fil);
 			plqu_iter_put(i, i.v);
 			/* fill him and out */
 			x[m++] = (unxs_exsc_t){{ref, fil}, proto};

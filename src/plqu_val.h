@@ -20,13 +20,4 @@ plqu_val_nil_p(plqu_val_t v)
 	return v.tim == 0U;
 }
 
-
-/* not used by plqu but nice to define here */
-static inline __attribute__((pure, const)) plqu_val_t
-plqu_val_exe(plqu_val_t v1, plqu_val_t v2)
-{
-/* V1 is executed against V2, use up hidden liquidity of V1 first */
-	return (plqu_val_t){qty_exe(v1.qty, v2.qty), v1.tim};
-}
-
 #endif	/* INCLUDED_plqu_h_ */
