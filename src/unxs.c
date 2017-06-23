@@ -252,7 +252,7 @@ unxs_order(unxs_exbi_t *restrict x, size_t n, clob_t c, clob_ord_t o, px_t r)
 		}
 		/* otherwise dive into limits */
 		maker.typ = TYPE_LMT;
-		m += _unxs_order(x + m, n - m, &o, ti.v->q, r, maker, taker);
+		m += _unxs_order(x + m, n - m, &o, ti.v->q, ti.k, maker, taker);
 		/* maintain the sum */
 		with (qty_t sum = plqu_qty(ti.v->q)) {
 			if (qty(ti.v->sum = sum) <= 0.dd) {
