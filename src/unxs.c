@@ -107,7 +107,7 @@ _unxs_order(
 	qx_t oq = qty(o->qty);
 	size_t m = 0U;
 
-	for (; m < n && plqu_iter_next(&qi) && oq > 0.dd; oq = qty(o->qty)) {
+	for (; plqu_iter_next(&qi) && m < n && oq > 0.dd; oq = qty(o->qty)) {
 		qx_t mq = qty(qi.v.qty);
 
 		maker.qid = plqu_iter_qid(qi);
