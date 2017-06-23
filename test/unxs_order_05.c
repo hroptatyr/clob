@@ -44,7 +44,8 @@ main(void)
 
 	free_clob(c);
 	return n != 3U ||
-		x[0U].x.qty != 100.dd || x[0U].x.prc != 198.0dd ||
+		x[0U].x.qty != 300.dd || !isnandpx(x[0U].x.prc) ||
 		x[1U].x.qty != 100.dd || x[1U].x.prc != 198.0dd ||
-		x[2U].x.qty != 300.dd || !isnandpx(x[2U].x.prc);
+		x[2U].x.qty != 100.dd || x[2U].x.prc != 198.0dd ||
+		0;
 }

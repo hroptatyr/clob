@@ -219,7 +219,7 @@ size_t
 unxs_order(unxs_exbi_t *restrict x, size_t n, clob_t c, clob_ord_t o, px_t r)
 {
 	clob_oid_t maker, taker;
-	size_t m = 0U;
+	size_t m = 1U;
 
 	maker = (clob_oid_t){.sid = clob_contra_side(o.sid), .prc = NANPX};
 	taker = (clob_oid_t){o.typ, o.sid, .prc = NANPX};
@@ -247,7 +247,7 @@ unxs_order(unxs_exbi_t *restrict x, size_t n, clob_t c, clob_ord_t o, px_t r)
 			x + m, n - m, &o, c.mkt[maker.sid], r, maker, taker);
 	more:
 		if (qty(o.qty) <= 0.dd) {
-			return m;
+			goto fill;
 		} else if (!lmtp) {
 			goto rest;
 		}
@@ -267,8 +267,11 @@ unxs_order(unxs_exbi_t *restrict x, size_t n, clob_t c, clob_ord_t o, px_t r)
 rest:
 	/* put the rest on the queue and bugger off*/
 	maker = clob_add(c, o);
-	/* what if M >= N? */
-	x[m++] = (unxs_exbi_t){{NANPX, qty(o.qty)}, {maker}};
+	/* let the user know about the order in the book */
+	x[0U] = (unxs_exbi_t){{NANPX, qty(o.qty)}, {maker}};
+	return m;
+fill:
+	x[0U] = (unxs_exbi_t){{NANPX, 0.dd}};
 	return m;
 }
 

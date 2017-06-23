@@ -61,8 +61,9 @@ typedef struct {
  * Try crossing order O with book C at reference price R.
  * At most N executions are stored in X.
  * Lateral sides are maker/taker.
- * An unxs_exe_t object with price NANPX denotes the residual order,
- * it is added to the order book and it's order id is in the MAKER side. */
+ * If the order is accepted the first object in X will hold the residual
+ * quantity left in the order book along, if > 0, with the order id on
+ * the MAKER side. */
 extern size_t
 unxs_order(unxs_exbi_t *restrict x, size_t n, clob_t c, clob_ord_t o, px_t r);
 

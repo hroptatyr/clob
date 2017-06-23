@@ -31,5 +31,5 @@ main(void)
 	clob_prnt(c);
 
 	free_clob(c);
-	return n != 1U || x->x.qty != 5.dd || x->x.prc != 198.0dd;
+	return n != 2U || x[1U].x.qty != 5.dd || x[1U].x.prc != 198.0dd;
 }

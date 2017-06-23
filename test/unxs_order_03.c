@@ -33,7 +33,9 @@ main(void)
 	clob_prnt(c);
 
 	free_clob(c);
-	return n != 2U ||
-		x[0U].x.qty != 100.dd || x[0U].x.prc != 198.0dd ||
-		x[1U].x.qty != 50.dd || x[1U].x.prc != 198.0dd;
+	return n != 3U ||
+		x[0U].x.qty != 0.dd ||
+		x[1U].x.qty != 100.dd || x[1U].x.prc != 198.0dd ||
+		x[2U].x.qty != 50.dd || x[2U].x.prc != 198.0dd ||
+		0;
 }
