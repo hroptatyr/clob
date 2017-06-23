@@ -115,6 +115,27 @@ TESTS += mmod_auction_xetra_09
 mmod_auction_xetra_09_LDADD = $(clob_LIBS)
 
 
+check_PROGRAMS += unxs_order_01
+TESTS += unxs_order_01
+unxs_order_01_LDADD = $(clob_LIBS)
+
+check_PROGRAMS += unxs_order_02
+TESTS += unxs_order_02
+unxs_order_02_LDADD = $(clob_LIBS)
+
+check_PROGRAMS += unxs_order_03
+TESTS += unxs_order_03
+unxs_order_03_LDADD = $(clob_LIBS)
+
+check_PROGRAMS += unxs_order_04
+TESTS += unxs_order_04
+unxs_order_04_LDADD = $(clob_LIBS)
+
+check_PROGRAMS += unxs_order_05
+TESTS += unxs_order_05
+unxs_order_05_LDADD = $(clob_LIBS)
+
+
 check_PROGRAMS += plqu_01
 TESTS += plqu_01
 plqu_01_LDADD = $(clob_LIBS)
