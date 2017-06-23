@@ -226,7 +226,6 @@ unxs_order(unxs_exbi_t *restrict x, size_t n, clob_t c, clob_ord_t o, px_t r)
 
 	switch (o.typ) {
 		btree_iter_t ti;
-		plqu_iter_t qi;
 		bool lmtp;
 
 	case TYPE_LMT:
@@ -255,7 +254,7 @@ unxs_order(unxs_exbi_t *restrict x, size_t n, clob_t c, clob_ord_t o, px_t r)
 		maker.typ = TYPE_LMT;
 		m += _unxs_order(x + m, n - m, &o, ti.v->q, r, maker, taker);
 		/* maintain the sum */
-		with (qty_t sum = plqu_qty(qi.q)) {
+		with (qty_t sum = plqu_qty(ti.v->q)) {
 			if (qty(ti.v->sum = sum) <= 0.dd) {
 				btree_val_t v = btree_rem(ti.t, ti.k);
 				free_plqu(v.q);
