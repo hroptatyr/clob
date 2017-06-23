@@ -247,6 +247,8 @@ unxs_order(unxs_exbi_t *restrict x, size_t n, clob_t c, clob_ord_t o, px_t r)
 	more:
 		if (qty(o.qty) <= 0.dd) {
 			goto fill;
+		} else if (m >= n) {
+			goto rest;
 		} else if (!lmtp) {
 			goto rest;
 		}
