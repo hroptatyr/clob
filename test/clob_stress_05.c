@@ -27,7 +27,7 @@ main(void)
 	{
 		unxs_exbi_t x[100000U];
 		mmod_auc_t auc = mmod_auction(c);
-		size_t n = unxs_mass_bi(x, countof(x), c, auc.prc, auc.qty);
+		size_t n = unxs_mass_sc(x, countof(x), c, auc.prc, auc.qty);
 		btree_key_t a, b;
 
 		printf("AUC %f %f %f\n", (double)auc.prc, (double)auc.qty, (double)auc.imb);

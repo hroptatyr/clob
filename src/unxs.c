@@ -67,77 +67,6 @@ plqu_qty(plqu_t q)
 }
 
 static size_t
-_unxs_plqu_bi(
-	unxs_exbi_t *restrict x, size_t n, plqu_t m1, plqu_t m2, px_t ref,
-	clob_oid_t m1o, clob_oid_t m2o)
-{
-/* match up order from M1 and M2 assuming they're opposite sides */
-	plqu_iter_t m1i = {.q = m1};
-	plqu_iter_t m2i = {.q = m2};
-	qx_t m1q, m2q;
-	size_t m = 0U;
-
-rwnd:
-	if (UNLIKELY(!plqu_iter_next(&m1i))) {
-		/* plqu1 is empty */
-		goto out;
-	} else if (UNLIKELY(!plqu_iter_next(&m2i))) {
-		/* plqu2 is empty */
-		goto out;
-	}
-	/* obtain qids */
-	m1o.qid = plqu_iter_qid(m1i);
-	m2o.qid = plqu_iter_qid(m2i);
-
-redo:
-	m1q = qty(m1i.v.qty);
-	m2q = qty(m2i.v.qty);
-	if (m1q < m2q) {
-		/* FULL M1 v PART M2 */
-		m2i.v.qty = qty_exe(m2i.v.qty, m1q);
-		plqu_iter_put(m2i, m2i.v);
-		plqu_iter_put(m1i, plqu_val_nil);
-		x[m++] = (unxs_exbi_t){{ref, m1q}, {m1o, m2o}};
-		if (UNLIKELY(m >= n)) {
-			/* queue is full, sorry */
-			goto out;
-		}
-		if (plqu_iter_next(&m1i)) {
-			m1o.qid = plqu_iter_qid(m1i);
-			goto redo;
-		}
-	} else if (m1q > m2q) {
-		/* PART M1 v FULL M2 */
-		m1i.v.qty = qty_exe(m1i.v.qty, m2q);
-		plqu_iter_put(m1i, m1i.v);
-		plqu_iter_put(m2i, plqu_val_nil);
-		x[m++] = (unxs_exbi_t){{ref, m2q}, {m2o, m1o}};
-		if (UNLIKELY(m >= n)) {
-			/* queue is full, sorry */
-			goto out;
-		}
-		if (plqu_iter_next(&m2i)) {
-			m2o.qid = plqu_iter_qid(m1i);
-			goto redo;
-		}
-	} else {
-		/* FULL v FULL, how lucky can we get */
-		plqu_iter_put(m1i, plqu_val_nil);
-		plqu_iter_put(m2i, plqu_val_nil);
-		x[m++] = (unxs_exbi_t){{ref, m1q}, {m2o, m1o}};
-		if (UNLIKELY(m >= n)) {
-			/* queue is full, sorry */
-			goto out;
-		}
-		goto rwnd;
-	}
-out:
-	plqu_iter_set_top(m1i);
-	plqu_iter_set_top(m2i);
-	return m;
-}
-
-static size_t
 _unxs_plqu_sc(
 	unxs_exsc_t *restrict x, size_t n, plqu_t q, px_t ref, qx_t max,
 	clob_oid_t proto)
@@ -170,59 +99,6 @@ _unxs_plqu_sc(
 }
 
 
-size_t
-unxs_mass_bi(unxs_exbi_t *restrict x, size_t n, clob_t c, px_t p, qx_t q)
-{
-	clob_oid_t buyer, seller;
-	btree_iter_t aski;
-	btree_iter_t bidi;
-	size_t m = 0U;
-
-	if (UNLIKELY(isnandpx(p))) {
-		/* no price? */
-		return 0U;
-	} else if (UNLIKELY(q <= 0.dd)) {
-		/* no volume? */
-		return 0U;
-	}
-
-	/* bilateral mode */
-	seller = (clob_oid_t){TYPE_LMT, SIDE_SELLER};
-	buyer = (clob_oid_t){TYPE_LMT, SIDE_BUYER};
-
-	aski = (btree_iter_t){.t = c.lmt[seller.sid]};
-	bidi = (btree_iter_t){.t = c.lmt[buyer.sid]};
-
-	btree_iter_next(&aski);
-	btree_iter_next(&bidi);
-
-	do {
-		plqu_t bq = bidi.v->q;
-		plqu_t aq = aski.v->q;
-
-		/* let the plqu matcher do his magic */
-		m += _unxs_plqu_bi(x + m, n - m, bq, aq, p, buyer, seller);
-		/* maintain lmt sum */
-		with (qty_t sum = plqu_qty(bq)) {
-			if (qty(bidi.v->sum = sum) <= 0.dd) {
-				btree_t bt = c.lmt[SIDE_BID];
-				btree_val_t v = btree_rem(bt, bidi.k);
-				free_plqu(v.q);
-				btree_iter_next(&bidi);
-			}
-		}
-		with (qty_t sum = plqu_qty(aq)) {
-			if (qty(aski.v->sum = sum) <= 0.dd) {
-				btree_t at = c.lmt[SIDE_ASK];
-				btree_val_t v = btree_rem(at, aski.k);
-				free_plqu(v.q);
-				btree_iter_next(&aski);
-			}
-		}
-	} while (m < n && bidi.k >= p && aski.k <= p);
-	return m;
-}
-
 size_t
 unxs_mass_sc(unxs_exsc_t *restrict x, size_t n, clob_t c, px_t p, qx_t q)
 {

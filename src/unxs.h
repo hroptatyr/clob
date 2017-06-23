@@ -58,10 +58,6 @@ typedef struct {
 } unxs_exbi_t;
 
 /**
- * Uncross the book C at price P for a quantity of at most Q bilaterally.
- * At most N executions are stored in X. */
-extern size_t
-unxs_mass_bi(unxs_exbi_t *restrict x, size_t n, clob_t c, px_t p, qx_t q);
 
 /**
  * Uncross the book C at price P for a quantity of at most Q
