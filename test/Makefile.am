@@ -135,6 +135,14 @@ check_PROGRAMS += unxs_order_05
 TESTS += unxs_order_05
 unxs_order_05_LDADD = $(clob_LIBS)
 
+check_PROGRAMS += unxs_order_06
+TESTS += unxs_order_06
+unxs_order_06_LDADD = $(clob_LIBS)
+
+check_PROGRAMS += unxs_order_07
+TESTS += unxs_order_07
+unxs_order_07_LDADD = $(clob_LIBS)
+
 
 check_PROGRAMS += plqu_01
 TESTS += plqu_01
