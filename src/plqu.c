@@ -107,12 +107,11 @@ plqu_add(plqu_t q, plqu_val_t v)
 		}
 		/* otherwise resize */
 		q->a = tmp;
-		/* and maybe move */
-		if (UNLIKELY(!((q->tail - q->head) % q->z))) {
-			/* they won't overlap */
-			memcpy(q->a + q->z, q->a,
-			       (q->tail % q->z) * sizeof(*q->a));
-		}
+		/* head is either in the current range or the next range modulo
+		 * the new size, move tail or head respectively
+		 * to make things easy (and branchless) we simply clone the
+		 * whole array */
+		memcpy(q->a + q->z, q->a, q->z * sizeof(*q->a));
 		/* keep track of size */
 		q->z = nuz;
 	}
