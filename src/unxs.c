@@ -171,7 +171,7 @@ unxs_mass_sc(unxs_exsc_t *restrict x, size_t n, clob_t c, px_t p, qx_t q)
 		/* maintain lmt sum */
 		with (qty_t sum = plqu_qty(i.v->q)) {
 			if ((after = qty(i.v->sum = sum)) <= 0.dd) {
-				btree_val_t v = btree_rem(i.t, i.k);
+				btree_val_t v = btree_rem(c.lmt[proto.sid], i.k);
 				free_plqu(v.q);
 			}
 		}
@@ -205,7 +205,7 @@ unxs_mass_sc(unxs_exsc_t *restrict x, size_t n, clob_t c, px_t p, qx_t q)
 		/* maintain lmt sum */
 		with (qty_t sum = plqu_qty(i.v->q)) {
 			if ((after = qty(i.v->sum = sum)) <= 0.dd) {
-				btree_val_t v = btree_rem(i.t, i.k);
+				btree_val_t v = btree_rem(c.lmt[proto.sid], i.k);
 				free_plqu(v.q);
 			}
 		}
@@ -264,7 +264,7 @@ unxs_order(unxs_exbi_t *restrict x, size_t n, clob_t c, clob_ord_t o, px_t r)
 		/* maintain the sum */
 		with (qty_t sum = plqu_qty(ti.v->q)) {
 			if (qty(ti.v->sum = sum) <= 0.dd) {
-				btree_val_t v = btree_rem(ti.t, ti.k);
+				btree_val_t v = btree_rem(c.lmt[maker.sid], ti.k);
 				free_plqu(v.q);
 				lmtp = btree_iter_next(&ti);
 			}
