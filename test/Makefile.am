@@ -143,6 +143,42 @@ check_PROGRAMS += unxs_order_07
 TESTS += unxs_order_07
 unxs_order_07_LDADD = $(clob_LIBS)
 
+check_PROGRAMS += unxs_order_11
+TESTS += unxs_order_11
+unxs_order_11_LDADD = $(clob_LIBS)
+
+check_PROGRAMS += unxs_order_12
+TESTS += unxs_order_12
+unxs_order_12_LDADD = $(clob_LIBS)
+
+check_PROGRAMS += unxs_order_13
+TESTS += unxs_order_13
+unxs_order_13_LDADD = $(clob_LIBS)
+
+check_PROGRAMS += unxs_order_14
+TESTS += unxs_order_14
+unxs_order_14_LDADD = $(clob_LIBS)
+
+check_PROGRAMS += unxs_order_15
+TESTS += unxs_order_15
+unxs_order_15_LDADD = $(clob_LIBS)
+
+check_PROGRAMS += unxs_order_16
+TESTS += unxs_order_16
+unxs_order_16_LDADD = $(clob_LIBS)
+
+check_PROGRAMS += unxs_order_17
+TESTS += unxs_order_17
+unxs_order_17_LDADD = $(clob_LIBS)
+
+check_PROGRAMS += unxs_order_18
+TESTS += unxs_order_18
+unxs_order_18_LDADD = $(clob_LIBS)
+
+check_PROGRAMS += unxs_order_19
+TESTS += unxs_order_19
+unxs_order_19_LDADD = $(clob_LIBS)
+
 
 check_PROGRAMS += plqu_01
 TESTS += plqu_01
