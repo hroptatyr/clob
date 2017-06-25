@@ -221,6 +221,12 @@ unxs_order(unxs_exbi_t *restrict x, size_t n, clob_t c, clob_ord_t o, px_t r)
 	clob_oid_t maker, taker;
 	size_t m = 1U;
 
+	if (UNLIKELY(!n)) {
+		return 0U;
+	} else if (UNLIKELY(n == 1U)) {
+		goto fill;
+	}
+
 	maker = (clob_oid_t){.sid = clob_contra_side(o.sid), .prc = NANPX};
 	taker = (clob_oid_t){o.typ, o.sid, .prc = NANPX};
 
