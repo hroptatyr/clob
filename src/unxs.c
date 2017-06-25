@@ -67,69 +67,9 @@ plqu_qty(plqu_t q)
 }
 
 static size_t
-_unxs_plqu_bi(unxs_exe_t *restrict x, size_t n, plqu_t m1, plqu_t m2, px_t ref)
-{
-/* match up order from M1 and M2 assuming they're opposite sides */
-	plqu_iter_t m1i = {.q = m1};
-	plqu_iter_t m2i = {.q = m2};
-	qx_t m1q, m2q;
-	size_t m = 0U;
-
-rwnd:
-	if (UNLIKELY(!plqu_iter_next(&m1i))) {
-		/* plqu1 is empty */
-		goto out;
-	} else if (UNLIKELY(!plqu_iter_next(&m2i))) {
-		/* plqu2 is empty */
-		goto out;
-	}
-
-redo:
-	m1q = qty(m1i.v.qty);
-	m2q = qty(m2i.v.qty);
-	if (m1q < m2q) {
-		/* FULL M1 v PART M2 */
-		plqu_iter_put(m2i, m2i.v = plqu_val_exe(m2i.v, m1i.v));
-		plqu_iter_put(m1i, plqu_val_nil);
-		x[m++] = (unxs_exe_t){ref, m1q};
-		if (UNLIKELY(m >= n)) {
-			/* queue is full, sorry */
-			goto out;
-		}
-		if (plqu_iter_next(&m1i)) {
-			goto redo;
-		}
-	} else if (m1q > m2q) {
-		/* PART M1 v FULL M2 */
-		plqu_iter_put(m1i, m1i.v = plqu_val_exe(m1i.v, m2i.v));
-		plqu_iter_put(m2i, plqu_val_nil);
-		x[m++] = (unxs_exe_t){ref, m2q};
-		if (UNLIKELY(m >= n)) {
-			/* queue is full, sorry */
-			goto out;
-		}
-		if (plqu_iter_next(&m2i)) {
-			goto redo;
-		}
-	} else {
-		/* FULL v FULL, how lucky can we get */
-		plqu_iter_put(m1i, plqu_val_nil);
-		plqu_iter_put(m2i, plqu_val_nil);
-		x[m++] = (unxs_exe_t){ref, m1q};
-		if (UNLIKELY(m >= n)) {
-			/* queue is full, sorry */
-			goto out;
-		}
-		goto rwnd;
-	}
-out:
-	plqu_iter_set_top(m1i);
-	plqu_iter_set_top(m2i);
-	return m;
-}
-
-static size_t
-_unxs_plqu_sc(unxs_exe_t *restrict x, size_t n, plqu_t q, px_t ref, qx_t max)
+_unxs_plqu_sc(
+	unxs_exsc_t *restrict x, size_t n, plqu_t q, px_t ref, qx_t max,
+	clob_oid_t proto)
 {
 	plqu_iter_t i = {.q = q};
 	size_t m = 0U;
@@ -137,6 +77,7 @@ _unxs_plqu_sc(unxs_exe_t *restrict x, size_t n, plqu_t q, px_t ref, qx_t max)
 	qx_t fil;
 
 	for (; plqu_iter_next(&i) && m < n && F < max; m++, F += fil) {
+		proto.qid = plqu_iter_qid(i);
 		fil = qty(i.v.qty);
 
 		if (UNLIKELY(F + fil > max)) {
@@ -144,72 +85,55 @@ _unxs_plqu_sc(unxs_exe_t *restrict x, size_t n, plqu_t q, px_t ref, qx_t max)
 			 * we're checking F < max in the for-check first
 			 * so we can just finish the loop body as planned */
 			fil = max - F;
-			i.v = plqu_val_exe(i.v, (plqu_val_t){fil, 0.dd});
+			i.v.qty = qty_exe(i.v.qty, fil);
 			plqu_iter_put(i, i.v);
 			/* fill him and out */
-			x[m++] = (unxs_exe_t){ref, fil};
+			x[m++] = (unxs_exsc_t){{ref, fil}, proto};
 			break;
 		}
 		/* otherwise fill him fully */
-		x[m] = (unxs_exe_t){ref, fil};
+		x[m] = (unxs_exsc_t){{ref, fil}, proto};
 	}
 	plqu_iter_set_top(i);
 	return m;
 }
 
-
-size_t
-unxs_mass_bi(unxs_exe_t *restrict x, size_t n, clob_t c, px_t p, qx_t q)
+static size_t
+_unxs_order(
+	unxs_exbi_t *restrict x, size_t n, clob_ord_t *restrict o,
+	plqu_t q, px_t r, clob_oid_t maker, clob_oid_t taker)
 {
-	btree_iter_t aski;
-	btree_iter_t bidi;
+	plqu_iter_t qi = {.q = q};
+	qx_t oq = qty(o->qty);
 	size_t m = 0U;
 
-	if (UNLIKELY(isnandpx(p))) {
-		/* no price? */
-		return 0U;
-	} else if (UNLIKELY(q <= 0.dd)) {
-		/* no volume? */
-		return 0U;
+	for (; plqu_iter_next(&qi) && m < n && oq > 0.dd; oq = qty(o->qty)) {
+		qx_t mq = qty(qi.v.qty);
+
+		maker.qid = plqu_iter_qid(qi);
+		if (mq <= oq) {
+			/* full maker ~ partial taker */
+			x[m++] = (unxs_exbi_t){{r, mq}, {maker, taker}};
+			o->qty = qty_exe(o->qty, mq);
+		} else {
+			/* partial maker ~ full taker */
+			x[m++] = (unxs_exbi_t){{r, oq}, {maker, taker}};
+			qi.v.qty = qty_exe(qi.v.qty, oq);
+			plqu_iter_put(qi, qi.v);
+			/* let everyone know there's nothing left */
+			o->qty = qty0;
+			break;
+		}
 	}
-
-	/* bilateral mode */
-	aski = (btree_iter_t){.t = c.lmt[SIDE_ASK]};
-	bidi = (btree_iter_t){.t = c.lmt[SIDE_BID]};
-
-	btree_iter_next(&aski);
-	btree_iter_next(&bidi);
-
-	do {
-		plqu_t bq = bidi.v->q;
-		plqu_t aq = aski.v->q;
-
-		/* let the plqu matcher do his magic */
-		m += _unxs_plqu_bi(x + m, n - m, bq, aq, p);
-		/* maintain lmt sum */
-		with (qty_t sum = plqu_qty(bq)) {
-			if (qty(bidi.v->sum = sum) <= 0.dd) {
-				btree_t bt = c.lmt[SIDE_BID];
-				btree_val_t v = btree_rem(bt, bidi.k);
-				free_plqu(v.q);
-				btree_iter_next(&bidi);
-			}
-		}
-		with (qty_t sum = plqu_qty(aq)) {
-			if (qty(aski.v->sum = sum) <= 0.dd) {
-				btree_t at = c.lmt[SIDE_ASK];
-				btree_val_t v = btree_rem(at, aski.k);
-				free_plqu(v.q);
-				btree_iter_next(&aski);
-			}
-		}
-	} while (m < n && bidi.k >= p && aski.k <= p);
+	plqu_iter_set_top(qi);
 	return m;
 }
 
+
 size_t
-unxs_mass_sc(unxs_exe_t *restrict x, size_t n, clob_t c, px_t p, qx_t q)
+unxs_mass_sc(unxs_exsc_t *restrict x, size_t n, clob_t c, px_t p, qx_t q)
 {
+	clob_oid_t proto = {};
 	size_t m = 0U;
 	qx_t Q;
 
@@ -222,17 +146,32 @@ unxs_mass_sc(unxs_exe_t *restrict x, size_t n, clob_t c, px_t p, qx_t q)
 	}
 
 	Q = 0.dd;
-	for (btree_iter_t i = {.t = c.lmt[SIDE_ASK]};
-	     m < n && Q < q && btree_iter_next(&i) && i.k <= p;) {
+	proto = (clob_oid_t){TYPE_MKT, SIDE_SHORT, .prc = NANPX};
+	/* market orders have the highest priority */
+	with (plqu_t pq = c.mkt[proto.sid]) {
+		qx_t before = qty(plqu_qty(pq));
+		qx_t after;
+
+		/* set the executor free */
+		m += _unxs_plqu_sc(x + m, n - m, pq, p, q - Q, proto);
+		/* what's left? */
+		after = qty(plqu_qty(pq));
+		/* up our Q */
+		Q += before - after;
+	}
+	/* and now limit orders */
+	proto = (clob_oid_t){TYPE_LMT, SIDE_ASK};
+	for (btree_iter_t i = {.t = c.lmt[proto.sid]};
+	     m < n && Q < q && btree_iter_next(&i) && (proto.prc = i.k) <= p;) {
 		qx_t before = qty(i.v->sum);
 		qx_t after;
 
 		/* set the executor free */
-		m += _unxs_plqu_sc(x + m, n - m, i.v->q, p, q - Q);
+		m += _unxs_plqu_sc(x + m, n - m, i.v->q, p, q - Q, proto);
 		/* maintain lmt sum */
 		with (qty_t sum = plqu_qty(i.v->q)) {
 			if ((after = qty(i.v->sum = sum)) <= 0.dd) {
-				btree_val_t v = btree_rem(i.t, i.k);
+				btree_val_t v = btree_rem(c.lmt[proto.sid], i.k);
 				free_plqu(v.q);
 			}
 		}
@@ -241,23 +180,132 @@ unxs_mass_sc(unxs_exe_t *restrict x, size_t n, clob_t c, px_t p, qx_t q)
 	}
 
 	Q = 0.dd;
-	for (btree_iter_t i = {.t = c.lmt[SIDE_BID]};
-	     m < n && Q < q && btree_iter_next(&i) && i.k >= p;) {
+	proto = (clob_oid_t){TYPE_MKT, SIDE_LONG};
+	/* market orders have the highest priority */
+	with (plqu_t pq = c.mkt[proto.sid]) {
+		qx_t before = qty(plqu_qty(pq));
+		qx_t after;
+
+		/* set the executor free */
+		m += _unxs_plqu_sc(x + m, n - m, pq, p, q - Q, proto);
+		/* what's left? */
+		after = qty(plqu_qty(pq));
+		/* up the Q */
+		Q += before - after;
+	}
+	/* and limit orders again */
+	proto = (clob_oid_t){TYPE_LMT, SIDE_LONG};
+	for (btree_iter_t i = {.t = c.lmt[proto.sid]};
+	     m < n && Q < q && btree_iter_next(&i) && (proto.prc = i.k) >= p;) {
 		qx_t before = qty(i.v->sum);
 		qx_t after;
 
 		/* set the executor free */
-		m += _unxs_plqu_sc(x + m, n - m, i.v->q, p, q - Q);
+		m += _unxs_plqu_sc(x + m, n - m, i.v->q, p, q - Q, proto);
 		/* maintain lmt sum */
 		with (qty_t sum = plqu_qty(i.v->q)) {
 			if ((after = qty(i.v->sum = sum)) <= 0.dd) {
-				btree_val_t v = btree_rem(i.t, i.k);
+				btree_val_t v = btree_rem(c.lmt[proto.sid], i.k);
 				free_plqu(v.q);
 			}
 		}
 		/* also up our Q */
 		Q += before - after;
 	}
+	return m;
+}
+
+size_t
+unxs_order(unxs_exbi_t *restrict x, size_t n, clob_t c, clob_ord_t o, px_t r)
+{
+	clob_oid_t maker, taker;
+	size_t m = 1U;
+
+	if (UNLIKELY(!n)) {
+		return 0U;
+	} else if (UNLIKELY(n == 1U)) {
+		goto fill;
+	}
+
+	maker = (clob_oid_t){.sid = clob_contra_side(o.sid), .prc = NANPX};
+	taker = (clob_oid_t){o.typ, o.sid, .prc = o.lmt};
+
+	switch (o.typ) {
+		btree_iter_t ti;
+		bool lmtp;
+
+	case TYPE_LMT:
+		/* execute against contra market first, then contra limit */
+		ti = (btree_iter_t){.t = c.lmt[maker.sid]};
+		if (LIKELY((lmtp = btree_iter_next(&ti)))) {
+			/* aaah, reference price we need not */
+			r = ti.k;
+		} else if (UNLIKELY(isnandpx(r))) {
+			/* can't execute against NAN reference price */
+			r = o.lmt;
+		} else if (o.sid == SIDE_ASK && r < o.lmt) {
+			/* we need an improvement over R */
+			goto rest;
+		} else if (o.sid == SIDE_BID && r > o.lmt) {
+			/* not an improvement */
+			goto rest;
+		}
+		goto marketable;
+
+	case TYPE_MKT:
+		/* execute against contra market first, then contra limit */
+		ti = (btree_iter_t){.t = c.lmt[maker.sid]};
+		if (LIKELY((lmtp = btree_iter_next(&ti)))) {
+			/* aaah, reference price we need not */
+			r = ti.k;
+		} else if (UNLIKELY(isnandpx(r))) {
+			/* can't execute against NAN reference price */
+			return 0U;
+		}
+		/* make sure we don't violate limit constraints later */
+		o.lmt = NANPX;
+		goto marketable;
+
+	marketable:
+		/* get markets ready */
+		maker.typ = TYPE_MKT;
+		m += _unxs_order(
+			x + m, n - m, &o, c.mkt[maker.sid], r, maker, taker);
+	more:
+		if (qty(o.qty) <= 0.dd) {
+			goto fill;
+		} else if (m >= n) {
+			goto rest;
+		} else if (!lmtp) {
+			goto rest;
+		} else if (o.sid == SIDE_ASK && ti.k < o.lmt) {
+			/* we need an improvement over R */
+			goto rest;
+		} else if (o.sid == SIDE_BID && ti.k > o.lmt) {
+			/* not an improvement */
+			goto rest;
+		}
+		/* otherwise dive into limits */
+		maker.typ = TYPE_LMT;
+		m += _unxs_order(x + m, n - m, &o, ti.v->q, ti.k, maker, taker);
+		/* maintain the sum */
+		with (qty_t sum = plqu_qty(ti.v->q)) {
+			if (qty(ti.v->sum = sum) <= 0.dd) {
+				btree_val_t v = btree_rem(c.lmt[maker.sid], ti.k);
+				free_plqu(v.q);
+				lmtp = btree_iter_next(&ti);
+			}
+		}
+		goto more;
+	}
+rest:
+	/* put the rest on the queue and bugger off*/
+	maker = clob_add(c, o);
+	/* let the user know about the order in the book */
+	x[0U] = (unxs_exbi_t){{NANPX, qty(o.qty)}, {maker}};
+	return m;
+fill:
+	x[0U] = (unxs_exbi_t){{NANPX, 0.dd}};
 	return m;
 }
 

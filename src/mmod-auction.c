@@ -142,7 +142,7 @@ mmod_auction(clob_t c)
 	ask = aski.k;
 	bid = bidi.k;
 
-	asz = plqu_qx(c.mkt[SIDE_SHRT]);
+	asz = plqu_qx(c.mkt[SIDE_SHORT]);
 	bsz = plqu_qx(c.mkt[SIDE_LONG]);
 
 	/* see if there's an overlap */

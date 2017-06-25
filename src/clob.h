@@ -51,10 +51,14 @@ typedef enum {
 } clob_type_t;
 
 typedef enum {
-	SIDE_ASK,
-	SIDE_SHRT = SIDE_ASK,
-	SIDE_BID,
+	SIDE_ASK = 0U,
+	SIDE_SHORT = SIDE_ASK,
+	SIDE_SELLER = SIDE_ASK,
+	SIDE_MAKER = SIDE_ASK,
+	SIDE_BID = 1U,
 	SIDE_LONG = SIDE_BID,
+	SIDE_BUYER = SIDE_BID,
+	SIDE_TAKER = SIDE_BID,
 	NSIDES,
 } clob_side_t;
 
@@ -100,5 +104,13 @@ extern int clob_del(clob_t, clob_oid_t);
 extern px_t clob_mid(clob_t);
 
 extern void clob_prnt(clob_t c);
+
+
+/* convenience */
+static inline __attribute__((pure, const)) clob_side_t
+clob_contra_side(clob_side_t s)
+{
+	return (clob_side_t)((unsigned int)s ^ 1U);
+}
 
 #endif	/* INCLUDED_clob_h_ */

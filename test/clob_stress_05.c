@@ -14,7 +14,9 @@ main(void)
 	qx_t tot[2U] = {0.dd, 0.dd};
 
 	c = make_clob();
-	for (size_t j = 0U; j < 1000U; j++) {
+	clob_add(c, (clob_ord_t){TYPE_MKT, SIDE_LONG, {2.dd, 0.dd}});
+	clob_add(c, (clob_ord_t){TYPE_MKT, SIDE_SHORT, {2.dd, 1.dd}});
+	for (size_t j = 0U; j < 998U; j++) {
 		clob_side_t s = rand() % 2;
 		qx_t q = 2.dd + rand() % 4;
 		tot[s] += q;
@@ -23,9 +25,9 @@ main(void)
 
 	clob_prnt(c);
 	{
-		unxs_exsc_t x[100000U];
+		unxs_exbi_t x[100000U];
 		mmod_auc_t auc = mmod_auction(c);
-		size_t n = unxs_mass_sc(x, countof(x), c, auc.prc, auc.qty -2);
+		size_t n = unxs_mass_sc(x, countof(x), c, auc.prc, auc.qty);
 		btree_key_t a, b;
 
 		printf("AUC %f %f %f\n", (double)auc.prc, (double)auc.qty, (double)auc.imb);
@@ -37,9 +39,10 @@ main(void)
 		qx_t q = 0.dd;
 		for (size_t i = 0U; i < n; i++) {
 			//q += x[i].x.qty;
-			printf("%f @ %f  %u %u %f %zu\n",
+			printf("%f @ %f  %u %u %f %zu  v  %u %u %f %zu\n",
 			       (double)x[i].x.qty, (double)x[i].x.prc,
-			       x[i].o.typ, x[i].o.sid, (double)x[i].o.prc, x[i].o.qid);
+			       x[i].o[SIDE_BUYER].typ, x[i].o[SIDE_BUYER].sid, (double)x[i].o[SIDE_BUYER].prc, x[i].o[SIDE_BUYER].qid,
+			       x[i].o[SIDE_SELLER].typ, x[i].o[SIDE_SELLER].sid, (double)x[i].o[SIDE_SELLER].prc, x[i].o[SIDE_SELLER].qid);
 		}
 		printf("TRA\t%f\t%f\t%zu\n", (double)x->x.prc, (double)q, n);
 		printf("QUO\t%f\t%f\n", (double)b, (double)a);

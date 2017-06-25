@@ -45,17 +45,33 @@ typedef struct {
 	qx_t qty;
 } unxs_exe_t;
 
+/** single contra firm execution */
+typedef struct {
+	unxs_exe_t x;
+	clob_oid_t o;
+} unxs_exsc_t;
+
+/** maker/taker execution */
+typedef struct {
+	unxs_exe_t x;
+	clob_oid_t o[NSIDES];
+} unxs_exbi_t;
+
 /**
- * Uncross the book C at price P for a quantity of at most Q bilaterally.
- * At most N executions are stored in X. */
+ * Try crossing order O with book C at reference price R.
+ * At most N executions are stored in X.
+ * Lateral sides are maker/taker.
+ * If the order is accepted the first object in X will hold the residual
+ * quantity left in the order book along, if > 0, with the order id on
+ * the MAKER side. */
 extern size_t
-unxs_mass_bi(unxs_exe_t *restrict x, size_t n, clob_t c, px_t p, qx_t q);
+unxs_order(unxs_exbi_t *restrict x, size_t n, clob_t c, clob_ord_t o, px_t r);
 
 /**
  * Uncross the book C at price P for a quantity of at most Q
- * and assuming a single contrarian.
+ * and assuming a single contra firm.
  * At most N executions are stored in X. */
 extern size_t
-unxs_mass_sc(unxs_exe_t *restrict x, size_t n, clob_t c, px_t p, qx_t q);
+unxs_mass_sc(unxs_exsc_t *restrict x, size_t n, clob_t c, px_t p, qx_t q);
 
 #endif	/* INCLUDED_unxs_h_ */

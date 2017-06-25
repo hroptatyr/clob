@@ -23,12 +23,12 @@ main(void)
 	clob_prnt(c);
 
 	{
-		unxs_exe_t x[16U];
+		unxs_exsc_t x[16U];
 		mmod_auc_t a;
 
 		puts("UNX AUCTION");
 		a = mmod_auction(c);
-		unxs_mass_bi(x, countof(x), c, a.prc, a.qty);
+		unxs_mass_sc(x, countof(x), c, a.prc, a.qty);
 	}
 
 	clob_prnt(c);

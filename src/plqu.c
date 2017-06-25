@@ -103,16 +103,15 @@ plqu_add(plqu_t q, plqu_val_t v)
 		const size_t nuz = q->z * 2U;
 		void *tmp = realloc(q->a, nuz * sizeof(*q->a));
 		if (UNLIKELY(tmp == NULL)) {
-			return -1ULL;
+			return 0ULL;
 		}
 		/* otherwise resize */
 		q->a = tmp;
-		/* and maybe move */
-		if (UNLIKELY(!((q->tail - q->head) % q->z))) {
-			/* they won't overlap */
-			memcpy(q->a + q->z, q->a,
-			       (q->tail % q->z) * sizeof(*q->a));
-		}
+		/* head is either in the current range or the next range modulo
+		 * the new size, move tail or head respectively
+		 * to make things easy (and branchless) we simply clone the
+		 * whole array */
+		memcpy(q->a + q->z, q->a, q->z * sizeof(*q->a));
 		/* keep track of size */
 		q->z = nuz;
 	}
@@ -165,6 +164,13 @@ plqu_iter_next(plqu_iter_t *iter)
 	/* set iter past tail */
 	iter->i = iter->q->tail + 1U;
 	return false;
+}
+
+plqu_qid_t
+plqu_iter_qid(plqu_iter_t iter)
+{
+	plqu_qid_t cand = iter.q->head + iter.i;
+	return cand <= iter.q->tail ? cand : 0ULL;
 }
 
 int

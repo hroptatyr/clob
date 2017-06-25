@@ -85,12 +85,12 @@ qty_sub(qty_t v1, qty_t v2)
 }
 
 static inline __attribute__((pure, const)) qty_t
-qty_exe(qty_t v1, qty_t v2)
+qty_exe(qty_t v, qx_t q)
 {
-/* V1 is executed against V2, use up hidden liquidity of V1 first */
-	qx_t nuh = min(v1.hid, v2.dis + v2.hid);
-	qx_t nuv = max(0.dd, v2.dis + v2.hid - v1.hid);
-	return (qty_t){v1.dis - nuv, v1.hid - nuh};
+/* V is executed against quantity Q, use up hidden liquidity of V first */
+	qx_t nuh = min(v.hid, q);
+	qx_t nuv = max(0.dd, q - v.hid);
+	return (qty_t){v.dis - nuv, v.hid - nuh};
 }
 
 #endif	/* INCLUDED_clob_val_h_ */
