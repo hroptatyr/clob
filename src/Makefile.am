@@ -33,6 +33,7 @@ libclob_a_SOURCES += plqu.c plqu.h plqu_val.h
 libclob_a_SOURCES += clob.c clob.h clob_val.h
 libclob_a_SOURCES += unxs.c unxs.h
 libclob_a_SOURCES += mmod-auction.c mmod-auction.h
+libclob_a_SOURCES += nifty.h
 libclob_a_CPPFLAGS = $(AM_CPPFLAGS)
 libclob_a_CPPFLAGS += $(dfp754_CFLAGS)
 
