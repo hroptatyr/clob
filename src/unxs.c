@@ -228,13 +228,29 @@ unxs_order(unxs_exbi_t *restrict x, size_t n, clob_t c, clob_ord_t o, px_t r)
 	}
 
 	maker = (clob_oid_t){.sid = clob_contra_side(o.sid), .prc = NANPX};
-	taker = (clob_oid_t){o.typ, o.sid, .prc = NANPX};
+	taker = (clob_oid_t){o.typ, o.sid, .prc = o.lmt};
 
 	switch (o.typ) {
 		btree_iter_t ti;
 		bool lmtp;
 
 	case TYPE_LMT:
+		/* execute against contra market first, then contra limit */
+		ti = (btree_iter_t){.t = c.lmt[maker.sid]};
+		if (LIKELY((lmtp = btree_iter_next(&ti)))) {
+			/* aaah, reference price we need not */
+			r = ti.k;
+		} else if (UNLIKELY(isnandpx(r))) {
+			/* can't execute against NAN reference price */
+			r = o.lmt;
+		} else if (o.sid == SIDE_ASK && r < o.lmt) {
+			/* we need an improvement over R */
+			goto rest;
+		} else if (o.sid == SIDE_BID && r > o.lmt) {
+			/* not an improvement */
+			goto rest;
+		}
+		goto marketable;
 
 	case TYPE_MKT:
 		/* execute against contra market first, then contra limit */
@@ -246,6 +262,11 @@ unxs_order(unxs_exbi_t *restrict x, size_t n, clob_t c, clob_ord_t o, px_t r)
 			/* can't execute against NAN reference price */
 			return 0U;
 		}
+		/* make sure we don't violate limit constraints later */
+		o.lmt = NANPX;
+		goto marketable;
+
+	marketable:
 		/* get markets ready */
 		maker.typ = TYPE_MKT;
 		m += _unxs_order(
@@ -256,6 +277,12 @@ unxs_order(unxs_exbi_t *restrict x, size_t n, clob_t c, clob_ord_t o, px_t r)
 		} else if (m >= n) {
 			goto rest;
 		} else if (!lmtp) {
+			goto rest;
+		} else if (o.sid == SIDE_ASK && ti.k < o.lmt) {
+			/* we need an improvement over R */
+			goto rest;
+		} else if (o.sid == SIDE_BID && ti.k > o.lmt) {
+			/* not an improvement */
 			goto rest;
 		}
 		/* otherwise dive into limits */
