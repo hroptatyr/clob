@@ -138,7 +138,7 @@ unxs_mass_sc(unxs_exsc_t *restrict x, size_t n, clob_t c, px_t p, qx_t q)
 	size_t m = 0U;
 	qx_t Q;
 
-	if (UNLIKELY(isnandpx(p))) {
+	if (UNLIKELY(isnanpx(p))) {
 		/* no price? */
 		return 0U;
 	} else if (UNLIKELY(q <= 0.dd)) {
@@ -247,7 +247,7 @@ unxs_order(unxs_exbi_t *restrict x, size_t n, clob_t c, clob_ord_t o, px_t r)
 				r = min(o.lmt, ti.k);
 				break;
 			}
-		} else if (UNLIKELY(isnandpx(r))) {
+		} else if (UNLIKELY(isnanpx(r))) {
 			/* can't execute against NAN reference price */
 			r = o.lmt;
 		} else if (o.sid == SIDE_ASK && r < o.lmt) {
@@ -265,7 +265,7 @@ unxs_order(unxs_exbi_t *restrict x, size_t n, clob_t c, clob_ord_t o, px_t r)
 		if (LIKELY((lmtp = btree_iter_next(&ti)))) {
 			/* aaah, reference price we need not */
 			r = ti.k;
-		} else if (UNLIKELY(isnandpx(r))) {
+		} else if (UNLIKELY(isnanpx(r))) {
 			/* can't execute against NAN reference price */
 			return 0U;
 		}

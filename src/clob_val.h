@@ -53,8 +53,8 @@ typedef _Decimal64 qx_t;
 #define NANPX		NAND64
 #define NANQX		NAND64
 
-#define isnandpx	isnand64
-#define isnandqx	isnand64
+#define isnanpx		isnand64
+#define isnanqx		isnand64
 
 #define quantizepx	quantized64
 #define quantizeqx	quantized64

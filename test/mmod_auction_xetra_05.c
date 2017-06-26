@@ -34,5 +34,5 @@ main(void)
 	printf("AUCTION %f @ %f ~%f\n", (double)auc.qty, (double)auc.prc, (double)auc.imb);
 
 	free_clob(c);
-	return !isnandpx(auc.prc) || auc.qty != 0.dd || auc.imb != 0.dd;
+	return !isnanpx(auc.prc) || auc.qty != 0.dd || auc.imb != 0.dd;
 }
