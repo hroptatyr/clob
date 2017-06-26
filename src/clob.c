@@ -43,6 +43,7 @@
 #include "plqu.h"
 #include "plqu_val.h"
 #include "clob.h"
+#include "quos.h"
 #include "nifty.h"
 
 #define pxtostr		d64tostr
@@ -124,6 +125,10 @@ clob_add(clob_t c, clob_ord_t o)
 			}
 			/* maintain the sum */
 			v->sum = qty_add(v->sum, (qty_t)o.qty);
+			if (c.quo != NULL) {
+				quos_add(c.quo,
+					 (quos_msg_t){o.sid, p, v->sum.dis});
+			}
 			/* set queue variable for plqu stuff */
 			q = v->q;
 		}
@@ -161,6 +166,11 @@ clob_del(clob_t c, clob_oid_t o)
 			/* maintain the sum */
 			with (plqu_val_t w = plqu_get(q, o.qid)) {
 				v->sum = qty_sub(v->sum, w.qty);
+			}
+			if (c.quo != NULL) {
+				/* publish him */
+				quos_add(c.quo,
+					 (quos_msg_t){o.sid, o.prc, v->sum.dis});
 			}
 		}
 		break;

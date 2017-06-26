@@ -68,6 +68,7 @@ typedef struct {
 	void *lmt[NSIDES];
 	void *mkt[NSIDES];
 	void *stp[NSIDES];
+	void *quo;
 } clob_t;
 
 typedef struct {
@@ -95,8 +96,16 @@ extern clob_t make_clob(void);
  * Deinstantiate clob object and free associated resources. */
 extern void free_clob(clob_t);
 
+/**
+ * Add order to clob_t object and return an order id object.
+ * If a quote-stream is attached any touched price levels will
+ * be published there. */
 extern clob_oid_t clob_add(clob_t, clob_ord_t);
 
+/**
+ * Delete order from clob_t object.
+ * If a quote-stream is attached any touched price levels will
+ * be published there. */
 extern int clob_del(clob_t, clob_oid_t);
 
 extern px_t clob_mid(clob_t);

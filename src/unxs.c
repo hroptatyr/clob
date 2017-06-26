@@ -53,6 +53,7 @@
 #include "plqu_val.h"
 #include "clob.h"
 #include "clob_val.h"
+#include "quos.h"
 #include "unxs.h"
 #include "nifty.h"
 
@@ -171,6 +172,11 @@ unxs_mass_sc(unxs_exsc_t *restrict x, size_t n, clob_t c, px_t p, qx_t q)
 		m += _unxs_plqu_sc(x + m, n - m, i.v->q, p, q - Q, proto);
 		/* maintain lmt sum */
 		with (qty_t sum = plqu_qty(i.v->q)) {
+			if (c.quo != NULL) {
+				/* publish the change */
+				quos_add(c.quo,
+					 (quos_msg_t){SIDE_ASK, i.k, sum.dis});
+			}
 			if ((after = qty(i.v->sum = sum)) <= 0.dd) {
 				btree_val_t v = btree_rem(c.lmt[proto.sid], i.k);
 				free_plqu(v.q);
@@ -205,6 +211,11 @@ unxs_mass_sc(unxs_exsc_t *restrict x, size_t n, clob_t c, px_t p, qx_t q)
 		m += _unxs_plqu_sc(x + m, n - m, i.v->q, p, q - Q, proto);
 		/* maintain lmt sum */
 		with (qty_t sum = plqu_qty(i.v->q)) {
+			if (c.quo != NULL) {
+				/* publish the change */
+				quos_add(c.quo,
+					 (quos_msg_t){SIDE_BID, i.k, sum.dis});
+			}
 			if ((after = qty(i.v->sum = sum)) <= 0.dd) {
 				btree_val_t v = btree_rem(c.lmt[proto.sid], i.k);
 				free_plqu(v.q);
@@ -297,6 +308,10 @@ unxs_order(unxs_exbi_t *restrict x, size_t n, clob_t c, clob_ord_t o, px_t r)
 		m += _unxs_order(x + m, n - m, &o, ti.v->q, ti.k, maker, taker);
 		/* maintain the sum */
 		with (qty_t sum = plqu_qty(ti.v->q)) {
+			if (c.quo != NULL) {
+				quos_add(c.quo,
+					 (quos_msg_t){maker.sid, ti.k, sum.dis});
+			}
 			if (qty(ti.v->sum = sum) <= 0.dd) {
 				btree_val_t v = btree_rem(c.lmt[maker.sid], ti.k);
 				free_plqu(v.q);
