@@ -20,7 +20,7 @@ Features
 - order types: market, limit, stop and peg (mid, best)
 - market models: auction, continuous trading
 - handles ~250 auctions with 10000 orders each per second
-- handles ~10M orders per second in continuous trading mode
+- handles ~1M orders per second in continuous trading mode
 
 
 Motivation
