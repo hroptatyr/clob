@@ -11,6 +11,12 @@ DISTCLEANFILES =
 CLEANFILES =
 doc_DATA =
 
+pkgconfigdir = @libdir@/pkgconfig
+pkgconfig_DATA =
+pkgconfig_DATA += clob.pc
+DISTCLEANFILES += $(pkgconfig_DATA)
+EXTRA_DIST += clob.pc.in
+
 SUBDIRS += build-aux
 SUBDIRS += src
 SUBDIRS += test
@@ -22,5 +28,11 @@ EXTRA_DIST += version.mk.in
 ## make sure .version is read-only in the dist
 dist-hook:
 	chmod ugo-w $(distdir)/.version
+
+clob.pc: .version clob.pc.in
+	$(AM_V_GEN) PATH="$(top_builddir)/build-aux:$${PATH}" \
+		yuck$(EXEEXT) scmver -n \
+			--reference $^ | \
+		$(SHELL) "$(builddir)/config.status" --file=- > $@
 
 ## Makefile.am ends here

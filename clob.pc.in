@@ -1,0 +1,14 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+includedir=@includedir@
+headerdir=@headerdir@
+libdir=@libdir@
+datadir=@datarootdir@
+utedir=@utedir@
+
+Name: @PACKAGE_NAME@
+Description: Simple limit order book and matching engine.
+Version: YUCK_SCMVER_VERSION
+Libs: -L${libdir} -lclob
+Cflags: -I${includedir}
+
