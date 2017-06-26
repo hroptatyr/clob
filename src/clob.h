@@ -103,6 +103,8 @@ extern px_t clob_mid(clob_t);
 
 extern void clob_prnt(clob_t c);
 
+extern void clob_lvl2(clob_t c);
+
 
 /* convenience */
 static inline __attribute__((pure, const)) clob_side_t
