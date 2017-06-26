@@ -46,6 +46,7 @@
 #elif defined HAVE_DECIMAL_H
 # include <decimal.h>
 #endif
+#include <dfp754_d64.h>
 #include "btree.h"
 #include "btree_val.h"
 #include "plqu.h"

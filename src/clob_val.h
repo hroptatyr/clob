@@ -37,7 +37,15 @@
 #if !defined INCLUDED_clob_val_h_
 #define INCLUDED_clob_val_h_
 #include <stdlib.h>
-#include "dfp754_d64.h"
+
+/* just the bare essentials of dfp754_d64.h so we don't have to include him */
+#if !defined NAND64_U
+# define NAND64_U                (0x7c00000000000000U)
+#endif	/* !NAND64_U */
+#if !defined NAND64
+# include <stdint.h>
+# define NAND64          ((union {uint64_t u; _Decimal64 x;}){NAND64_U}.x)
+#endif	/* !NAND64 */
 
 typedef _Decimal64 px_t;
 typedef _Decimal64 qx_t;
