@@ -8,7 +8,7 @@ AM_LDFLAGS = $(XCCLDFLAGS)
 
 bin_PROGRAMS =
 noinst_PROGRAMS =
-lib_LTLIBRARIES =
+lib_LIBRARIES =
 noinst_LIBRARIES =
 noinst_HEADERS =
 BUILT_SOURCES =
@@ -26,7 +26,7 @@ libdfp_a_SOURCES += dfp754_d64.c dfp754_d64.h
 libdfp_a_CPPFLAGS = $(AM_CPPFLAGS)
 libdfp_a_CPPFLAGS += $(dfp754_CFLAGS)
 
-noinst_LIBRARIES += libclob.a
+lib_LIBRARIES += libclob.a
 libclob_a_SOURCES =
 libclob_a_SOURCES += btree.c btree.h btree_val.h
 libclob_a_SOURCES += plqu.c plqu.h plqu_val.h
@@ -36,6 +36,15 @@ libclob_a_SOURCES += mmod-auction.c mmod-auction.h
 libclob_a_SOURCES += nifty.h
 libclob_a_CPPFLAGS = $(AM_CPPFLAGS)
 libclob_a_CPPFLAGS += $(dfp754_CFLAGS)
+libclob_a_LIBADD = $(dfp754_LIBS)
+libclob_a_LIBADD += libdfp.a
+
+pkginclude_HEADERS =
+pkginclude_HEADERS += clob.h clob_val.h
+pkginclude_HEADERS += unxs.h
+pkginclude_HEADERS += plqu.h plqu_val.h
+pkginclude_HEADERS += btree.h btree_val.h
+pkginclude_HEADERS += mmod-auction.h
 
 
 ## version rules
