@@ -64,8 +64,6 @@ typedef struct {
 #define qty0		((qty_t){0.dd, 0.dd})
 
 
-#include "nifty.h"
-
 static inline __attribute__((pure, const)) qx_t
 qty(qty_t v)
 {
@@ -88,8 +86,8 @@ static inline __attribute__((pure, const)) qty_t
 qty_exe(qty_t v, qx_t q)
 {
 /* V is executed against quantity Q, use up hidden liquidity of V first */
-	qx_t nuh = min(v.hid, q);
-	qx_t nuv = max(0.dd, q - v.hid);
+	qx_t nuh = v.hid <= q ? v.hid : q;
+	qx_t nuv = v.hid <= q ? q - v.hid : 0.dd;
 	return (qty_t){v.dis - nuv, v.hid - nuh};
 }
 
