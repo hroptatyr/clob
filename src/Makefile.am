@@ -33,6 +33,7 @@ libclob_a_SOURCES += plqu.c plqu.h plqu_val.h
 libclob_a_SOURCES += clob.c clob.h clob_val.h
 libclob_a_SOURCES += unxs.c unxs.h
 libclob_a_SOURCES += mmod-auction.c mmod-auction.h
+libclob_a_SOURCES += quos.c quos.h
 libclob_a_SOURCES += nifty.h
 libclob_a_CPPFLAGS = $(AM_CPPFLAGS)
 libclob_a_CPPFLAGS += $(dfp754_CFLAGS)
@@ -45,6 +46,7 @@ pkginclude_HEADERS += unxs.h
 pkginclude_HEADERS += plqu.h plqu_val.h
 pkginclude_HEADERS += btree.h btree_val.h
 pkginclude_HEADERS += mmod-auction.h
+pkginclude_HEADERS += quos.h
 
 
 ## version rules

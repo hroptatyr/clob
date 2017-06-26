@@ -1,4 +1,4 @@
-/*** clob.h -- central limit order book
+/*** quos.h -- quote stream attachment to central limit order book
  *
  * Copyright (C) 2016-2017 Sebastian Freundt
  *
@@ -34,92 +34,30 @@
  * IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  **/
-#if !defined INCLUDED_clob_h_
-#define INCLUDED_clob_h_
+#if !defined INCLUDED_quos_h_
+#define INCLUDED_quos_h_
 #include <stdlib.h>
 #include <stdbool.h>
-#include "clob_val.h"
-
-typedef size_t clob_qid_t;
-
-typedef enum {
-	TYPE_LMT,
-	TYPE_MID,
-	TYPE_MKT,
-	TYPE_PEG,
-	TYPE_STP,
-} clob_type_t;
-
-typedef enum {
-	SIDE_ASK = 0U,
-	SIDE_SHORT = SIDE_ASK,
-	SIDE_SELLER = SIDE_ASK,
-	SIDE_MAKER = SIDE_ASK,
-	SIDE_BID = 1U,
-	SIDE_LONG = SIDE_BID,
-	SIDE_BUYER = SIDE_BID,
-	SIDE_TAKER = SIDE_BID,
-	NSIDES,
-} clob_side_t;
-
-_Static_assert(NSIDES == 2U, "more than 2 sides");
+#include "clob.h"
 
 typedef struct {
-	void *lmt[NSIDES];
-	void *mkt[NSIDES];
-	void *stp[NSIDES];
-	void *quo;
-} clob_t;
-
-typedef struct {
-	clob_type_t typ;
-	clob_side_t sid;
-	qty_t qty;
-	px_t lmt;
-	px_t stp;
-} clob_ord_t;
-
-typedef struct {
-	clob_type_t typ;
 	clob_side_t sid;
 	px_t prc;
-	clob_qid_t qid;
-} clob_oid_t;
+	qx_t new;
+} quos_msg_t;
+
+typedef struct quos_s {
+	const size_t n;
+	const quos_msg_t *m;
+} *quos_t;
 
 
-/**
- * Instantiate central limit order book.
- * DESCP indicates whether to sort descendingly. */
-extern clob_t make_clob(void);
+extern quos_t make_quos(void);
 
-/**
- * Deinstantiate clob object and free associated resources. */
-extern void free_clob(clob_t);
+extern void free_quos(quos_t);
 
-/**
- * Add order to clob_t object and return an order id object.
- * If a quote-stream is attached any touched price levels will
- * be published there. */
-extern clob_oid_t clob_add(clob_t, clob_ord_t);
+extern int quos_add(quos_t, quos_msg_t);
 
-/**
- * Delete order from clob_t object.
- * If a quote-stream is attached any touched price levels will
- * be published there. */
-extern int clob_del(clob_t, clob_oid_t);
+extern int quos_clr(quos_t);
 
-extern px_t clob_mid(clob_t);
-
-extern void clob_prnt(clob_t c);
-
-extern void clob_lvl2(clob_t c);
-
-
-/* convenience */
-static inline __attribute__((pure, const)) clob_side_t
-clob_contra_side(clob_side_t s)
-{
-	return (clob_side_t)((unsigned int)s ^ 1U);
-}
-
-#endif	/* INCLUDED_clob_h_ */
+#endif	/* INCLUDED_quos_h_ */
