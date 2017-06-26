@@ -46,7 +46,10 @@ typedef struct {
 	qx_t new;
 } quos_msg_t;
 
-typedef struct quos_s *quos_t;
+typedef struct quos_s {
+	const size_t n;
+	const quos_msg_t *m;
+} *quos_t;
 
 
 extern quos_t make_quos(void);

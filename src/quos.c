@@ -42,28 +42,29 @@
 
 #define QUOS_INIZ	(8U)
 
-struct quos_s {
-	size_t z;
+struct _quos_s {
 	size_t n;
 	quos_msg_t *a;
+	size_t z;
 };
 
 
 quos_t
 make_quos(void)
 {
-	struct quos_s *r = malloc(sizeof(*r));
-	r->z = QUOS_INIZ;
+	struct _quos_s *r = malloc(sizeof(*r));
 	r->n = 0U;
 	r->a = malloc(QUOS_INIZ * sizeof(*r));
-	return r;
+	r->z = QUOS_INIZ;
+	return (quos_t)r;
 }
 
 void
 free_quos(quos_t q)
 {
-	if (LIKELY(q->a != NULL)) {
-		free(q->a);
+	struct _quos_s *_q = (struct _quos_s*)q;
+	if (LIKELY(_q->a != NULL)) {
+		free(_q->a);
 	}
 	free(q);
 	return;
@@ -72,25 +73,27 @@ free_quos(quos_t q)
 int
 quos_add(quos_t q, quos_msg_t m)
 {
-	if (UNLIKELY(q->n >= q->z)) {
+	struct _quos_s *_q = (struct _quos_s*)q;
+	if (UNLIKELY(_q->n >= _q->z)) {
 		/* resize him */
-		const size_t nuz = q->z * 2U;
-		void *tmp = realloc(q->a, nuz * sizeof(*q->a));
+		const size_t nuz = _q->z * 2U;
+		void *tmp = realloc(_q->a, nuz * sizeof(*_q->a));
 		if (UNLIKELY(tmp == NULL)) {
 			return -1;
 		}
 		/* otherwise assign */
-		q->a = tmp;
-		q->z = nuz;
+		_q->a = tmp;
+		_q->z = nuz;
 	}
-	q->a[q->n++] = m;
+	_q->a[_q->n++] = m;
 	return 0;
 }
 
 int
 quos_clr(quos_t q)
 {
-	q->n = 0U;
+	struct _quos_s *_q = (struct _quos_s*)q;
+	_q->n = 0U;
 	return 0;
 }
 
