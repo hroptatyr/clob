@@ -55,14 +55,10 @@ make_clob(void)
 	clob_t r = {
 		.lmt[SIDE_ASK] = make_btree(false),
 		.lmt[SIDE_BID] = make_btree(true),
-		.stp[SIDE_ASK] = make_btree(false),
-		.stp[SIDE_BID] = make_btree(true),
-		.mid[SIDE_ASK] = make_plqu(),
-		.mid[SIDE_BID] = make_plqu(),
 		.mkt[SIDE_ASK] = make_plqu(),
 		.mkt[SIDE_BID] = make_plqu(),
-		.peg[SIDE_ASK] = make_plqu(),
-		.peg[SIDE_BID] = make_plqu(),
+		.stp[SIDE_ASK] = make_btree(false),
+		.stp[SIDE_BID] = make_btree(true),
 	};
 	return r;
 }
@@ -74,12 +70,8 @@ free_clob(clob_t c)
 	free_btree(c.lmt[SIDE_BID]);
 	free_btree(c.stp[SIDE_ASK]);
 	free_btree(c.stp[SIDE_BID]);
-	free_plqu(c.mid[SIDE_ASK]);
-	free_plqu(c.mid[SIDE_BID]);
 	free_plqu(c.mkt[SIDE_ASK]);
 	free_plqu(c.mkt[SIDE_BID]);
-	free_plqu(c.peg[SIDE_ASK]);
-	free_plqu(c.peg[SIDE_BID]);
 	return;
 }
 
@@ -102,19 +94,15 @@ clob_add(clob_t c, clob_ord_t o)
 		p = o.stp;
 		t = c.stp[o.sid];
 		goto addv;
-
-	case TYPE_MID:
-		p = 0;
-		q = c.mid[o.sid];
-		goto addq;
 	case TYPE_MKT:
 		p = 0;
 		q = c.mkt[o.sid];
 		goto addq;
+
+	case TYPE_MID:
 	case TYPE_PEG:
-		p = 0;
-		q = c.peg[o.sid];
-		goto addq;
+	default:
+		return (clob_oid_t){};
 
 	addv:
 		with (btree_val_t *v = btree_put(t, p)) {
@@ -151,7 +139,9 @@ clob_del(clob_t c, clob_oid_t o)
 
 	delt:
 		with (btree_val_t *v = btree_get(t, o.prc)) {
-			if (UNLIKELY(btree_val_nil_p(*v))) {
+			if (UNLIKELY(v == NULL)) {
+				return -1;
+			} else if (UNLIKELY(btree_val_nil_p(*v))) {
 				return -1;
 			}
 			q = v->q;
@@ -163,15 +153,14 @@ clob_del(clob_t c, clob_oid_t o)
 		}
 		break;
 
-	case TYPE_MID:
-		q = c.mid[o.sid];
-		break;
 	case TYPE_MKT:
-		q = c.mid[o.sid];
+		q = c.mkt[o.sid];
 		break;
+
+	case TYPE_MID:
 	case TYPE_PEG:
-		q = c.mid[o.sid];
-		break;
+	default:
+		return -1;
 	}
 	return plqu_put(q, o.qid, plqu_val_nil);
 }
@@ -255,22 +244,14 @@ clob_prnt(clob_t c)
 	_prnt_btree(c.lmt[SIDE_BID]);
 	puts("LMT/ASK");
 	_prnt_btree(c.lmt[SIDE_ASK]);
-	puts("STP/BID");
-	_prnt_btree(c.stp[SIDE_BID]);
-	puts("STP/ASK");
-	_prnt_btree(c.stp[SIDE_ASK]);
 	puts("MKT/BID");
 	_prnt_plqu(c.mkt[SIDE_BID]);
 	puts("MKT/ASK");
 	_prnt_plqu(c.mkt[SIDE_ASK]);
-	puts("MID/BID");
-	_prnt_plqu(c.mid[SIDE_BID]);
-	puts("MID/ASK");
-	_prnt_plqu(c.mid[SIDE_ASK]);
-	puts("PEG/BID");
-	_prnt_plqu(c.peg[SIDE_BID]);
-	puts("PEG/ASK");
-	_prnt_plqu(c.peg[SIDE_ASK]);
+	puts("STP/BID");
+	_prnt_btree(c.stp[SIDE_BID]);
+	puts("STP/ASK");
+	_prnt_btree(c.stp[SIDE_ASK]);
 	return;
 }
 
