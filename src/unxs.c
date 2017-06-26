@@ -239,8 +239,14 @@ unxs_order(unxs_exbi_t *restrict x, size_t n, clob_t c, clob_ord_t o, px_t r)
 		/* execute against contra market first, then contra limit */
 		ti = (btree_iter_t){.t = c.lmt[maker.sid]};
 		if (LIKELY((lmtp = btree_iter_next(&ti)))) {
-			/* aaah, reference price we need not */
-			r = ti.k;
+			switch (o.sid) {
+			case SIDE_ASK:
+				r = max(o.lmt, ti.k);
+				break;
+			case SIDE_BID:
+				r = min(o.lmt, ti.k);
+				break;
+			}
 		} else if (UNLIKELY(isnandpx(r))) {
 			/* can't execute against NAN reference price */
 			r = o.lmt;
