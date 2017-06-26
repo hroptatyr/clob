@@ -49,20 +49,28 @@
 #define qxtostr		d64tostr
 
 
+static qx_t
+plqu_sum(plqu_t q)
+{
+/* sum up displayed quantities */
+	qx_t sum = 0.dd;
+	for (plqu_iter_t i = {.q = q}; plqu_iter_next(&i);) {
+		sum += i.v.qty.dis;
+	}
+	return sum;
+}
+
+
 clob_t
 make_clob(void)
 {
 	clob_t r = {
 		.lmt[SIDE_ASK] = make_btree(false),
 		.lmt[SIDE_BID] = make_btree(true),
-		.stp[SIDE_ASK] = make_btree(false),
-		.stp[SIDE_BID] = make_btree(true),
-		.mid[SIDE_ASK] = make_plqu(),
-		.mid[SIDE_BID] = make_plqu(),
 		.mkt[SIDE_ASK] = make_plqu(),
 		.mkt[SIDE_BID] = make_plqu(),
-		.peg[SIDE_ASK] = make_plqu(),
-		.peg[SIDE_BID] = make_plqu(),
+		.stp[SIDE_ASK] = make_btree(false),
+		.stp[SIDE_BID] = make_btree(true),
 	};
 	return r;
 }
@@ -74,12 +82,8 @@ free_clob(clob_t c)
 	free_btree(c.lmt[SIDE_BID]);
 	free_btree(c.stp[SIDE_ASK]);
 	free_btree(c.stp[SIDE_BID]);
-	free_plqu(c.mid[SIDE_ASK]);
-	free_plqu(c.mid[SIDE_BID]);
 	free_plqu(c.mkt[SIDE_ASK]);
 	free_plqu(c.mkt[SIDE_BID]);
-	free_plqu(c.peg[SIDE_ASK]);
-	free_plqu(c.peg[SIDE_BID]);
 	return;
 }
 
@@ -102,19 +106,15 @@ clob_add(clob_t c, clob_ord_t o)
 		p = o.stp;
 		t = c.stp[o.sid];
 		goto addv;
-
-	case TYPE_MID:
-		p = 0;
-		q = c.mid[o.sid];
-		goto addq;
 	case TYPE_MKT:
 		p = 0;
 		q = c.mkt[o.sid];
 		goto addq;
+
+	case TYPE_MID:
 	case TYPE_PEG:
-		p = 0;
-		q = c.peg[o.sid];
-		goto addq;
+	default:
+		return (clob_oid_t){};
 
 	addv:
 		with (btree_val_t *v = btree_put(t, p)) {
@@ -151,7 +151,9 @@ clob_del(clob_t c, clob_oid_t o)
 
 	delt:
 		with (btree_val_t *v = btree_get(t, o.prc)) {
-			if (UNLIKELY(btree_val_nil_p(*v))) {
+			if (UNLIKELY(v == NULL)) {
+				return -1;
+			} else if (UNLIKELY(btree_val_nil_p(*v))) {
 				return -1;
 			}
 			q = v->q;
@@ -163,15 +165,14 @@ clob_del(clob_t c, clob_oid_t o)
 		}
 		break;
 
-	case TYPE_MID:
-		q = c.mid[o.sid];
-		break;
 	case TYPE_MKT:
-		q = c.mid[o.sid];
+		q = c.mkt[o.sid];
 		break;
+
+	case TYPE_MID:
 	case TYPE_PEG:
-		q = c.mid[o.sid];
-		break;
+	default:
+		return -1;
 	}
 	return plqu_put(q, o.qid, plqu_val_nil);
 }
@@ -255,22 +256,65 @@ clob_prnt(clob_t c)
 	_prnt_btree(c.lmt[SIDE_BID]);
 	puts("LMT/ASK");
 	_prnt_btree(c.lmt[SIDE_ASK]);
-	puts("STP/BID");
-	_prnt_btree(c.stp[SIDE_BID]);
-	puts("STP/ASK");
-	_prnt_btree(c.stp[SIDE_ASK]);
 	puts("MKT/BID");
 	_prnt_plqu(c.mkt[SIDE_BID]);
 	puts("MKT/ASK");
 	_prnt_plqu(c.mkt[SIDE_ASK]);
-	puts("MID/BID");
-	_prnt_plqu(c.mid[SIDE_BID]);
-	puts("MID/ASK");
-	_prnt_plqu(c.mid[SIDE_ASK]);
-	puts("PEG/BID");
-	_prnt_plqu(c.peg[SIDE_BID]);
-	puts("PEG/ASK");
-	_prnt_plqu(c.peg[SIDE_ASK]);
+	puts("STP/BID");
+	_prnt_btree(c.stp[SIDE_BID]);
+	puts("STP/ASK");
+	_prnt_btree(c.stp[SIDE_ASK]);
+	return;
+}
+
+void
+clob_lvl2(clob_t c)
+{
+	char buf[256U];
+	size_t len = 0U;
+
+	/* market orders first */
+	qx_t mb = plqu_sum(c.mkt[SIDE_BID]);
+	qx_t ma = plqu_sum(c.mkt[SIDE_ASK]);
+
+	len += (memcpy(buf + len, "MKT\t", 4U), 4U);
+	len += (memcpy(buf + len, "MKT\t", 4U), 4U);
+	len += qxtostr(buf + len, sizeof(buf) - len, mb);
+	buf[len++] = '\t';
+	len += qxtostr(buf + len, sizeof(buf) - len, ma);
+	buf[len++] = '\n';
+	fwrite(buf, 1, len, stdout);
+
+	/* now for limits */
+	for (btree_iter_t bi = {c.lmt[SIDE_BID]}, ai = {c.lmt[SIDE_ASK]};;) {
+		bool bp = btree_iter_next(&bi);
+		bool ap = btree_iter_next(&ai);
+
+		if (UNLIKELY(!bp && !ap)) {
+			break;
+		}
+
+		len = 0U;
+		if (bp) {
+			len += pxtostr(buf + len, sizeof(buf) - len, bi.k);
+		}
+		buf[len++] = '\t';
+		if (ap) {
+			len += pxtostr(buf + len, sizeof(buf) - len, ai.k);
+		}
+		buf[len++] = '\t';
+		if (bp) {
+			len += qxtostr(
+				buf + len, sizeof(buf) - len, bi.v->sum.dis);
+		}
+		buf[len++] = '\t';
+		if (ap) {
+			len += qxtostr(
+				buf + len, sizeof(buf) - len, ai.v->sum.dis);
+		}
+		buf[len++] = '\n';
+		fwrite(buf, 1, len, stdout);
+	}
 	return;
 }
 

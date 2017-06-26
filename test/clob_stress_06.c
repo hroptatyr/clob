@@ -24,7 +24,7 @@ main(void)
 		unxs_order(x, countof(x), c, (clob_ord_t){TYPE_MKT, s ^ 1, {2.dd, (rand() % 3) + 0.00}}, NANPX);
 	}
 
-	clob_prnt(c);
+	clob_lvl2(c);
 
 	free_clob(c);
 	return 0;

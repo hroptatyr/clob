@@ -44,10 +44,10 @@ typedef size_t clob_qid_t;
 
 typedef enum {
 	TYPE_LMT,
-	TYPE_STP,
 	TYPE_MID,
 	TYPE_MKT,
 	TYPE_PEG,
+	TYPE_STP,
 } clob_type_t;
 
 typedef enum {
@@ -66,10 +66,8 @@ _Static_assert(NSIDES == 2U, "more than 2 sides");
 
 typedef struct {
 	void *lmt[NSIDES];
-	void *stp[NSIDES];
-	void *mid[NSIDES];
 	void *mkt[NSIDES];
-	void *peg[NSIDES];
+	void *stp[NSIDES];
 } clob_t;
 
 typedef struct {
@@ -104,6 +102,8 @@ extern int clob_del(clob_t, clob_oid_t);
 extern px_t clob_mid(clob_t);
 
 extern void clob_prnt(clob_t c);
+
+extern void clob_lvl2(clob_t c);
 
 
 /* convenience */
