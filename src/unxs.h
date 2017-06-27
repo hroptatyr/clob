@@ -71,7 +71,7 @@ extern void free_unxs(unxs_t);
 
 /**
  * Clear execution stream. */
-extern void unxs_clr(unxs_t);
+extern int unxs_clr(unxs_t);
 
 /**
  * Try crossing order O with book C at reference price R.

@@ -189,6 +189,14 @@ free_unxs(unxs_t x)
 	return;
 }
 
+int
+unxs_clr(unxs_t x)
+{
+	struct _unxs_s *_x = (struct _unxs_s*)x;
+	_x->n = 0U;
+	return 0;
+}
+
 void
 unxs_auction(clob_t c, px_t p, qx_t q)
 {
