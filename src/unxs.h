@@ -60,37 +60,29 @@ typedef struct unxs_s {
 	const clob_oid_t *o;
 } *unxs_t;
 
-/** single contra firm execution */
-typedef struct {
-	unxs_exe_t x;
-	clob_oid_t o;
-} unxs_exsc_t;
-
-/** maker/taker execution */
-typedef struct {
-	unxs_exe_t x;
-	clob_oid_t o[NSIDES];
-} unxs_exbi_t;
-
 
+/**
+ * Instantiate an uncrossing stream using uncrossing mode M. */
 extern unxs_t make_unxs(unxs_mode_t);
+
+/**
+ * Free resources associated with uncrossing stream. */
 extern void free_unxs(unxs_t);
 
 /**
+ * Clear execution stream. */
+extern void unxs_clr(unxs_t);
+
+/**
  * Try crossing order O with book C at reference price R.
- * At most N executions are stored in X.
- * Lateral sides are maker/taker.
- * If the order is accepted the first object in X will hold the residual
- * quantity left in the order book along, if > 0, with the order id on
- * the MAKER side. */
-extern size_t
-unxs_order(unxs_exbi_t *restrict x, size_t n, clob_t c, clob_ord_t o, px_t r);
+ * If the order is accepted (i.e. not entirely filled) return its id. */
+extern clob_oid_t
+unxs_order(clob_t c, clob_ord_t o, px_t r);
 
 /**
  * Uncross the book C at price P for a quantity of at most Q
- * and assuming a single contra firm.
- * At most N executions are stored in X. */
-extern size_t
-unxs_mass_sc(unxs_exsc_t *restrict x, size_t n, clob_t c, px_t p, qx_t q);
+ * and assuming a single contra firm. */
+extern void
+unxs_mass_sc(clob_t c, px_t p, qx_t q);
 
 #endif	/* INCLUDED_unxs_h_ */
