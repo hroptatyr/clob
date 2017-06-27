@@ -36,14 +36,29 @@
  **/
 #if !defined INCLUDED_unxs_h_
 #define INCLUDED_unxs_h_
-#include <stdlib.h>
 #include "clob.h"
 #include "clob_val.h"
+
+typedef enum {
+	/** don't keep track of parties */
+	MODE_NO = 0U,
+	/** uncross with a single contra firm */
+	MODE_SC = 1U,
+	/** uncross bilaterally */
+	MODE_BI = 2U,
+} unxs_mode_t;
 
 typedef struct {
 	px_t prc;
 	qx_t qty;
 } unxs_exe_t;
+
+typedef struct unxs_s {
+	const unxs_mode_t m;
+	const size_t n;
+	const unxs_exe_t *x;
+	const clob_oid_t *o;
+} *unxs_t;
 
 /** single contra firm execution */
 typedef struct {
@@ -56,6 +71,10 @@ typedef struct {
 	unxs_exe_t x;
 	clob_oid_t o[NSIDES];
 } unxs_exbi_t;
+
+
+extern unxs_t make_unxs(unxs_mode_t);
+extern void free_unxs(unxs_t);
 
 /**
  * Try crossing order O with book C at reference price R.

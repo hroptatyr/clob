@@ -57,6 +57,16 @@
 #include "unxs.h"
 #include "nifty.h"
 
+#define UNXS_INIZ	(8U)
+
+struct _unxs_s {
+	unxs_mode_t m;
+	size_t n;
+	unxs_exe_t *x;
+	clob_oid_t *o;
+	size_t z;
+};
+
 
 static qty_t
 plqu_qty(plqu_t q)
@@ -132,6 +142,32 @@ _unxs_order(
 }
 
 
+unxs_t
+make_unxs(unxs_mode_t m)
+{
+	struct _unxs_s *r = malloc(sizeof(*r));
+	r->m = m;
+	r->n = 0U;
+	r->x = malloc(UNXS_INIZ * sizeof(*r->x));
+	r->o = malloc(UNXS_INIZ * m * sizeof(*r->o));
+	r->z = UNXS_INIZ;
+	return (unxs_t)r;
+}
+
+void
+free_unxs(unxs_t x)
+{
+	struct _unxs_s *_x = (struct _unxs_s*)x;
+	if (LIKELY(_x->x != NULL)) {
+		free(_x->x);
+	}
+	if (LIKELY(_x->o != NULL)) {
+		free(_x->o);
+	}
+	free(_x);
+	return;
+}
+
 size_t
 unxs_mass_sc(unxs_exsc_t *restrict x, size_t n, clob_t c, px_t p, qx_t q)
 {
