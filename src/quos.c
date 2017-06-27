@@ -54,7 +54,7 @@ make_quos(void)
 {
 	struct _quos_s *r = malloc(sizeof(*r));
 	r->n = 0U;
-	r->a = malloc(QUOS_INIZ * sizeof(*r));
+	r->a = malloc(QUOS_INIZ * sizeof(*r->a));
 	r->z = QUOS_INIZ;
 	return (quos_t)r;
 }
