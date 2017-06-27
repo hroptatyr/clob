@@ -1,0 +1,8 @@
+Usage: cloe
+
+Run the clob engine (in continuous trading mode).
+
+
+Usage: cloe auction
+
+Run the clob engine in auction mode.

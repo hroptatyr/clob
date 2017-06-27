@@ -48,6 +48,15 @@ pkginclude_HEADERS += btree.h btree_val.h
 pkginclude_HEADERS += mmod-auction.h
 pkginclude_HEADERS += quos.h
 
+bin_PROGRAMS += cloe
+cloe_SOURCES = cloe.c cloe.yuck
+cloe_CPPFLAGS = $(AM_CPPFLAGS)
+cloe_CPPFLAGS += $(dfp754_CFLAGS)
+cloe_LDFLAGS = $(AM_LDFLAGS)
+cloe_LDFLAGS += $(dfp754_LIBS)
+cloe_LDADD = libclob.a libdfp.a
+BUILT_SOURCES = cloe.yucc
+
 
 ## version rules
 version.c: version.c.in $(top_builddir)/.version
