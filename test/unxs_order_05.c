@@ -18,11 +18,12 @@
 int
 main(void)
 {
-	unxs_exbi_t x[16U];
-	size_t n;
 	clob_t c;
+	int rc;
+	clob_oid_t o;
 
 	c = make_clob();
+	c.exe = make_unxs(MODE_BI);
 
 	clob_add(c, (clob_ord_t){TYPE_LMT, SIDE_ASK, {100.dd, 0.0dd}, .lmt = 200.0dd});
 	clob_add(c, (clob_ord_t){TYPE_LMT, SIDE_BID, {100.dd, 0.0dd}, .lmt = 198.0dd});
@@ -31,21 +32,28 @@ main(void)
 	clob_prnt(c);
 
 	/* less book than order */
-	n = unxs_order(x, countof(x), c, (clob_ord_t){TYPE_MKT, SIDE_SHORT, {500.dd, 0.0dd}}, NANPX);
+	o = unxs_order(c, (clob_ord_t){TYPE_MKT, SIDE_SHORT, {500.dd, 0.0dd}}, NANPX);
 
+#if 0
 	for (size_t i = 0U; i < n; i++) {
 		printf("%f @ %f  %u %u %f %zu  v  %u %u %f %zu\n",
 		       (double)x[i].x.qty, (double)x[i].x.prc,
 		       x[i].o[SIDE_MAKER].typ, x[i].o[SIDE_MAKER].sid, (double)x[i].o[SIDE_MAKER].prc, x[i].o[SIDE_MAKER].qid,
 		       x[i].o[SIDE_TAKER].typ, x[i].o[SIDE_TAKER].sid, (double)x[i].o[SIDE_TAKER].prc, x[i].o[SIDE_TAKER].qid);
 	}
+#endif
 
 	clob_prnt(c);
 
-	free_clob(c);
-	return n != 3U ||
-		x[0U].x.qty != 300.dd || !isnanpx(x[0U].x.prc) ||
-		x[1U].x.qty != 100.dd || x[1U].x.prc != 198.0dd ||
-		x[2U].x.qty != 100.dd || x[2U].x.prc != 198.0dd ||
+	rc = c.exe->n != 2U ||
+		o.qid == 0U ||
+		c.exe->x[0U].qty != 100.dd ||
+		c.exe->x[0U].prc != 198.0dd ||
+		c.exe->x[1U].qty != 100.dd ||
+		c.exe->x[1U].prc != 198.0dd ||
 		0;
+
+	free_unxs(c.exe);
+	free_clob(c);
+	return rc;
 }

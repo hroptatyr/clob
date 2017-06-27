@@ -68,7 +68,8 @@ typedef struct {
 	void *lmt[NSIDES];
 	void *mkt[NSIDES];
 	void *stp[NSIDES];
-	void *quo;
+	struct quos_s *quo;
+	struct unxs_s *exe;
 } clob_t;
 
 typedef struct {

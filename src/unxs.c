@@ -38,7 +38,7 @@
 # include "config.h"
 #endif	/* HAVE_CONFIG_H */
 #include <stdlib.h>
-#include <stdio.h>
+#include <string.h>
 #if defined HAVE_DFP754_H
 # include <dfp754.h>
 #elif defined HAVE_DFP_STDLIB_H
@@ -57,6 +57,16 @@
 #include "unxs.h"
 #include "nifty.h"
 
+#define UNXS_INIZ	(8U)
+
+struct _unxs_s {
+	unxs_mode_t m;
+	size_t n;
+	unxs_exe_t *x;
+	clob_oid_t *o;
+	size_t z;
+};
+
 
 static qty_t
 plqu_qty(plqu_t q)
@@ -68,17 +78,40 @@ plqu_qty(plqu_t q)
 	return sum;
 }
 
-static size_t
-_unxs_plqu_sc(
-	unxs_exsc_t *restrict x, size_t n, plqu_t q, px_t ref, qx_t max,
-	clob_oid_t proto)
+static int
+unxs_add(struct _unxs_s *s, unxs_exe_t x, const clob_oid_t *o)
 {
+	if (s == NULL) {
+		return 0;
+	}
+	if (UNLIKELY(s->n >= s->z)) {
+		/* resize him */
+		const size_t nuz = s->z * 2U;
+		void *tmpx = realloc(s->x, nuz * sizeof(*s->x));
+		void *tmpo = realloc(s->o, nuz * s->m * sizeof(*s->o));
+
+		if (UNLIKELY(tmpx == NULL || tmpo == NULL)) {
+			return -1;
+		}
+		/* otherwise assign */
+		s->x = tmpx;
+		s->o = tmpo;
+		s->z = nuz;
+	}
+	memcpy(s->o + s->m * s->n, o, s->m * sizeof(*o));
+	s->x[s->n++] = x;
+	return 0;
+}
+
+static void
+_unxs_plqu_sc(unxs_t x, plqu_t q, px_t ref, qx_t max, clob_oid_t proto)
+{
+	struct _unxs_s *_x = (struct _unxs_s*)x;
 	plqu_iter_t i = {.q = q};
-	size_t m = 0U;
 	qx_t F = 0.dd;
 	qx_t fil;
 
-	for (; plqu_iter_next(&i) && m < n && F < max; m++, F += fil) {
+	for (; plqu_iter_next(&i) && F < max; F += fil) {
 		proto.qid = plqu_iter_qid(i);
 		fil = qty(i.v.qty);
 
@@ -90,36 +123,34 @@ _unxs_plqu_sc(
 			i.v.qty = qty_exe(i.v.qty, fil);
 			plqu_iter_put(i, i.v);
 			/* fill him and out */
-			x[m++] = (unxs_exsc_t){{ref, fil}, proto};
+			unxs_add(_x, (unxs_exe_t){ref, fil}, &proto);
 			break;
 		}
 		/* otherwise fill him fully */
-		x[m] = (unxs_exsc_t){{ref, fil}, proto};
+		unxs_add(_x, (unxs_exe_t){ref, fil}, &proto);
 	}
 	plqu_iter_set_top(i);
-	return m;
+	return;
 }
 
-static size_t
-_unxs_order(
-	unxs_exbi_t *restrict x, size_t n, clob_ord_t *restrict o,
-	plqu_t q, px_t r, clob_oid_t maker, clob_oid_t taker)
+static void
+_unxs_order(unxs_t x, clob_ord_t *restrict o, plqu_t q, px_t r, clob_oid_t *ids)
 {
+	struct _unxs_s *_x = (struct _unxs_s*)x;
 	plqu_iter_t qi = {.q = q};
 	qx_t oq = qty(o->qty);
-	size_t m = 0U;
 
-	for (; plqu_iter_next(&qi) && m < n && oq > 0.dd; oq = qty(o->qty)) {
+	for (; plqu_iter_next(&qi) && oq > 0.dd; oq = qty(o->qty)) {
 		qx_t mq = qty(qi.v.qty);
 
-		maker.qid = plqu_iter_qid(qi);
+		ids[SIDE_MAKER].qid = plqu_iter_qid(qi);
 		if (mq <= oq) {
 			/* full maker ~ partial taker */
-			x[m++] = (unxs_exbi_t){{r, mq}, {maker, taker}};
+			unxs_add(_x, (unxs_exe_t){r, mq}, ids);
 			o->qty = qty_exe(o->qty, mq);
 		} else {
 			/* partial maker ~ full taker */
-			x[m++] = (unxs_exbi_t){{r, oq}, {maker, taker}};
+			unxs_add(_x, (unxs_exe_t){r, oq}, ids);
 			qi.v.qty = qty_exe(qi.v.qty, oq);
 			plqu_iter_put(qi, qi.v);
 			/* let everyone know there's nothing left */
@@ -128,23 +159,56 @@ _unxs_order(
 		}
 	}
 	plqu_iter_set_top(qi);
-	return m;
+	return;
 }
 
 
-size_t
-unxs_mass_sc(unxs_exsc_t *restrict x, size_t n, clob_t c, px_t p, qx_t q)
+unxs_t
+make_unxs(unxs_mode_t m)
+{
+	struct _unxs_s *r = malloc(sizeof(*r));
+	r->m = m;
+	r->n = 0U;
+	r->x = malloc(UNXS_INIZ * sizeof(*r->x));
+	r->o = malloc(UNXS_INIZ * m * sizeof(*r->o));
+	r->z = UNXS_INIZ;
+	return (unxs_t)r;
+}
+
+void
+free_unxs(unxs_t x)
+{
+	struct _unxs_s *_x = (struct _unxs_s*)x;
+	if (LIKELY(_x->x != NULL)) {
+		free(_x->x);
+	}
+	if (LIKELY(_x->o != NULL)) {
+		free(_x->o);
+	}
+	free(_x);
+	return;
+}
+
+int
+unxs_clr(unxs_t x)
+{
+	struct _unxs_s *_x = (struct _unxs_s*)x;
+	_x->n = 0U;
+	return 0;
+}
+
+void
+unxs_auction(clob_t c, px_t p, qx_t q)
 {
 	clob_oid_t proto = {};
-	size_t m = 0U;
 	qx_t Q;
 
 	if (UNLIKELY(isnanpx(p))) {
 		/* no price? */
-		return 0U;
+		return;
 	} else if (UNLIKELY(q <= 0.dd)) {
 		/* no volume? */
-		return 0U;
+		return;
 	}
 
 	Q = 0.dd;
@@ -155,7 +219,7 @@ unxs_mass_sc(unxs_exsc_t *restrict x, size_t n, clob_t c, px_t p, qx_t q)
 		qx_t after;
 
 		/* set the executor free */
-		m += _unxs_plqu_sc(x + m, n - m, pq, p, q - Q, proto);
+		_unxs_plqu_sc(c.exe, pq, p, q - Q, proto);
 		/* what's left? */
 		after = qty(plqu_qty(pq));
 		/* up our Q */
@@ -164,12 +228,12 @@ unxs_mass_sc(unxs_exsc_t *restrict x, size_t n, clob_t c, px_t p, qx_t q)
 	/* and now limit orders */
 	proto = (clob_oid_t){TYPE_LMT, SIDE_ASK};
 	for (btree_iter_t i = {.t = c.lmt[proto.sid]};
-	     m < n && Q < q && btree_iter_next(&i) && (proto.prc = i.k) <= p;) {
+	     Q < q && btree_iter_next(&i) && (proto.prc = i.k) <= p;) {
 		qx_t before = qty(i.v->sum);
 		qx_t after;
 
 		/* set the executor free */
-		m += _unxs_plqu_sc(x + m, n - m, i.v->q, p, q - Q, proto);
+		_unxs_plqu_sc(c.exe, i.v->q, p, q - Q, proto);
 		/* maintain lmt sum */
 		with (qty_t sum = plqu_qty(i.v->q)) {
 			if (c.quo != NULL) {
@@ -194,7 +258,7 @@ unxs_mass_sc(unxs_exsc_t *restrict x, size_t n, clob_t c, px_t p, qx_t q)
 		qx_t after;
 
 		/* set the executor free */
-		m += _unxs_plqu_sc(x + m, n - m, pq, p, q - Q, proto);
+		_unxs_plqu_sc(c.exe, pq, p, q - Q, proto);
 		/* what's left? */
 		after = qty(plqu_qty(pq));
 		/* up the Q */
@@ -203,12 +267,12 @@ unxs_mass_sc(unxs_exsc_t *restrict x, size_t n, clob_t c, px_t p, qx_t q)
 	/* and limit orders again */
 	proto = (clob_oid_t){TYPE_LMT, SIDE_LONG};
 	for (btree_iter_t i = {.t = c.lmt[proto.sid]};
-	     m < n && Q < q && btree_iter_next(&i) && (proto.prc = i.k) >= p;) {
+	     Q < q && btree_iter_next(&i) && (proto.prc = i.k) >= p;) {
 		qx_t before = qty(i.v->sum);
 		qx_t after;
 
 		/* set the executor free */
-		m += _unxs_plqu_sc(x + m, n - m, i.v->q, p, q - Q, proto);
+		_unxs_plqu_sc(c.exe, i.v->q, p, q - Q, proto);
 		/* maintain lmt sum */
 		with (qty_t sum = plqu_qty(i.v->q)) {
 			if (c.quo != NULL) {
@@ -224,23 +288,17 @@ unxs_mass_sc(unxs_exsc_t *restrict x, size_t n, clob_t c, px_t p, qx_t q)
 		/* also up our Q */
 		Q += before - after;
 	}
-	return m;
+	return;
 }
 
-size_t
-unxs_order(unxs_exbi_t *restrict x, size_t n, clob_t c, clob_ord_t o, px_t r)
+clob_oid_t
+unxs_order(clob_t c, clob_ord_t o, px_t r)
 {
-	clob_oid_t maker, taker;
-	size_t m = 1U;
-
-	if (UNLIKELY(!n)) {
-		return 0U;
-	} else if (UNLIKELY(n == 1U)) {
-		goto fill;
-	}
-
-	maker = (clob_oid_t){.sid = clob_contra_side(o.sid), .prc = NANPX};
-	taker = (clob_oid_t){o.typ, o.sid, .prc = o.lmt};
+	const clob_side_t contra = clob_contra_side(o.sid);
+	clob_oid_t oids[] = {
+		[SIDE_MAKER] = {.sid = contra, .prc = NANPX},
+		[SIDE_TAKER] = {o.typ, o.sid, .prc = o.lmt},
+	};
 
 	switch (o.typ) {
 		btree_iter_t ti;
@@ -248,7 +306,7 @@ unxs_order(unxs_exbi_t *restrict x, size_t n, clob_t c, clob_ord_t o, px_t r)
 
 	case TYPE_LMT:
 		/* execute against contra market first, then contra limit */
-		ti = (btree_iter_t){.t = c.lmt[maker.sid]};
+		ti = (btree_iter_t){.t = c.lmt[contra]};
 		if (LIKELY((lmtp = btree_iter_next(&ti)))) {
 			switch (o.sid) {
 			case SIDE_ASK:
@@ -272,13 +330,13 @@ unxs_order(unxs_exbi_t *restrict x, size_t n, clob_t c, clob_ord_t o, px_t r)
 
 	case TYPE_MKT:
 		/* execute against contra market first, then contra limit */
-		ti = (btree_iter_t){.t = c.lmt[maker.sid]};
+		ti = (btree_iter_t){.t = c.lmt[contra]};
 		if (LIKELY((lmtp = btree_iter_next(&ti)))) {
 			/* aaah, reference price we need not */
 			r = ti.k;
 		} else if (UNLIKELY(isnanpx(r))) {
 			/* can't execute against NAN reference price */
-			return 0U;
+			goto nil;
 		}
 		/* make sure we don't violate limit constraints later */
 		o.lmt = NANPX;
@@ -286,14 +344,11 @@ unxs_order(unxs_exbi_t *restrict x, size_t n, clob_t c, clob_ord_t o, px_t r)
 
 	marketable:
 		/* get markets ready */
-		maker.typ = TYPE_MKT;
-		m += _unxs_order(
-			x + m, n - m, &o, c.mkt[maker.sid], r, maker, taker);
+		oids[SIDE_MAKER].typ = TYPE_MKT;
+		_unxs_order(c.exe, &o, c.mkt[contra], r, oids);
 	more:
 		if (qty(o.qty) <= 0.dd) {
 			goto fill;
-		} else if (m >= n) {
-			goto rest;
 		} else if (!lmtp) {
 			goto rest;
 		} else if (o.sid == SIDE_ASK && ti.k < o.lmt) {
@@ -304,16 +359,16 @@ unxs_order(unxs_exbi_t *restrict x, size_t n, clob_t c, clob_ord_t o, px_t r)
 			goto rest;
 		}
 		/* otherwise dive into limits */
-		maker.typ = TYPE_LMT;
-		m += _unxs_order(x + m, n - m, &o, ti.v->q, ti.k, maker, taker);
+		oids[SIDE_MAKER].typ = TYPE_LMT;
+		_unxs_order(c.exe, &o, ti.v->q, ti.k, oids);
 		/* maintain the sum */
 		with (qty_t sum = plqu_qty(ti.v->q)) {
 			if (c.quo != NULL) {
 				quos_add(c.quo,
-					 (quos_msg_t){maker.sid, ti.k, sum.dis});
+					 (quos_msg_t){contra, ti.k, sum.dis});
 			}
 			if (qty(ti.v->sum = sum) <= 0.dd) {
-				btree_val_t v = btree_rem(c.lmt[maker.sid], ti.k);
+				btree_val_t v = btree_rem(c.lmt[contra], ti.k);
 				free_plqu(v.q);
 				lmtp = btree_iter_next(&ti);
 			}
@@ -322,13 +377,11 @@ unxs_order(unxs_exbi_t *restrict x, size_t n, clob_t c, clob_ord_t o, px_t r)
 	}
 rest:
 	/* put the rest on the queue and bugger off*/
-	maker = clob_add(c, o);
-	/* let the user know about the order in the book */
-	x[0U] = (unxs_exbi_t){{NANPX, qty(o.qty)}, {maker}};
-	return m;
+	return clob_add(c, o);
 fill:
-	x[0U] = (unxs_exbi_t){{NANPX, 0.dd}};
-	return m;
+	/* fallthrough */
+nil:
+	return (clob_oid_t){.qid = 0U};
 }
 
 /* unxs.c ends here */
