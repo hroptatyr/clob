@@ -26,7 +26,7 @@ main(void)
 		mmod_auc_t auc = mmod_auction(c);
 		btree_key_t a, b;
 
-		unxs_mass_sc(c, auc.prc, auc.qty -2);
+		unxs_auction(c, auc.prc, auc.qty -2);
 
 		printf("AUC %f %f %f\n", (double)auc.prc, (double)auc.qty, (double)auc.imb);
 

@@ -16,7 +16,7 @@ main(void)
 		clob_add(c, (clob_ord_t){TYPE_LMT, rand() % 2, 2 + rand() % 4, 0.dd, .lmt = 100 + rand() % 100});
 		if (!((i - 1U) % 100U)) {
 			mmod_auc_t a = mmod_auction(c);
-			(void)unxs_mass_sc(c, a.prc, a.qty);
+			(void)unxs_auction(c, a.prc, a.qty);
 			//clob_prnt(c);
 		}
 	}

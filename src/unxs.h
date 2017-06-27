@@ -83,6 +83,6 @@ unxs_order(clob_t c, clob_ord_t o, px_t r);
  * Uncross the book C at price P for a quantity of at most Q
  * and assuming a single contra firm. */
 extern void
-unxs_mass_sc(clob_t c, px_t p, qx_t q);
+unxs_auction(clob_t c, px_t p, qx_t q);
 
 #endif	/* INCLUDED_unxs_h_ */

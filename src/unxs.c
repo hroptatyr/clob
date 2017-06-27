@@ -190,7 +190,7 @@ free_unxs(unxs_t x)
 }
 
 void
-unxs_mass_sc(clob_t c, px_t p, qx_t q)
+unxs_auction(clob_t c, px_t p, qx_t q)
 {
 	clob_oid_t proto = {};
 	qx_t Q;
