@@ -15,9 +15,8 @@ main(void)
 	for (size_t i = 0U; i < 10000000U; i++) {
 		clob_add(c, (clob_ord_t){TYPE_LMT, rand() % 2, 2 + rand() % 4, 0.dd, .lmt = 100 + rand() % 100});
 		if (!((i - 1U) % 100U)) {
-			unxs_exsc_t x[100000U];
 			mmod_auc_t a = mmod_auction(c);
-			(void)unxs_mass_sc(x, countof(x), c, a.prc, a.qty);
+			(void)unxs_mass_sc(c, a.prc, a.qty);
 			//clob_prnt(c);
 		}
 	}
