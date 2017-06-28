@@ -342,7 +342,7 @@ unxs_order(clob_t c, clob_ord_t o, px_t r)
 			r = ti.k;
 		} else if (UNLIKELY(isnanpx(r))) {
 			/* can't execute against NAN reference price */
-			goto nil;
+			goto rest;
 		}
 		/* make sure we don't violate limit constraints later */
 		o.lmt = NANPX;
@@ -386,8 +386,7 @@ rest:
 	/* put the rest on the queue and bugger off*/
 	return clob_add(c, o);
 fill:
-	/* fallthrough */
-nil:
+	/* it's completely filled */
 	return (clob_oid_t){.qid = 0U};
 }
 
