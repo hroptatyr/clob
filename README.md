@@ -21,7 +21,7 @@ Features
 - market models: auction, continuous trading
 - IEEE-754 decimals
 - handles ~250 auctions with 10000 orders each per second
-- handles ~1M orders per second in continuous trading mode
+- handles ~1.8M orders per second in continuous trading mode
 - twice the performance when double instead of _Decimal64 is used
 
 

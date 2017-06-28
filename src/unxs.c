@@ -133,12 +133,14 @@ _unxs_plqu_sc(unxs_t x, plqu_t q, px_t ref, qx_t max, clob_oid_t proto)
 	return;
 }
 
-static void
+static qty_t
 _unxs_order(unxs_t x, clob_ord_t *restrict o, plqu_t q, px_t r, clob_oid_t *ids)
 {
+/* return the quantity taken off of Q */
 	struct _unxs_s *_x = (struct _unxs_s*)x;
 	plqu_iter_t qi = {.q = q};
 	qx_t oq = qty(o->qty);
+	qty_t s = qty0;
 
 	for (; plqu_iter_next(&qi) && oq > 0.dd; oq = qty(o->qty)) {
 		qx_t mq = qty(qi.v.qty);
@@ -148,10 +150,14 @@ _unxs_order(unxs_t x, clob_ord_t *restrict o, plqu_t q, px_t r, clob_oid_t *ids)
 			/* full maker ~ partial taker */
 			unxs_add(_x, (unxs_exe_t){r, mq}, ids);
 			o->qty = qty_exe(o->qty, mq);
+			/* add maker quantity to result */
+			s = qty_add(s, qi.v.qty);
 		} else {
 			/* partial maker ~ full taker */
 			unxs_add(_x, (unxs_exe_t){r, oq}, ids);
 			qi.v.qty = qty_exe(qi.v.qty, oq);
+			/* add residual order quantity to result */
+			s = qty_add(s, o->qty);
 			plqu_iter_put(qi, qi.v);
 			/* let everyone know there's nothing left */
 			o->qty = qty0;
@@ -159,7 +165,7 @@ _unxs_order(unxs_t x, clob_ord_t *restrict o, plqu_t q, px_t r, clob_oid_t *ids)
 		}
 	}
 	plqu_iter_set_top(qi);
-	return;
+	return s;
 }
 
 
@@ -345,7 +351,7 @@ unxs_order(clob_t c, clob_ord_t o, px_t r)
 	marketable:
 		/* get markets ready */
 		oids[SIDE_MAKER].typ = TYPE_MKT;
-		_unxs_order(c.exe, &o, c.mkt[contra], r, oids);
+		(void)_unxs_order(c.exe, &o, c.mkt[contra], r, oids);
 	more:
 		if (qty(o.qty) <= 0.dd) {
 			goto fill;
@@ -360,14 +366,15 @@ unxs_order(clob_t c, clob_ord_t o, px_t r)
 		}
 		/* otherwise dive into limits */
 		oids[SIDE_MAKER].typ = TYPE_LMT;
-		_unxs_order(c.exe, &o, ti.v->q, ti.k, oids);
-		/* maintain the sum */
-		with (qty_t sum = plqu_qty(ti.v->q)) {
+		with (qty_t sum = _unxs_order(c.exe, &o, ti.v->q, ti.k, oids)) {
+			/* maintain the sum */
+			sum = ti.v->sum = qty_sub(ti.v->sum, sum);
+
 			if (c.quo != NULL) {
 				quos_add(c.quo,
 					 (quos_msg_t){contra, ti.k, sum.dis});
 			}
-			if (qty(ti.v->sum = sum) <= 0.dd) {
+			if (qty(ti.v->sum) <= 0.dd) {
 				btree_val_t v = btree_rem(c.lmt[contra], ti.k);
 				free_plqu(v.q);
 				lmtp = btree_iter_next(&ti);
