@@ -133,10 +133,10 @@ clob_add(clob_t c, clob_ord_t o)
 			q = v->q;
 		}
 	addq:
-		i = plqu_add(q, (plqu_val_t){o.qty, ++m});
+		i = plqu_add(q, (plqu_val_t){o.qty, ++m, o.user});
 		break;
 	}
-	return (clob_oid_t){o.typ, o.sid, p, .qid = i};
+	return (clob_oid_t){o.typ, o.sid, p, .qid = i, .user = o.user};
 }
 
 int
