@@ -36,9 +36,8 @@
  **/
 #if !defined INCLUDED_quos_h_
 #define INCLUDED_quos_h_
-#include <stdlib.h>
-#include <stdbool.h>
 #include "clob.h"
+#include "clob_val.h"
 
 typedef struct {
 	clob_side_t sid;
