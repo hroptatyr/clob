@@ -40,11 +40,18 @@
 
 /* just the bare essentials of dfp754_d64.h so we don't have to include him */
 #if !defined NAND64_U
-# define NAND64_U                (0x7c00000000000000U)
+# define NAND64_U	(0x7c00000000000000U)
 #endif	/* !NAND64_U */
 #if !defined NAND64
 # include <stdint.h>
-# define NAND64          ((union {uint64_t u; _Decimal64 x;}){NAND64_U}.x)
+# define NAND64		((union {uint64_t u; _Decimal64 x;}){NAND64_U}.x)
+#endif	/* !NAND64 */
+#if !defined NAND32_U
+# define NAND32_U	(0x7c000000U)
+#endif	/* !NAND32_U */
+#if !defined NAND32
+# include <stdint.h>
+# define NAND32		((union {uint32_t u; _Decimal32 x;}){NAND32_U}.x)
 #endif	/* !NAND64 */
 
 typedef _Decimal64 px_t;
@@ -53,11 +60,17 @@ typedef _Decimal64 qx_t;
 #define NANPX		NAND64
 #define NANQX		NAND64
 
+#define MAXPX		INFD64
+#define MINPX		MINFD64
+#define MAXQX		INFD64
+
 #define isnanpx		isnand64
 #define isnanqx		isnand64
 
 #define quantizepx	quantized64
 #define quantizeqx	quantized64
+
+#define fabsqx		fabsd64
 
 /* metronome type */
 typedef size_t metr_t;

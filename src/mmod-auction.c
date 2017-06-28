@@ -82,7 +82,7 @@ static void
 _init(void)
 {
 	besq = 0.dd;
-	bimb = INFD64;
+	bimb = MAXQX;
 	besn = 1.dd;
 }
 
@@ -100,8 +100,8 @@ _push(px_t p, qx_t b, qx_t a)
 		besn = 1.dd;
 	} else if (tmp == besq) {
 		/* see who's got less hang */
-		qx_t aimb = fabsd64(imb);
-		qx_t abimb = fabsd64(bimb);
+		qx_t aimb = fabsqx(imb);
+		qx_t abimb = fabsqx(bimb);
 
 		if (aimb < abimb) {
 			goto bang;
