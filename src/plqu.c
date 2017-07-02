@@ -152,9 +152,11 @@ plqu_iter_next(plqu_iter_t *iter)
 {
 	if (UNLIKELY(iter->q == NULL)) {
 		return false;
+	} else if (UNLIKELY(iter->i < iter->q->head)) {
+		iter->i = iter->q->head;
 	}
-	while (iter->q->head + iter->i < iter->q->tail) {
-		const size_t slot = (iter->q->head + iter->i++) % iter->q->z;
+	while (iter->i < iter->q->tail) {
+		const size_t slot = (iter->i++) % iter->q->z;
 		if (LIKELY(!plqu_val_nil_p(iter->q->a[slot]))) {
 			/* good one */
 			iter->v = iter->q->a[slot];
@@ -169,7 +171,7 @@ plqu_iter_next(plqu_iter_t *iter)
 plqu_qid_t
 plqu_iter_qid(plqu_iter_t iter)
 {
-	plqu_qid_t cand = iter.q->head + iter.i;
+	plqu_qid_t cand = iter.i;
 	return cand <= iter.q->tail ? cand : 0ULL;
 }
 
@@ -178,10 +180,10 @@ plqu_iter_put(plqu_iter_t iter, plqu_val_t v)
 {
 	if (UNLIKELY(iter.q == NULL)) {
 		;
-	} else if (UNLIKELY(!iter.i || iter.q->head + iter.i > iter.q->tail)) {
+	} else if (UNLIKELY(!iter.i || iter.i > iter.q->tail)) {
 		;
 	} else {
-		return plqu_put(iter.q, iter.q->head + iter.i, v);
+		return plqu_put(iter.q, iter.i, v);
 	}
 	return -1;
 }
@@ -191,11 +193,11 @@ plqu_iter_set_top(plqu_iter_t iter)
 {
 	if (UNLIKELY(iter.q == NULL)) {
 		return -1;
-	} else if (UNLIKELY(!iter.i)) {
+	} else if (UNLIKELY(!iter.i || iter.i > iter.q->tail)) {
 		return -1;
 	}
 	/* otherwise index becomes head */
-	iter.q->head += iter.i - 1U;
+	iter.q->head = iter.i - 1U;
 	return 0;
 }
 
