@@ -92,7 +92,7 @@ unxs_add(struct _unxs_s *r, unxs_exe_t x, clob_side_t s, const clob_oid_t *o)
 		void *tmps = realloc(r->s, nuz * sizeof(*r->s));
 		void *tmpo = realloc(r->o, nuz * r->m * sizeof(*r->o));
 
-		if (UNLIKELY(tmpx == NULL || tmpo == NULL)) {
+		if (UNLIKELY(tmpx == NULL || tmpo == NULL || tmps == NULL)) {
 			return -1;
 		}
 		/* otherwise assign */
