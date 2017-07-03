@@ -193,7 +193,7 @@ plqu_iter_set_top(plqu_iter_t iter)
 {
 	if (UNLIKELY(iter.q == NULL)) {
 		return -1;
-	} else if (UNLIKELY(!iter.i || iter.i > iter.q->tail)) {
+	} else if (UNLIKELY(!iter.i)) {
 		return -1;
 	}
 	/* otherwise index becomes head */
