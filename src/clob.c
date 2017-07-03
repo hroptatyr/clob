@@ -172,6 +172,13 @@ clob_del(clob_t c, clob_oid_t o)
 				quos_add(c.quo,
 					 (quos_msg_t){o.sid, o.prc, v->sum.dis});
 			}
+			/* check if plqu can be discarded entirely */
+			if (UNLIKELY(qty(v->sum) <= 0.dd)) {
+				btree_val_t w = btree_rem(t, o.prc);
+				free_plqu(w.q);
+				/* no need for further massages */
+				return 0;
+			}
 		}
 		break;
 

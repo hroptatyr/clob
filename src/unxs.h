@@ -36,6 +36,7 @@
  **/
 #if !defined INCLUDED_unxs_h_
 #define INCLUDED_unxs_h_
+#include <stdint.h>
 #include "clob.h"
 #include "clob_val.h"
 
@@ -53,10 +54,21 @@ typedef struct {
 	qx_t qty;
 } unxs_exe_t;
 
+typedef struct {
+	qx_t base;
+	qx_t term;
+} unxs_exa_t;
+
 typedef struct unxs_s {
+	/** mode used for uncrossing */
 	const unxs_mode_t m;
+	/** number of executions */
 	const size_t n;
+	/** executions */
 	const unxs_exe_t *x;
+	/** sides of executions from the maker point of view */
+	const uint_fast8_t *s;
+	/** orders taking part in this match */
 	const clob_oid_t *o;
 } *unxs_t;
 
@@ -84,5 +96,23 @@ unxs_order(clob_t c, clob_ord_t o, px_t r);
  * and assuming a single contra firm. */
 extern void
 unxs_auction(clob_t c, px_t p, qx_t q);
+
+
+/* convenience */
+static inline __attribute__((pure, const)) unxs_exa_t
+unxs_exa(unxs_exe_t x, clob_side_t s)
+{
+	switch (s) {
+	case SIDE_SELLER:
+		/* maker is a seller */
+		return (unxs_exa_t){-x.qty, x.prc * x.qty};
+	case SIDE_BUYER:
+		/* maker is a buyer */
+		return (unxs_exa_t){x.qty, -x.prc * x.qty};
+	default:
+		break;
+	}
+	return (unxs_exa_t){};
+}
 
 #endif	/* INCLUDED_unxs_h_ */
