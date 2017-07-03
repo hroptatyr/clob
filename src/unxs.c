@@ -326,6 +326,8 @@ unxs_order(clob_t c, clob_ord_t o, px_t r)
 		/* execute against contra market first, then contra limit */
 		ti = (btree_iter_t){.t = c.lmt[contra]};
 		if (LIKELY((lmtp = btree_iter_next(&ti)))) {
+			/* market orders act like pegs
+			 * so find out about the top bid/ask */
 			switch (o.sid) {
 			case SIDE_ASK:
 				r = max(o.lmt, ti.k);
