@@ -283,7 +283,7 @@ unxs_auction(clob_t c, px_t p, qx_t q)
 		Q += before - after;
 	}
 	/* and limit orders again */
-	proto = (clob_oid_t){TYPE_LMT, SIDE_LONG};
+	proto = (clob_oid_t){TYPE_LMT, SIDE_BID};
 	for (btree_iter_t i = {.t = c.lmt[proto.sid]};
 	     Q < q && btree_iter_next(&i) && (proto.prc = i.k) >= p;) {
 		qx_t before = qty(i.v->sum);
