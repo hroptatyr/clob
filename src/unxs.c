@@ -380,6 +380,7 @@ unxs_order(clob_t c, clob_ord_t o, px_t r)
 		}
 		/* otherwise dive into limits */
 		oids[SIDE_MAKER].typ = TYPE_LMT;
+		oids[SIDE_MAKER].prc = ti.k;
 		with (qty_t sum = _unxs_order(c.exe, &o, ti.v->q, ti.k, oids)) {
 			/* maintain the sum */
 			sum = ti.v->sum = qty_sub(ti.v->sum, sum);
