@@ -124,6 +124,27 @@ _push(px_t p, qx_t b, qx_t a)
 mmod_auc_t
 mmod_auction(clob_t c)
 {
+/* here we line up the cumsum of bid quantities against the
+ * cumsum of ask quantities, like xetra we stop at the edge
+ * points of the overlap
+ * it would look like this
+ *
+ *  sum(bq) bq  p  aq  sum(aq)
+ *        x  x  M
+ *        x  x  P  x   x
+ *        x  x  P      x
+ *              P  x   x
+ *              P      x
+ *              M  x   x
+ *
+ * Obviously because there's no way to traverse the btree
+ * backwards we have to temporarily write one of bids and
+ * asks into an array and traverse that one backwards
+ * with the opposite side traversing forwards.
+ *
+ * At each point we check for the highest turnover, and
+ * if there's no improvement on turnover for the lowest
+ * imbalance. */
 	btree_iter_t aski;
 	btree_iter_t bidi;
 	px_t ask, bid;
