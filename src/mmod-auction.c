@@ -128,6 +128,7 @@ mmod_auction(clob_t c)
 	btree_iter_t bidi;
 	px_t ask, bid;
 	qx_t asz, bsz;
+	qx_t mb;
 
 	aski = (btree_iter_t){.t = c.lmt[SIDE_ASK]};
 	if (UNLIKELY(!btree_iter_next(&aski))) {
@@ -144,7 +145,7 @@ mmod_auction(clob_t c)
 	bid = bidi.k;
 
 	asz = plqu_qx(c.mkt[SIDE_SHORT]);
-	bsz = plqu_qx(c.mkt[SIDE_LONG]);
+	mb = bsz = plqu_qx(c.mkt[SIDE_LONG]);
 
 	/* see if there's an overlap */
 	if (LIKELY(ask > bid && !(asz > 0.dd && bsz > 0.dd))) {
@@ -169,7 +170,7 @@ mmod_auction(clob_t c)
 	} while (btree_iter_next(&bidi) && bidi.k >= ask);
 	/* set very first element */
 	bids[0U] = bids[1U];
-	bszs[0U] = bszs[1U];
+	bszs[0U] = mb;
 
 	/* now cumulate asks and calculate execution */
 	size_t ai = bi;
