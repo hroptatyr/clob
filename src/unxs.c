@@ -269,7 +269,7 @@ unxs_auction(clob_t c, px_t p, qx_t q)
 	}
 
 	Q = 0.dd;
-	proto = (clob_oid_t){TYPE_MKT, SIDE_LONG};
+	proto = (clob_oid_t){TYPE_MKT, SIDE_LONG, .prc = NANPX};
 	/* market orders have the highest priority */
 	with (plqu_t pq = c.mkt[proto.sid]) {
 		qx_t before = qty(plqu_qty(pq));
