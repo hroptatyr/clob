@@ -120,6 +120,28 @@ _push(px_t p, qx_t b, qx_t a)
 	return;
 }
 
+static mmod_auc_t
+_mmod_unwind(btree_iter_t i, clob_side_t is, qx_t m)
+{
+/* helper routine for markets with limit orders on only one side
+ * unwind orders of at most M quantities from I
+ * this is the obvious unwind operation as would be done in
+ * continuous trading, however we won't touch the book
+ * the iterator is assumed to have stepped already
+ * IS is the side of I. */
+	qx_t iq = 0.dd;
+	px_t ik;
+
+	do {
+		/* keep track of auction price because we mustn't
+		 * access the iterator after he's run out of steam
+		 * (and invalidates its key slot along the way) */
+		ik = i.k;
+		iq += qty(i.v->sum);
+	} while (iq < m && btree_iter_next(&i));
+	return (mmod_auc_t){ik, min(iq, m), (iq - m) * ((qx_t)(2 * is) - 1.dd)};
+}
+
 
 mmod_auc_t
 mmod_auction(clob_t c)
@@ -145,37 +167,44 @@ mmod_auction(clob_t c)
  * At each point we check for the highest turnover, and
  * if there's no improvement on turnover for the lowest
  * imbalance. */
-	btree_iter_t aski;
-	btree_iter_t bidi;
+	btree_iter_t aski, bidi;
+	bool askp, bidp;
 	px_t ask, bid;
 	qx_t asz, bsz;
-	qx_t mb;
 
 	aski = (btree_iter_t){.t = c.lmt[SIDE_ASK]};
-	if (UNLIKELY(!btree_iter_next(&aski))) {
-		/* no asks */
-		return (mmod_auc_t){NANPX};
-	}
 	bidi = (btree_iter_t){.t = c.lmt[SIDE_BID]};
-	if (UNLIKELY(!btree_iter_next(&bidi))) {
-		/* no bids */
+	askp = btree_iter_next(&aski);
+	bidp = btree_iter_next(&bidi);
+	if (UNLIKELY(!askp && !bidp)) {
+		/* no bids nor asks */
 		return (mmod_auc_t){NANPX};
 	}
+
 	/* track overlap region */
 	ask = aski.k;
 	bid = bidi.k;
 
 	asz = plqu_qx(c.mkt[SIDE_SHORT]);
-	mb = bsz = plqu_qx(c.mkt[SIDE_LONG]);
+	bsz = plqu_qx(c.mkt[SIDE_LONG]);
 
 	/* see if there's an overlap */
-	if (LIKELY(ask > bid && asz <= 0.dd && bsz <= 0.dd)) {
+	if (0) {
+		;
+	} else if (!bidp) {
+		/* unwind bid market against asks */
+		return _mmod_unwind(aski, SIDE_ASK, bsz);
+	} else if (!askp) {
+		/* unwind ask market against bids */
+		return _mmod_unwind(bidi, SIDE_BID, asz);
+	} else if (LIKELY(ask > bid && asz <= 0.dd && bsz <= 0.dd)) {
 		/* no overlap */
 		return (mmod_auc_t){NANPX};
 	}
 
 	/* determine cum vol and keep track of levels */
 	size_t bi = 0U;
+	qx_t mb = bsz;
 
 	do {
 		if (UNLIKELY(++bi >= bidz)) {
