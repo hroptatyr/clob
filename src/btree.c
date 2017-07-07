@@ -414,7 +414,7 @@ bool
 btree_iter_next(btree_iter_t *iter)
 {
 	if (UNLIKELY(iter->t == NULL)) {
-		return false;
+		goto inv;
 	}
 	for (; iter->t->innerp; iter->t = iter->t->val->t, iter->i = 0U);
 	do {
@@ -430,6 +430,10 @@ btree_iter_next(btree_iter_t *iter)
 		/* reset index */
 		iter->i = 0U;
 	} while ((iter->t = iter->t->next));
+inv:
+	/* invalidate */
+	iter->v = NULL;
+	iter->k = NANPX;
 	return false;
 }
 
