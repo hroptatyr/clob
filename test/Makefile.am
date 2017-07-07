@@ -180,4 +180,10 @@ TESTS += cloe_06
 check_PROGRAMS += cloe_07
 TESTS += cloe_07
 
+check_PROGRAMS += cloe_08
+TESTS += cloe_08
+
+check_PROGRAMS += cloe_09
+TESTS += cloe_09
+
 ## Makefile.am ends here
