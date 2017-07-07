@@ -169,7 +169,7 @@ mmod_auction(clob_t c)
 	mb = bsz = plqu_qx(c.mkt[SIDE_LONG]);
 
 	/* see if there's an overlap */
-	if (LIKELY(ask > bid && !(asz > 0.dd && bsz > 0.dd))) {
+	if (LIKELY(ask > bid && asz <= 0.dd && bsz <= 0.dd)) {
 		/* no overlap */
 		return (mmod_auc_t){NANPX};
 	}
