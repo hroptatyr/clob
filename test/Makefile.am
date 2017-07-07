@@ -215,4 +215,20 @@ check_PROGRAMS += cloe_03
 TESTS += cloe_03
 cloe_03_LDADD = $(clob_LIBS)
 
+check_PROGRAMS += cloe_04
+TESTS += cloe_04
+cloe_04_LDADD = $(clob_LIBS)
+
+check_PROGRAMS += cloe_05
+TESTS += cloe_05
+cloe_05_LDADD = $(clob_LIBS)
+
+check_PROGRAMS += cloe_06
+TESTS += cloe_06
+cloe_06_LDADD = $(clob_LIBS)
+
+check_PROGRAMS += cloe_07
+TESTS += cloe_07
+cloe_07_LDADD = $(clob_LIBS)
+
 ## Makefile.am ends here
