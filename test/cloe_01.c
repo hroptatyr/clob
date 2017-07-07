@@ -16,7 +16,7 @@ main(void)
 	clob_add(c, (clob_ord_t){TYPE_MKT, SIDE_ASK, {1300.dd, 0.0dd}});
 	clob_add(c, (clob_ord_t){TYPE_LMT, SIDE_ASK, {500.dd, 0.0dd}, .lmt = 2.85dd});
 	clob_add(c, (clob_ord_t){TYPE_MKT, SIDE_BID, {1400.dd, 0.0dd}});
-	clob_add(c, (clob_ord_t){TYPE_LMT, SIDE_BID, {500.dd, 0.0dd}, .lmt = 2.75});
+	clob_add(c, (clob_ord_t){TYPE_LMT, SIDE_BID, {500.dd, 0.0dd}, .lmt = 2.75dd});
 
 	clob_prnt(c);
 

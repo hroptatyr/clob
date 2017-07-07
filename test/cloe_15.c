@@ -14,9 +14,9 @@ main(void)
 
 	/* cloe fuckup 1 */
 	clob_add(c, (clob_ord_t){TYPE_MKT, SIDE_BID, {1000.dd, 0.0dd}});
-	clob_add(c, (clob_ord_t){TYPE_LMT, SIDE_ASK, {500.dd, 0.0dd}, .lmt = 2.75});
-	clob_add(c, (clob_ord_t){TYPE_LMT, SIDE_ASK, {500.dd, 0.0dd}, .lmt = 2.80});
-	clob_add(c, (clob_ord_t){TYPE_LMT, SIDE_ASK, {500.dd, 0.0dd}, .lmt = 2.85});
+	clob_add(c, (clob_ord_t){TYPE_LMT, SIDE_ASK, {500.dd, 0.0dd}, .lmt = 2.75dd});
+	clob_add(c, (clob_ord_t){TYPE_LMT, SIDE_ASK, {500.dd, 0.0dd}, .lmt = 2.80dd});
+	clob_add(c, (clob_ord_t){TYPE_LMT, SIDE_ASK, {500.dd, 0.0dd}, .lmt = 2.85dd});
 
 	clob_prnt(c);
 

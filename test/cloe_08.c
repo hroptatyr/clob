@@ -14,7 +14,7 @@ main(void)
 
 	/* cloe fuckup 1 */
 	clob_add(c, (clob_ord_t){TYPE_MKT, SIDE_ASK, {1300.dd, 0.0dd}});
-	clob_add(c, (clob_ord_t){TYPE_LMT, SIDE_BID, {0.dd, 0.0dd}, .lmt = 2.75});
+	clob_add(c, (clob_ord_t){TYPE_LMT, SIDE_BID, {0.dd, 0.0dd}, .lmt = 2.75dd});
 
 	clob_prnt(c);
 
