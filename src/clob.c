@@ -144,6 +144,10 @@ clob_del(clob_t c, clob_oid_t o)
 {
 	plqu_t q;
 
+	if (UNLIKELY(!o.qid)) {
+		return -1;
+	}
+
 	switch (o.typ) {
 		btree_t t;
 
@@ -165,6 +169,9 @@ clob_del(clob_t c, clob_oid_t o)
 
 			/* maintain the sum */
 			with (plqu_val_t w = plqu_get(q, o.qid)) {
+				if (UNLIKELY(plqu_val_nil_p(w))) {
+					return -1;
+				}
 				v->sum = qty_sub(v->sum, w.qty);
 			}
 			if (c.quo != NULL) {
