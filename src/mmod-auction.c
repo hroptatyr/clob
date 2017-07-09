@@ -110,8 +110,8 @@ _push(px_t p, qx_t b, qx_t a)
 				/* add up for meaning */
 				besp += p;
 				besq = tmp;
-				bimb = 0;
-				besn += 1;
+				bimb = 0.dd;
+				besn += 1.dd;
 			} else if (imb > 0.dd) {
 				goto bang;
 			}
