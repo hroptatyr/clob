@@ -139,7 +139,7 @@ _mmod_unwind(btree_iter_t i, clob_side_t is, qx_t m)
 		ik = i.k;
 		iq += qty(i.v->sum);
 	} while (iq < m && btree_iter_next(&i));
-	return (mmod_auc_t){ik, min(iq, m), (iq - m) * ((qx_t)(2 * is) - 1.dd)};
+	return (mmod_auc_t){ik, min(iq, m), (iq - m) * (!is ? -1.dd : 1.dd)};
 }
 
 
