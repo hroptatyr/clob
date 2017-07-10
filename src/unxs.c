@@ -162,10 +162,11 @@ _unxs_order(unxs_t x, clob_ord_t *restrict o, plqu_t q, px_t r, clob_oid_t *ids)
 			s = qty_add(s, qi.v.qty);
 		} else {
 			/* partial maker ~ full taker */
+			qty_t prvq = qi.v.qty;
 			unxs_add(_x, (unxs_exe_t){r, oq}, ms, ids);
-			qi.v.qty = qty_exe(qi.v.qty, oq);
+			qi.v.qty = qty_exe(prvq, oq);
 			/* add residual order quantity to result */
-			s = qty_add(s, o->qty);
+			s = qty_add(s, qty_sub(prvq, qi.v.qty));
 			plqu_iter_put(qi, qi.v);
 			/* let everyone know there's nothing left */
 			o->qty = qty0;
