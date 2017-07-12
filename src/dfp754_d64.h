@@ -45,7 +45,6 @@
 
 #define NAND64_U		(0x7c00000000000000U)
 #define INFD64_U		(0x7800000000000000U)
-#define MINFD64_U		(0xf800000000000000U)
 
 #if !defined __DEC64_MOST_POSITIVE__
 # define __DEC64_MOST_POSITIVE__	(__DEC64_MAX__)
@@ -154,7 +153,21 @@ quantexpd64(_Decimal64 x)
 }
 #endif	/* !HAVE_DFP754_*_LITERALS */
 
-#define NAND64		((union {uint64_t u; _Decimal64 x;}){NAND64_U}.x)
+#if defined HAVE_BUILTIN_NAND64
+# define NAND64		__builtin_nand64("")
+#elif defined HAVE_BUILTIN_NAN_FOR_NAND64
+# define NAND64		((_Decimal64)__builtin_nand64(""))
+#else
+# define NAND64		((union {uint64_t u; _Decimal64 x;}){NAND64_U}.x)
+#endif
+#if defined HAVE_BUILTIN_INFD64
+# define INFD64		__builtin_infd64()
+#elif defined HAVE_BUILTIN_INF_FOR_INFD64
+# define INFD64		((_Decimal64)__builtin_inf())
+#else
+# define INFD64		(((union {uint64_t u; _Decimal64 x;}){INFD64_U}).x)
+#endif
+
 #if !defined HAVE_NAND64
 inline __attribute__((pure, const)) _Decimal64
 nand64(char *__tagp __attribute__((unused)))
@@ -163,11 +176,12 @@ nand64(char *__tagp __attribute__((unused)))
 }
 #endif	/* !HAVE_NAND64 */
 
-#if !defined INFD64
-# define INFD64		(((union {uint64_t u; _Decimal64 x;}){INFD64_U}).x)
-#endif	/* !INFD32 */
-#if !defined MINFD64
-# define MINFD64	(((union {uint64_t u; _Decimal64 x;}){MINFD64_U}).x)
-#endif	/* !MINFD64 */
+#if !defined HAVE_INFD64
+inline __attribute__((pure, const)) _Decimal64
+infd64(void)
+{
+	return INFD64;
+}
+#endif	/* !HAVE_INFD64 */
 
 #endif	/* INCLUDED_dfp754_d64_h_ */

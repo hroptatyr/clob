@@ -45,7 +45,6 @@
 
 #define NAND32_U		(0x7c000000U)
 #define INFD32_U		(0x78000000U)
-#define MINFD32_U		(0xf8000000U)
 
 #if !defined __DEC32_MOST_POSITIVE__
 # define __DEC32_MOST_POSITIVE__	(__DEC32_MAX__)
@@ -154,7 +153,21 @@ quantexpd32(_Decimal32 x)
 }
 #endif	/* !HAVE_DFP754_*_LITERALS */
 
-#define NAND32		((union {uint32_t u; _Decimal32 x;}){NAND32_U}.x)
+#if defined HAVE_BUILTIN_NAND32
+# define NAND32		__builtin_nand32("")
+#elif defined HAVE_BUILTIN_NAN_FOR_NAND32
+# define NAND32		((_Decimal32)__builtin_nan(""))
+#else
+# define NAND32		((union {uint32_t u; _Decimal32 x;}){NAND32_U}.x)
+#endif
+#if defined HAVE_BUILTIN_INFD32
+# define INFD32		__builtin_infd32()
+#elif defined HAVE_BUILTIN_INF_FOR_INFD32
+# define INFD32		((_Decimal32)__builtin_inf())
+#else
+# define INFD32		(((union {uint32_t u; _Decimal32 x;}){INFD32_U}).x)
+#endif
+
 #if !defined HAVE_NAND32
 inline __attribute__((pure, const)) _Decimal32
 nand32(char *__tagp __attribute__((unused)))
@@ -163,11 +176,12 @@ nand32(char *__tagp __attribute__((unused)))
 }
 #endif	/* !HAVE_NAND32 */
 
-#if !defined INFD32
-# define INFD32		(((union {uint32_t u; _Decimal32 x;}){INFD32_U}).x)
-#endif	/* !INFD32 */
-#if !defined MINFD32
-# define MINFD32	(((union {uint32_t u; _Decimal32 x;}){MINFD32_U}).x)
-#endif	/* !INFD32 */
+#if !defined HAVE_INFD32
+inline __attribute__((pure, const)) _Decimal32
+infd32(void)
+{
+	return INFD32;
+}
+#endif	/* !HAVE_INFD32 */
 
 #endif	/* INCLUDED_dfp754_d32_h_ */
