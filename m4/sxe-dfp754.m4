@@ -494,11 +494,11 @@ AC_DEFUN([_SXE_CHECK_DFP754_BUILTINS], [dnl
 	_SXE_CHECK_DFP754_BUILTIN([infd32], [_Decimal32], [], [:], [
 		_SXE_CHECK_DFP754_BUILTIN_BANG([infd32], [_Decimal32], [inf])])
 	_SXE_CHECK_DFP754_BUILTIN([infd64], [_Decimal64], [], [:], [
-		_SXE_CHECK_DFP754_BUILTIN_BANG([infd32], [_Decimal64], [inf])])
+		_SXE_CHECK_DFP754_BUILTIN_BANG([infd64], [_Decimal64], [inf])])
 	_SXE_CHECK_DFP754_BUILTIN([nand32], [_Decimal32], [("")], [:], [
 		_SXE_CHECK_DFP754_BUILTIN_BANG([nand32], [_Decimal32], [nan], [("")])])
 	_SXE_CHECK_DFP754_BUILTIN([nand64], [_Decimal64], [("")], [:], [
-		_SXE_CHECK_DFP754_BUILTIN_BANG([nand32], [_Decimal64], [nan], [("")])])
+		_SXE_CHECK_DFP754_BUILTIN_BANG([nand64], [_Decimal64], [nan], [("")])])
 ])dnl _SXE_CHECK_DFP754_BUILTINS
 
 AC_DEFUN([SXE_CHECK_DFP754], [dnl

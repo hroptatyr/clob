@@ -156,7 +156,7 @@ quantexpd64(_Decimal64 x)
 #if defined HAVE_BUILTIN_NAND64
 # define NAND64		__builtin_nand64("")
 #elif defined HAVE_BUILTIN_NAN_FOR_NAND64
-# define NAND64		((_Decimal64)__builtin_nand64(""))
+# define NAND64		((_Decimal64)__builtin_nan(""))
 #else
 # define NAND64		((union {uint64_t u; _Decimal64 x;}){NAND64_U}.x)
 #endif
