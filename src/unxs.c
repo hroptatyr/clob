@@ -152,8 +152,8 @@ _unxs_order(unxs_t x, clob_ord_t *restrict o, plqu_t q, px_t r, clob_oid_t *ids)
 	for (; plqu_iter_next(&qi) && oq > 0.dd; oq = qty(o->qty)) {
 		qx_t mq = qty(qi.v.qty);
 
-		ids[SIDE_MAKER].qid = plqu_iter_qid(qi);
-		ids[SIDE_MAKER].user = qi.v.usr;
+		ids[CLOB_SIDE_MAKER].qid = plqu_iter_qid(qi);
+		ids[CLOB_SIDE_MAKER].user = qi.v.usr;
 		if (mq <= oq) {
 			/* full maker ~ partial taker */
 			unxs_add(_x, (unxs_exe_t){r, mq}, ms, ids);
@@ -231,7 +231,7 @@ unxs_auction(clob_t c, px_t p, qx_t q)
 	}
 
 	Q = 0.dd;
-	proto = (clob_oid_t){TYPE_MKT, SIDE_SHORT, .prc = NANPX};
+	proto = (clob_oid_t){CLOB_TYPE_MKT, CLOB_SIDE_SHORT, .prc = NANPX};
 	/* market orders have the highest priority */
 	with (plqu_t pq = c.mkt[proto.sid]) {
 		qx_t before = qty(plqu_qty(pq));
@@ -245,7 +245,7 @@ unxs_auction(clob_t c, px_t p, qx_t q)
 		Q += before - after;
 	}
 	/* and now limit orders */
-	proto = (clob_oid_t){TYPE_LMT, SIDE_ASK};
+	proto = (clob_oid_t){CLOB_TYPE_LMT, CLOB_SIDE_ASK};
 	for (btree_iter_t i = {.t = c.lmt[proto.sid]};
 	     Q < q && btree_iter_next(&i) && (proto.prc = i.k) <= p;) {
 		qx_t before = qty(i.v->sum);
@@ -258,7 +258,7 @@ unxs_auction(clob_t c, px_t p, qx_t q)
 			if (c.quo != NULL) {
 				/* publish the change */
 				quos_add(c.quo,
-					 (quos_msg_t){SIDE_ASK, i.k, sum.dis});
+					 (quos_msg_t){CLOB_SIDE_ASK, i.k, sum.dis});
 			}
 			if ((after = qty(i.v->sum = sum)) <= 0.dd) {
 				btree_val_t v = btree_rem(c.lmt[proto.sid], i.k);
@@ -270,7 +270,7 @@ unxs_auction(clob_t c, px_t p, qx_t q)
 	}
 
 	Q = 0.dd;
-	proto = (clob_oid_t){TYPE_MKT, SIDE_LONG, .prc = NANPX};
+	proto = (clob_oid_t){CLOB_TYPE_MKT, CLOB_SIDE_LONG, .prc = NANPX};
 	/* market orders have the highest priority */
 	with (plqu_t pq = c.mkt[proto.sid]) {
 		qx_t before = qty(plqu_qty(pq));
@@ -284,7 +284,7 @@ unxs_auction(clob_t c, px_t p, qx_t q)
 		Q += before - after;
 	}
 	/* and limit orders again */
-	proto = (clob_oid_t){TYPE_LMT, SIDE_BID};
+	proto = (clob_oid_t){CLOB_TYPE_LMT, CLOB_SIDE_BID};
 	for (btree_iter_t i = {.t = c.lmt[proto.sid]};
 	     Q < q && btree_iter_next(&i) && (proto.prc = i.k) >= p;) {
 		qx_t before = qty(i.v->sum);
@@ -297,7 +297,7 @@ unxs_auction(clob_t c, px_t p, qx_t q)
 			if (c.quo != NULL) {
 				/* publish the change */
 				quos_add(c.quo,
-					 (quos_msg_t){SIDE_BID, i.k, sum.dis});
+					 (quos_msg_t){CLOB_SIDE_BID, i.k, sum.dis});
 			}
 			if ((after = qty(i.v->sum = sum)) <= 0.dd) {
 				btree_val_t v = btree_rem(c.lmt[proto.sid], i.k);
@@ -315,41 +315,41 @@ unxs_order(clob_t c, clob_ord_t o, px_t r)
 {
 	const clob_side_t contra = clob_contra_side(o.sid);
 	clob_oid_t oids[] = {
-		[SIDE_MAKER] = {.sid = contra, .prc = NANPX},
-		[SIDE_TAKER] = {o.typ, o.sid, .prc = o.lmt, .user = o.user},
+		[CLOB_SIDE_MAKER] = {.sid = contra, .prc = NANPX},
+		[CLOB_SIDE_TAKER] = {o.typ, o.sid, .prc = o.lmt, .user = o.user},
 	};
 
 	switch (o.typ) {
 		btree_iter_t ti;
 		bool lmtp;
 
-	case TYPE_LMT:
+	case CLOB_TYPE_LMT:
 		/* execute against contra market first, then contra limit */
 		ti = (btree_iter_t){.t = c.lmt[contra]};
 		if (LIKELY((lmtp = btree_iter_next(&ti)))) {
 			/* market orders act like pegs
 			 * so find out about the top bid/ask */
 			switch (o.sid) {
-			case SIDE_ASK:
+			case CLOB_SIDE_ASK:
 				r = max(o.lmt, ti.k);
 				break;
-			case SIDE_BID:
+			case CLOB_SIDE_BID:
 				r = min(o.lmt, ti.k);
 				break;
 			}
 		} else if (UNLIKELY(isnanpx(r))) {
 			/* can't execute against NAN reference price */
 			r = o.lmt;
-		} else if (o.sid == SIDE_ASK && r < o.lmt) {
+		} else if (o.sid == CLOB_SIDE_ASK && r < o.lmt) {
 			/* we need an improvement over R */
 			goto rest;
-		} else if (o.sid == SIDE_BID && r > o.lmt) {
+		} else if (o.sid == CLOB_SIDE_BID && r > o.lmt) {
 			/* not an improvement */
 			goto rest;
 		}
 		goto marketable;
 
-	case TYPE_MKT:
+	case CLOB_TYPE_MKT:
 		/* execute against contra market first, then contra limit */
 		ti = (btree_iter_t){.t = c.lmt[contra]};
 		if (LIKELY((lmtp = btree_iter_next(&ti)))) {
@@ -365,23 +365,23 @@ unxs_order(clob_t c, clob_ord_t o, px_t r)
 
 	marketable:
 		/* get markets ready */
-		oids[SIDE_MAKER].typ = TYPE_MKT;
+		oids[CLOB_SIDE_MAKER].typ = CLOB_TYPE_MKT;
 		(void)_unxs_order(c.exe, &o, c.mkt[contra], r, oids);
 	more:
 		if (qty(o.qty) <= 0.dd) {
 			goto fill;
 		} else if (!lmtp) {
 			goto rest;
-		} else if (o.sid == SIDE_ASK && ti.k < o.lmt) {
+		} else if (o.sid == CLOB_SIDE_ASK && ti.k < o.lmt) {
 			/* we need an improvement over R */
 			goto rest;
-		} else if (o.sid == SIDE_BID && ti.k > o.lmt) {
+		} else if (o.sid == CLOB_SIDE_BID && ti.k > o.lmt) {
 			/* not an improvement */
 			goto rest;
 		}
 		/* otherwise dive into limits */
-		oids[SIDE_MAKER].typ = TYPE_LMT;
-		oids[SIDE_MAKER].prc = ti.k;
+		oids[CLOB_SIDE_MAKER].typ = CLOB_TYPE_LMT;
+		oids[CLOB_SIDE_MAKER].prc = ti.k;
 		with (qty_t sum = _unxs_order(c.exe, &o, ti.v->q, ti.k, oids)) {
 			/* maintain the sum */
 			sum = ti.v->sum = qty_sub(ti.v->sum, sum);

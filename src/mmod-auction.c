@@ -172,8 +172,8 @@ mmod_auction(clob_t c)
 	px_t ask, bid;
 	qx_t asz, bsz;
 
-	aski = (btree_iter_t){.t = c.lmt[SIDE_ASK]};
-	bidi = (btree_iter_t){.t = c.lmt[SIDE_BID]};
+	aski = (btree_iter_t){.t = c.lmt[CLOB_SIDE_ASK]};
+	bidi = (btree_iter_t){.t = c.lmt[CLOB_SIDE_BID]};
 	askp = btree_iter_next(&aski);
 	bidp = btree_iter_next(&bidi);
 	if (UNLIKELY(!askp && !bidp)) {
@@ -185,18 +185,18 @@ mmod_auction(clob_t c)
 	ask = aski.k;
 	bid = bidi.k;
 
-	asz = plqu_qx(c.mkt[SIDE_SHORT]);
-	bsz = plqu_qx(c.mkt[SIDE_LONG]);
+	asz = plqu_qx(c.mkt[CLOB_SIDE_SHORT]);
+	bsz = plqu_qx(c.mkt[CLOB_SIDE_LONG]);
 
 	/* see if there's an overlap */
 	if (0) {
 		;
 	} else if (!bidp) {
 		/* unwind bid market against asks */
-		return _mmod_unwind(aski, SIDE_ASK, bsz);
+		return _mmod_unwind(aski, CLOB_SIDE_ASK, bsz);
 	} else if (!askp) {
 		/* unwind ask market against bids */
-		return _mmod_unwind(bidi, SIDE_BID, asz);
+		return _mmod_unwind(bidi, CLOB_SIDE_BID, asz);
 	} else if (LIKELY(ask > bid && asz <= 0.dd && bsz <= 0.dd)) {
 		/* no overlap */
 		return (mmod_auc_t){NANPX};

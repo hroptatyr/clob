@@ -49,6 +49,15 @@
 #define pxtostr		d64tostr
 #define qxtostr		d64tostr
 
+#define SIDE_BID	CLOB_SIDE_BID
+#define SIDE_ASK	CLOB_SIDE_ASK
+
+#define TYPE_LMT	CLOB_TYPE_LMT
+#define TYPE_MKT	CLOB_TYPE_MKT
+#define TYPE_MID	CLOB_TYPE_MID
+#define TYPE_STP	CLOB_TYPE_STP
+#define TYPE_PEG	CLOB_TYPE_PEG
+
 
 static qx_t
 plqu_sum(plqu_t q)

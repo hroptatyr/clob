@@ -103,10 +103,10 @@ static inline __attribute__((pure, const)) unxs_exa_t
 unxs_exa(unxs_exe_t x, clob_side_t s)
 {
 	switch (s) {
-	case SIDE_SELLER:
+	case CLOB_SIDE_SELLER:
 		/* maker is a seller */
 		return (unxs_exa_t){-x.qty, x.prc * x.qty};
-	case SIDE_BUYER:
+	case CLOB_SIDE_BUYER:
 		/* maker is a buyer */
 		return (unxs_exa_t){x.qty, -x.prc * x.qty};
 	default:

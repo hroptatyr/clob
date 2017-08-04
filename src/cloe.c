@@ -59,7 +59,7 @@
 #define qxtostr		d64tostr
 #define pxtostr		d64tostr
 
-#define TYPE_AUC	((clob_type_t)0x10U)
+#define CLOB_TYPE_AUC	((clob_type_t)0x10U)
 
 static FILE *traout, *quoout;
 
@@ -79,16 +79,16 @@ push_beef(const char *ln, size_t lz)
 	switch (ln[0U]) {
 	case 'F'/*INISH AUCTION*/:
 	case 'f'/*inish auction*/:
-		return (clob_ord_t){TYPE_AUC};
+		return (clob_ord_t){CLOB_TYPE_AUC};
 	case 'B'/*UY*/:
 	case 'L'/*ONG*/:
 	case 'b'/*uy*/:
 	case 'l'/*ong*/:
-		o.sid = SIDE_BID;
+		o.sid = CLOB_SIDE_BID;
 		break;
 	case 'S'/*ELL|HORT*/:
 	case 's'/*ell|hort*/:
-		o.sid = SIDE_ASK;
+		o.sid = CLOB_SIDE_ASK;
 		break;
 	default:
 		goto bork;
@@ -112,9 +112,9 @@ push_beef(const char *ln, size_t lz)
 		if (*on > ' ') {
 			goto bork;
 		}
-		o.typ = TYPE_LMT;
+		o.typ = CLOB_TYPE_LMT;
 	} else {
-		o.typ = TYPE_MKT;
+		o.typ = CLOB_TYPE_MKT;
 	}
 	return o;
 bork:
@@ -197,10 +197,10 @@ main(int argc, char *argv[])
 		while ((nrd = getline(&line, &llen, stdin)) > 0) {
 			clob_ord_t o = push_beef(line, nrd);
 
-			if (UNLIKELY(o.typ > TYPE_AUC)) {
+			if (UNLIKELY(o.typ > CLOB_TYPE_AUC)) {
 				fputs("Error: unreadable line\n", stderr);
 				continue;
-			} else if (UNLIKELY(o.typ == TYPE_AUC)) {
+			} else if (UNLIKELY(o.typ == CLOB_TYPE_AUC)) {
 				/* just ignore auctions */
 				continue;
 			}
@@ -231,10 +231,10 @@ main(int argc, char *argv[])
 			while ((nrd = getline(&line, &llen, stdin)) > 0) {
 				clob_ord_t o = push_beef(line, nrd);
 
-				if (UNLIKELY(o.typ > TYPE_AUC)) {
+				if (UNLIKELY(o.typ > CLOB_TYPE_AUC)) {
 					fputs("Error: unreadable line\n", stderr);
 					continue;
-				} else if (o.typ == TYPE_AUC) {
+				} else if (o.typ == CLOB_TYPE_AUC) {
 					/* auction him */
 					break;
 				}

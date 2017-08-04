@@ -44,31 +44,31 @@
 typedef size_t clob_qid_t;
 
 typedef enum {
-	TYPE_LMT,
-	TYPE_MID,
-	TYPE_MKT,
-	TYPE_PEG,
-	TYPE_STP,
+	CLOB_TYPE_LMT,
+	CLOB_TYPE_MID,
+	CLOB_TYPE_MKT,
+	CLOB_TYPE_PEG,
+	CLOB_TYPE_STP,
 } clob_type_t;
 
 typedef enum {
-	SIDE_ASK = 0U,
-	SIDE_SHORT = SIDE_ASK,
-	SIDE_SELLER = SIDE_ASK,
-	SIDE_MAKER = SIDE_ASK,
-	SIDE_BID = 1U,
-	SIDE_LONG = SIDE_BID,
-	SIDE_BUYER = SIDE_BID,
-	SIDE_TAKER = SIDE_BID,
-	NSIDES,
+	CLOB_SIDE_ASK = 0U,
+	CLOB_SIDE_SHORT = CLOB_SIDE_ASK,
+	CLOB_SIDE_SELLER = CLOB_SIDE_ASK,
+	CLOB_SIDE_MAKER = CLOB_SIDE_ASK,
+	CLOB_SIDE_BID = 1U,
+	CLOB_SIDE_LONG = CLOB_SIDE_BID,
+	CLOB_SIDE_BUYER = CLOB_SIDE_BID,
+	CLOB_SIDE_TAKER = CLOB_SIDE_BID,
+	NCLOB_SIDES,
 } clob_side_t;
 
-_Static_assert(NSIDES == 2U, "more than 2 sides");
+_Static_assert(NCLOB_SIDES == 2U, "more than 2 sides");
 
 typedef struct {
-	void *lmt[NSIDES];
-	void *mkt[NSIDES];
-	void *stp[NSIDES];
+	void *lmt[NCLOB_SIDES];
+	void *mkt[NCLOB_SIDES];
+	void *stp[NCLOB_SIDES];
 	struct quos_s *quo;
 	struct unxs_s *exe;
 } clob_t;
