@@ -59,6 +59,9 @@
 #define qxtostr		d64tostr
 #define pxtostr		d64tostr
 
+#define NANPX		NAND64
+#define isnanpx		isnand64
+
 #define CLOB_TYPE_AUC	((clob_type_t)0x10U)
 
 static FILE *traout, *quoout;

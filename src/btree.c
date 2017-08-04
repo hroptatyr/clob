@@ -40,13 +40,20 @@
 #include <stdlib.h>
 #if defined HAVE_DFP754_H
 # include <dfp754.h>
-#endif	/* HAVE_DFP754_H */
+#elif defined HAVE_DFP_STDLIB_H
+# include <dfp/stdlib.h>
+#elif defined HAVE_DECIMAL_H
+# include <decimal.h>
+#endif	/* DFP754_H || HAVE_DFP_STDLIB_H || HAVE_DECIMAL_H */
 #include <stdint.h>
 #include <string.h>
 #include <stdbool.h>
 #include "btree.h"
 #include "btree_val.h"
+#include "dfp754_d64.h"
 #include "nifty.h"
+
+#define NANPX	NAND64
 
 typedef union {
 	btree_val_t v;

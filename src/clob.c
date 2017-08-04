@@ -37,7 +37,14 @@
 #if defined HAVE_CONFIG_H
 # include "config.h"
 #endif	/* HAVE_CONFIG_H */
-#include <dfp754_d64.h>
+#if defined HAVE_DFP754_H
+# include <dfp754.h>
+#elif defined HAVE_DFP_STDLIB_H
+# include <dfp/stdlib.h>
+#elif defined HAVE_DECIMAL_H
+# include <decimal.h>
+#endif	/* DFP754_H || HAVE_DFP_STDLIB_H || HAVE_DECIMAL_H */
+#include "dfp754_d64.h"
 #include "btree.h"
 #include "btree_val.h"
 #include "plqu.h"
@@ -48,6 +55,9 @@
 
 #define pxtostr		d64tostr
 #define qxtostr		d64tostr
+
+#define NANPX		NAND64
+#define isnanpx		isnand64
 
 #define SIDE_BID	CLOB_SIDE_BID
 #define SIDE_ASK	CLOB_SIDE_ASK

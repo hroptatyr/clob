@@ -56,6 +56,13 @@
 #include "mmod-auction.h"
 #include "nifty.h"
 
+#define NANPX		NAND64
+#define isnanpx		isnand64
+#define MAXQX		INFD64
+#define MINQX		-INFD64
+#define fabsqx		fabsd64
+#define quantizepx	quantized64
+
 /* auction helper */
 static px_t besp;
 static px_t besn;

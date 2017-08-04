@@ -59,6 +59,9 @@
 
 #define UNXS_INIZ	(8U)
 
+#define NANPX		NAND64
+#define isnanpx		isnand64
+
 struct _unxs_s {
 	unxs_mode_t m;
 	size_t n;
