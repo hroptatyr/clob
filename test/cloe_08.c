@@ -13,8 +13,8 @@ main(void)
 	c = make_clob();
 
 	/* cloe fuckup 1 */
-	clob_add(c, (clob_ord_t){TYPE_MKT, SIDE_ASK, {1300.dd, 0.0dd}});
-	clob_add(c, (clob_ord_t){TYPE_LMT, SIDE_BID, {0.dd, 0.0dd}, .lmt = 2.75dd});
+	clob_add(c, (clob_ord_t){CLOB_TYPE_MKT, CLOB_SIDE_ASK, {1300.dd, 0.0dd}});
+	clob_add(c, (clob_ord_t){CLOB_TYPE_LMT, CLOB_SIDE_BID, {0.dd, 0.0dd}, .lmt = 2.75dd});
 
 	clob_prnt(c);
 

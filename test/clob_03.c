@@ -13,24 +13,24 @@ main(void)
 
 	c = make_clob();
 
-	i = clob_add(c, (clob_ord_t){TYPE_LMT, SIDE_BID, 0.5dd, 0.0dd, .lmt = 1.23227dd});
+	i = clob_add(c, (clob_ord_t){CLOB_TYPE_LMT, CLOB_SIDE_BID, 0.5dd, 0.0dd, .lmt = 1.23227dd});
 	printf("%zu\n", i.qid);
-	i = clob_add(c, (clob_ord_t){TYPE_LMT, SIDE_ASK, 0.5dd, 0.0dd, .lmt = 1.23230dd});
+	i = clob_add(c, (clob_ord_t){CLOB_TYPE_LMT, CLOB_SIDE_ASK, 0.5dd, 0.0dd, .lmt = 1.23230dd});
 	printf("%zu\n", i.qid);
-	i = clob_add(c, (clob_ord_t){TYPE_LMT, SIDE_BID, 0.5dd, 0.0dd, .lmt = 1.23227dd});
+	i = clob_add(c, (clob_ord_t){CLOB_TYPE_LMT, CLOB_SIDE_BID, 0.5dd, 0.0dd, .lmt = 1.23227dd});
 	printf("%zu\n", i.qid);
-	i = clob_add(c, (clob_ord_t){TYPE_LMT, SIDE_ASK, 0.5dd, 0.0dd, .lmt = 1.23228dd});
+	i = clob_add(c, (clob_ord_t){CLOB_TYPE_LMT, CLOB_SIDE_ASK, 0.5dd, 0.0dd, .lmt = 1.23228dd});
 	printf("%zu\n", i.qid);
-	i = clob_add(c, (clob_ord_t){TYPE_LMT, SIDE_ASK, 0.4dd, 0.0dd, .lmt = 1.23230dd});
+	i = clob_add(c, (clob_ord_t){CLOB_TYPE_LMT, CLOB_SIDE_ASK, 0.4dd, 0.0dd, .lmt = 1.23230dd});
 	printf("%zu\n", i.qid);
-	i = clob_add(c, (clob_ord_t){TYPE_LMT, SIDE_ASK, 0.5dd, 0.0dd, .lmt = 1.23231dd});
+	i = clob_add(c, (clob_ord_t){CLOB_TYPE_LMT, CLOB_SIDE_ASK, 0.5dd, 0.0dd, .lmt = 1.23231dd});
 	printf("%zu\n", i.qid);
 
-	i = clob_add(c, (clob_ord_t){TYPE_MID, SIDE_ASK, 0.5dd, 0.0dd});
+	i = clob_add(c, (clob_ord_t){CLOB_TYPE_MID, CLOB_SIDE_ASK, 0.5dd, 0.0dd});
 	printf("%zu\n", i.qid);
-	i = clob_add(c, (clob_ord_t){TYPE_MID, SIDE_BID, 0.1dd, 0.0dd});
+	i = clob_add(c, (clob_ord_t){CLOB_TYPE_MID, CLOB_SIDE_BID, 0.1dd, 0.0dd});
 	printf("%zu\n", i.qid);
-	i = clob_add(c, (clob_ord_t){TYPE_MID, SIDE_ASK, 0.5dd, 0.0dd});
+	i = clob_add(c, (clob_ord_t){CLOB_TYPE_MID, CLOB_SIDE_ASK, 0.5dd, 0.0dd});
 	printf("%zu\n", i.qid);
 
 	printf("%d\n", clob_del(c, i));
@@ -41,13 +41,13 @@ main(void)
 	clob_prnt(c);
 
 	/* add marketable limit order */
-	i = clob_add(c, (clob_ord_t){TYPE_LMT, SIDE_ASK, 0.7dd, 0.0dd, .lmt = 1.23226dd});
+	i = clob_add(c, (clob_ord_t){CLOB_TYPE_LMT, CLOB_SIDE_ASK, 0.7dd, 0.0dd, .lmt = 1.23226dd});
 	printf("%zu\n", i.qid);
-	i = clob_add(c, (clob_ord_t){TYPE_LMT, SIDE_BID, 0.4dd, 0.0dd, .lmt = 1.23229dd});
+	i = clob_add(c, (clob_ord_t){CLOB_TYPE_LMT, CLOB_SIDE_BID, 0.4dd, 0.0dd, .lmt = 1.23229dd});
 	printf("%zu\n", i.qid);
-	i = clob_add(c, (clob_ord_t){TYPE_LMT, SIDE_BID, 0.2dd, 0.0dd, .lmt = 1.23231dd});
+	i = clob_add(c, (clob_ord_t){CLOB_TYPE_LMT, CLOB_SIDE_BID, 0.2dd, 0.0dd, .lmt = 1.23231dd});
 	printf("%zu\n", i.qid);
-	i = clob_add(c, (clob_ord_t){TYPE_LMT, SIDE_BID, 0.8dd, 0.0dd, .lmt = 1.23226dd});
+	i = clob_add(c, (clob_ord_t){CLOB_TYPE_LMT, CLOB_SIDE_BID, 0.8dd, 0.0dd, .lmt = 1.23226dd});
 	printf("%zu\n", i.qid);
 
 	clob_prnt(c);

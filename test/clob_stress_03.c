@@ -12,7 +12,7 @@ main(void)
 	c = make_clob();
 
 	for (size_t i = 0U; i < 10000000U; i++) {
-		clob_add(c, (clob_ord_t){TYPE_MKT, rand() % 2, 2 + rand() % 4, 0.dd});
+		clob_add(c, (clob_ord_t){CLOB_TYPE_MKT, rand() % 2, 2 + rand() % 4, 0.dd});
 	}
 
 	clob_prnt(c);

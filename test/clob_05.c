@@ -1,6 +1,9 @@
 #include <stdio.h>
+#include "dfp754_d64.h"
 #include "clob.h"
 #include "unxs.h"
+
+#define NANPX		NAND64
 
 
 int
@@ -11,10 +14,10 @@ main(void)
 
 	c = make_clob();
 
-	i = clob_add(c, (clob_ord_t){TYPE_LMT, SIDE_BID, {50.0dd, 0.0dd}, .lmt = 1.23228dd});
+	i = clob_add(c, (clob_ord_t){CLOB_TYPE_LMT, CLOB_SIDE_BID, {50.0dd, 0.0dd}, .lmt = 1.23228dd});
 	clob_prnt(c);
 
-	unxs_order(c, (clob_ord_t){TYPE_MKT, SIDE_SHORT, {25.dd, 0.0dd}}, NANPX);
+	unxs_order(c, (clob_ord_t){CLOB_TYPE_MKT, CLOB_SIDE_SHORT, {25.dd, 0.0dd}}, NANPX);
 
 	clob_prnt(c);
 

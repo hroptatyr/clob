@@ -18,7 +18,7 @@ main(void)
 		clob_side_t s = rand() % 2;
 		qx_t q = 2.dd + rand() % 4;
 		tot[s] += q;
-		clob_add(c, (clob_ord_t){TYPE_LMT, s, {q, 0.dd}, .lmt = 100.00dd + rand() % 81});
+		clob_add(c, (clob_ord_t){CLOB_TYPE_LMT, s, {q, 0.dd}, .lmt = 100.00dd + rand() % 81});
 	}
 
 	clob_prnt(c);
@@ -31,8 +31,8 @@ main(void)
 		printf("AUC %f %f %f\n", (double)auc.prc, (double)auc.qty, (double)auc.imb);
 
 		printf("TOT SUB %f %f\n", (double)tot[0], (double)tot[1]);
-		btree_top(c.lmt[SIDE_ASK], &a);
-		btree_top(c.lmt[SIDE_BID], &b);
+		btree_top(c.lmt[CLOB_SIDE_ASK], &a);
+		btree_top(c.lmt[CLOB_SIDE_BID], &b);
 
 #if 0
 		qx_t q = 0.dd;
