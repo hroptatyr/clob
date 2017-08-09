@@ -45,6 +45,12 @@
 # include <dfp/stdlib.h>
 #elif defined HAVE_DECIMAL_H
 # include <decimal.h>
+#else
+static inline __attribute__((pure, const)) _Decimal64
+fabsd64(_Decimal64 x)
+{
+	return x >= 0.dd ? x : -x;
+}
 #endif
 #include <dfp754_d64.h>
 #include "btree.h"
