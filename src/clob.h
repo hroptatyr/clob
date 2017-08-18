@@ -90,6 +90,9 @@ typedef struct {
 	uintptr_t user;
 } clob_oid_t;
 
+_Static_assert(sizeof(clob_oid_t) == 32U, "clob_oid_t of odd size");
+_Static_assert(sizeof(clob_ord_t) == 48U, "clob_ord_t of odd size");
+
 
 /**
  * Instantiate central limit order book.
