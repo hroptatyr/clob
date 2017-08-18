@@ -62,11 +62,6 @@
 #define SIDE_BID	CLOB_SIDE_BID
 #define SIDE_ASK	CLOB_SIDE_ASK
 
-#define TYPE_LMT	CLOB_TYPE_LMT
-#define TYPE_MKT	CLOB_TYPE_MKT
-#define TYPE_MID	CLOB_TYPE_MID
-#define TYPE_PEG	CLOB_TYPE_PEG
-
 
 static qx_t
 plqu_sum(plqu_t q)
@@ -113,17 +108,17 @@ clob_add(clob_t c, clob_ord_t o)
 		btree_t t;
 		plqu_t q;
 
-	case TYPE_LMT:
+	case CLOB_TYPE_LMT:
 		p = o.lmt;
 		t = c.lmt[o.sid];
 		goto addv;
-	case TYPE_MKT:
+	case CLOB_TYPE_MKT:
 		p = 0;
 		q = c.mkt[o.sid];
 		goto addq;
 
-	case TYPE_MID:
-	case TYPE_PEG:
+	case CLOB_TYPE_MID:
+	case CLOB_TYPE_PEG:
 	default:
 		return (clob_oid_t){};
 
@@ -161,7 +156,7 @@ clob_del(clob_t c, clob_oid_t o)
 	switch (o.typ) {
 		btree_t t;
 
-	case TYPE_LMT:
+	case CLOB_TYPE_LMT:
 		t = c.lmt[o.sid];
 		goto delt;
 
@@ -196,12 +191,12 @@ clob_del(clob_t c, clob_oid_t o)
 		}
 		break;
 
-	case TYPE_MKT:
+	case CLOB_TYPE_MKT:
 		q = c.mkt[o.sid];
 		break;
 
-	case TYPE_MID:
-	case TYPE_PEG:
+	case CLOB_TYPE_MID:
+	case CLOB_TYPE_PEG:
 	default:
 		return -1;
 	}
