@@ -68,7 +68,6 @@ _Static_assert(NCLOB_SIDES == 2U, "more than 2 sides");
 typedef struct {
 	void *lmt[NCLOB_SIDES];
 	void *mkt[NCLOB_SIDES];
-	void *stp[NCLOB_SIDES];
 	struct quos_s *quo;
 	struct unxs_s *exe;
 } clob_t;

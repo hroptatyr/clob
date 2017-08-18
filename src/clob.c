@@ -65,7 +65,6 @@
 #define TYPE_LMT	CLOB_TYPE_LMT
 #define TYPE_MKT	CLOB_TYPE_MKT
 #define TYPE_MID	CLOB_TYPE_MID
-#define TYPE_STP	CLOB_TYPE_STP
 #define TYPE_PEG	CLOB_TYPE_PEG
 
 
@@ -89,8 +88,6 @@ make_clob(void)
 		.lmt[SIDE_BID] = make_btree(true),
 		.mkt[SIDE_ASK] = make_plqu(),
 		.mkt[SIDE_BID] = make_plqu(),
-		.stp[SIDE_ASK] = make_btree(false),
-		.stp[SIDE_BID] = make_btree(true),
 	};
 	return r;
 }
@@ -100,8 +97,6 @@ free_clob(clob_t c)
 {
 	free_btree(c.lmt[SIDE_ASK]);
 	free_btree(c.lmt[SIDE_BID]);
-	free_btree(c.stp[SIDE_ASK]);
-	free_btree(c.stp[SIDE_BID]);
 	free_plqu(c.mkt[SIDE_ASK]);
 	free_plqu(c.mkt[SIDE_BID]);
 	return;
@@ -121,10 +116,6 @@ clob_add(clob_t c, clob_ord_t o)
 	case TYPE_LMT:
 		p = o.lmt;
 		t = c.lmt[o.sid];
-		goto addv;
-	case TYPE_STP:
-		p = o.stp;
-		t = c.stp[o.sid];
 		goto addv;
 	case TYPE_MKT:
 		p = 0;
@@ -172,9 +163,6 @@ clob_del(clob_t c, clob_oid_t o)
 
 	case TYPE_LMT:
 		t = c.lmt[o.sid];
-		goto delt;
-	case TYPE_STP:
-		t = c.stp[o.sid];
 		goto delt;
 
 	delt:
@@ -303,10 +291,6 @@ clob_prnt(clob_t c)
 	_prnt_plqu(c.mkt[SIDE_BID]);
 	puts("MKT/ASK");
 	_prnt_plqu(c.mkt[SIDE_ASK]);
-	puts("STP/BID");
-	_prnt_btree(c.stp[SIDE_BID]);
-	puts("STP/ASK");
-	_prnt_btree(c.stp[SIDE_ASK]);
 	return;
 }
 
