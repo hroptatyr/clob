@@ -313,7 +313,7 @@ unxs_auction(clob_t c, px_t p, qx_t q)
 	return;
 }
 
-clob_oid_t
+clob_ord_t
 unxs_order(clob_t c, clob_ord_t o, px_t r)
 {
 	const clob_side_t contra = clob_contra_side(o.sid);
@@ -372,7 +372,7 @@ unxs_order(clob_t c, clob_ord_t o, px_t r)
 		(void)_unxs_order(c.exe, &o, c.mkt[contra], r, oids);
 	more:
 		if (qty(o.qty) <= 0.dd) {
-			goto fill;
+			goto rest;
 		} else if (!lmtp) {
 			goto rest;
 		} else if (o.sid == CLOB_SIDE_ASK && ti.k < o.lmt) {
@@ -402,11 +402,8 @@ unxs_order(clob_t c, clob_ord_t o, px_t r)
 		goto more;
 	}
 rest:
-	/* put the rest on the queue and bugger off*/
-	return clob_add(c, o);
-fill:
-	/* it's completely filled */
-	return (clob_oid_t){.qid = 0U};
+	/* remainder goes back to requester */
+	return o;
 }
 
 /* unxs.c ends here */

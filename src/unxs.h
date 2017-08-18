@@ -87,8 +87,9 @@ extern int unxs_clr(unxs_t);
 
 /**
  * Try crossing order O with book C at reference price R.
- * If the order is accepted (i.e. not entirely filled) return its id. */
-extern clob_oid_t
+ * Executions will be tracked in C's exe-list.
+ * The remainder of the order is returned. */
+extern clob_ord_t
 unxs_order(clob_t c, clob_ord_t o, px_t r);
 
 /**
