@@ -45,10 +45,7 @@ typedef size_t clob_qid_t;
 
 typedef enum {
 	CLOB_TYPE_LMT,
-	CLOB_TYPE_MID,
 	CLOB_TYPE_MKT,
-	CLOB_TYPE_PEG,
-	CLOB_TYPE_STP,
 } clob_type_t;
 
 typedef enum {

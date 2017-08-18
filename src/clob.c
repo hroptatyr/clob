@@ -117,8 +117,6 @@ clob_add(clob_t c, clob_ord_t o)
 		q = c.mkt[o.sid];
 		goto addq;
 
-	case CLOB_TYPE_MID:
-	case CLOB_TYPE_PEG:
 	default:
 		return (clob_oid_t){};
 
@@ -195,8 +193,6 @@ clob_del(clob_t c, clob_oid_t o)
 		q = c.mkt[o.sid];
 		break;
 
-	case CLOB_TYPE_MID:
-	case CLOB_TYPE_PEG:
 	default:
 		return -1;
 	}
