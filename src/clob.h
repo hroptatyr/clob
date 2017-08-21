@@ -73,7 +73,12 @@ typedef struct {
 	clob_type_t typ;
 	clob_side_t sid;
 	qty_t qty;
-	px_t lmt;
+	union {
+		/* limit price for limit orders */
+		px_t lmt;
+		/* max slippage for market orders */
+		px_t slp;
+	};
 	px_t stp;
 	uintptr_t user;
 } clob_ord_t;

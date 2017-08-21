@@ -82,6 +82,13 @@ plqu_qty(plqu_t q)
 	return sum;
 }
 
+static inline __attribute__((const, pure)) px_t
+sign_side(px_t p, clob_side_t s)
+{
+/* negate ask prices, leave bid prices */
+	return s == CLOB_SIDE_ASK ? -p : p;
+}
+
 static int
 unxs_add(struct _unxs_s *r, unxs_exe_t x, clob_side_t s, const clob_oid_t *o)
 {
@@ -362,8 +369,9 @@ unxs_order(clob_t c, clob_ord_t o, px_t r)
 			/* can't execute against NAN reference price */
 			goto rest;
 		}
-		/* make sure we don't violate limit constraints later */
-		o.lmt = NANPX;
+		/* turn slippage into absolute limit price
+		 * only if slippage is a normal */
+		o.lmt = r + sign_side(o.slp, o.sid);
 		goto marketable;
 
 	marketable:

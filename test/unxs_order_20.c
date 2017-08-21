@@ -22,16 +22,14 @@ main(void)
 
 	clob_prnt(c);
 
-	/* eat into the limits */
-	unxs_order(c, (clob_ord_t){CLOB_TYPE_MKT, CLOB_SIDE_SHORT, {80.dd, 0.0dd}, NANPX}, NANPX);
+	/* eat into the limits, max slippage is 0 though */
+	unxs_order(c, (clob_ord_t){CLOB_TYPE_MKT, CLOB_SIDE_SHORT, {80.dd, 0.0dd}, 0.dd}, NANPX);
 
 	clob_prnt(c);
 
-	rc = c.exe->n != 2U ||
+	rc = c.exe->n != 1U ||
 		c.exe->x[0U].qty != 60.dd ||
 		c.exe->x[0U].prc != 198.0dd ||
-		c.exe->x[1U].qty != 20.dd ||
-		c.exe->x[1U].prc != 197.0dd ||
 		0;
 
 	free_unxs(c.exe);
