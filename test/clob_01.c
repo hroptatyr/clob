@@ -21,11 +21,8 @@ main(void)
 	i = clob_add(c, (clob_ord_t){CLOB_TYPE_LMT, CLOB_SIDE_ASK, 0.5dd, 0.0dd, .lmt = 1.23230dd});
 	printf("%zu\n", i.qid);
 
-	i = clob_add(c, (clob_ord_t){CLOB_TYPE_MID, CLOB_SIDE_ASK, 0.5dd, 0.0dd});
 	printf("%zu\n", i.qid);
-	i = clob_add(c, (clob_ord_t){CLOB_TYPE_MID, CLOB_SIDE_ASK, 0.1dd, 0.0dd});
 	printf("%zu\n", i.qid);
-	i = clob_add(c, (clob_ord_t){CLOB_TYPE_MID, CLOB_SIDE_ASK, 0.5dd, 0.0dd});
 	printf("%zu\n", i.qid);
 
 	printf("%d\n", clob_del(c, i));
@@ -33,10 +30,8 @@ main(void)
 	i.qid++;
 	printf("%d\n", clob_del(c, i));
 
-	i = clob_add(c, (clob_ord_t){CLOB_TYPE_MID, CLOB_SIDE_ASK, 0.6dd, 0.2dd});
 	printf("%zu\n", i.qid);
 
-	i = clob_add(c, (clob_ord_t){CLOB_TYPE_MID, CLOB_SIDE_ASK, 0.7dd, 0.1dd});
 	printf("%zu\n", i.qid);
 
 	clob_prnt(c);

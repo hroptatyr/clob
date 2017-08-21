@@ -183,6 +183,10 @@ check_PROGRAMS += unxs_order_19
 TESTS += unxs_order_19
 unxs_order_19_LDADD = $(clob_LIBS)
 
+check_PROGRAMS += unxs_order_20
+TESTS += unxs_order_20
+unxs_order_20_LDADD = $(clob_LIBS)
+
 
 check_PROGRAMS += plqu_01
 TESTS += plqu_01

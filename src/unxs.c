@@ -82,6 +82,13 @@ plqu_qty(plqu_t q)
 	return sum;
 }
 
+static inline __attribute__((const, pure)) px_t
+sign_side(px_t p, clob_side_t s)
+{
+/* negate ask prices, leave bid prices */
+	return s == CLOB_SIDE_ASK ? -p : p;
+}
+
 static int
 unxs_add(struct _unxs_s *r, unxs_exe_t x, clob_side_t s, const clob_oid_t *o)
 {
@@ -313,7 +320,7 @@ unxs_auction(clob_t c, px_t p, qx_t q)
 	return;
 }
 
-clob_oid_t
+clob_ord_t
 unxs_order(clob_t c, clob_ord_t o, px_t r)
 {
 	const clob_side_t contra = clob_contra_side(o.sid);
@@ -362,8 +369,9 @@ unxs_order(clob_t c, clob_ord_t o, px_t r)
 			/* can't execute against NAN reference price */
 			goto rest;
 		}
-		/* make sure we don't violate limit constraints later */
-		o.lmt = NANPX;
+		/* turn slippage into absolute limit price
+		 * only if slippage is a normal */
+		o.lmt = r + sign_side(o.slp, o.sid);
 		goto marketable;
 
 	marketable:
@@ -372,7 +380,7 @@ unxs_order(clob_t c, clob_ord_t o, px_t r)
 		(void)_unxs_order(c.exe, &o, c.mkt[contra], r, oids);
 	more:
 		if (qty(o.qty) <= 0.dd) {
-			goto fill;
+			goto rest;
 		} else if (!lmtp) {
 			goto rest;
 		} else if (o.sid == CLOB_SIDE_ASK && ti.k < o.lmt) {
@@ -402,11 +410,8 @@ unxs_order(clob_t c, clob_ord_t o, px_t r)
 		goto more;
 	}
 rest:
-	/* put the rest on the queue and bugger off*/
-	return clob_add(c, o);
-fill:
-	/* it's completely filled */
-	return (clob_oid_t){.qid = 0U};
+	/* remainder goes back to requester */
+	return o;
 }
 
 /* unxs.c ends here */

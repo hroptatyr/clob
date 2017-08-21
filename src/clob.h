@@ -45,10 +45,7 @@ typedef size_t clob_qid_t;
 
 typedef enum {
 	CLOB_TYPE_LMT,
-	CLOB_TYPE_MID,
 	CLOB_TYPE_MKT,
-	CLOB_TYPE_PEG,
-	CLOB_TYPE_STP,
 } clob_type_t;
 
 typedef enum {
@@ -68,7 +65,6 @@ _Static_assert(NCLOB_SIDES == 2U, "more than 2 sides");
 typedef struct {
 	void *lmt[NCLOB_SIDES];
 	void *mkt[NCLOB_SIDES];
-	void *stp[NCLOB_SIDES];
 	struct quos_s *quo;
 	struct unxs_s *exe;
 } clob_t;
@@ -77,7 +73,12 @@ typedef struct {
 	clob_type_t typ;
 	clob_side_t sid;
 	qty_t qty;
-	px_t lmt;
+	union {
+		/* limit price for limit orders */
+		px_t lmt;
+		/* max slippage for market orders */
+		px_t slp;
+	};
 	px_t stp;
 	uintptr_t user;
 } clob_ord_t;
@@ -89,6 +90,9 @@ typedef struct {
 	clob_qid_t qid;
 	uintptr_t user;
 } clob_oid_t;
+
+_Static_assert(sizeof(clob_oid_t) == 32U, "clob_oid_t of odd size");
+_Static_assert(sizeof(clob_ord_t) == 48U, "clob_ord_t of odd size");
 
 
 /**

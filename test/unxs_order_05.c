@@ -23,7 +23,7 @@ main(void)
 {
 	clob_t c;
 	int rc;
-	clob_oid_t o;
+	clob_ord_t o;
 
 	c = make_clob();
 	c.exe = make_unxs(MODE_BI);
@@ -49,7 +49,8 @@ main(void)
 	clob_prnt(c);
 
 	rc = c.exe->n != 2U ||
-		o.qid == 0U ||
+		o.qty.dis != 300.dd ||
+		o.qty.hid != 0.dd ||
 		c.exe->x[0U].qty != 100.dd ||
 		c.exe->x[0U].prc != 198.0dd ||
 		c.exe->x[1U].qty != 100.dd ||
