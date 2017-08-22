@@ -131,11 +131,10 @@ extern int clob_del(clob_t, clob_oid_t);
 
 extern px_t clob_mid(clob_t);
 
-extern void clob_prnt(clob_t c);
-
-extern void clob_lvl2(clob_t c);
-
 extern bool clob_aggiter_next(clob_aggiter_t*);
+
+/* for debugging purposes */
+extern void clob_prnt(clob_t c);
 
 
 /* convenience */

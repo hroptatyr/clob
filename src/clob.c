@@ -63,18 +63,6 @@
 #define SIDE_ASK	CLOB_SIDE_ASK
 
 
-static qx_t
-plqu_sum(plqu_t q)
-{
-/* sum up displayed quantities */
-	qx_t sum = 0.dd;
-	for (plqu_iter_t i = {.q = q}; plqu_iter_next(&i);) {
-		sum += i.v.qty.dis;
-	}
-	return sum;
-}
-
-
 clob_t
 make_clob(void)
 {
@@ -317,57 +305,6 @@ clob_prnt(clob_t c)
 	_prnt_plqu(c.mkt[SIDE_BID]);
 	puts("MKT/ASK");
 	_prnt_plqu(c.mkt[SIDE_ASK]);
-	return;
-}
-
-void
-clob_lvl2(clob_t c)
-{
-	char buf[256U];
-	size_t len = 0U;
-
-	/* market orders first */
-	qx_t mb = plqu_sum(c.mkt[SIDE_BID]);
-	qx_t ma = plqu_sum(c.mkt[SIDE_ASK]);
-
-	len += (memcpy(buf + len, "MKT\t", 4U), 4U);
-	len += (memcpy(buf + len, "MKT\t", 4U), 4U);
-	len += qxtostr(buf + len, sizeof(buf) - len, mb);
-	buf[len++] = '\t';
-	len += qxtostr(buf + len, sizeof(buf) - len, ma);
-	buf[len++] = '\n';
-	fwrite(buf, 1, len, stdout);
-
-	/* now for limits */
-	for (btree_iter_t bi = {c.lmt[SIDE_BID]}, ai = {c.lmt[SIDE_ASK]};;) {
-		bool bp = btree_iter_next(&bi);
-		bool ap = btree_iter_next(&ai);
-
-		if (UNLIKELY(!bp && !ap)) {
-			break;
-		}
-
-		len = 0U;
-		if (bp) {
-			len += pxtostr(buf + len, sizeof(buf) - len, bi.k);
-		}
-		buf[len++] = '\t';
-		if (ap) {
-			len += pxtostr(buf + len, sizeof(buf) - len, ai.k);
-		}
-		buf[len++] = '\t';
-		if (bp) {
-			len += qxtostr(
-				buf + len, sizeof(buf) - len, bi.v->sum.dis);
-		}
-		buf[len++] = '\t';
-		if (ap) {
-			len += qxtostr(
-				buf + len, sizeof(buf) - len, ai.v->sum.dis);
-		}
-		buf[len++] = '\n';
-		fwrite(buf, 1, len, stdout);
-	}
 	return;
 }
 
