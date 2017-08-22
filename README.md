@@ -17,7 +17,6 @@ Features
 
 - b+tree based central limit order book
 - pluggable uncrossing schemes
-- order types: market, limit, stop and peg (mid, best)
 - market models: auction, continuous trading
 - IEEE-754 decimals
 - handles ~250 auctions with 10000 orders each per second
@@ -49,5 +48,49 @@ between them.
 This prompted us to write `clob`, a simple matching engine that's
 flexible enough to serve our studies.
 
+
+Patterns
+--------
+
+A book for continuous auctions:
+
+    while (1) {
+            next = next_auction();
+
+            do {
+                    clob_ord_t ord = read_order();
+                    clob_oid_t oid = clob_add(book, ord);
+                    send_confirmation(oid);
+            } while (time(NULL) < next);
+
+            mmod_auc_t A = mmod_auction(book);
+            unxs_auction(book, A.prc, A.qty);
+            send_executions(book);
+    }
+
+Routines `next_auction`, `read_order`, `send_confirmation` and
+`send_executions` would have to be written.
+
+A book for continuous trading:
+
+    while (1) {
+            clob_ord_t ord = read_order();
+
+            /* see if order crosses book */
+            ord = unxs_order(book, ord);
+
+            if (ord.qty.dis + ord.qty.hid > 0.dd) {
+                    /* put remainder of order into book */
+                    clob_oid_t oid = clob_add(book, ord);
+                    send_confirmation(oid);
+            }
+
+            send_executions(book);
+            send_quotes(book);
+    }
+
+where additionally `send_quotes` would have to be written to
+disseminate updated quotes.  Continuous trading and continuous auction
+can freely be mixed as well.
 
   [1]: http://opensource.org/licenses/BSD-3-Clause
