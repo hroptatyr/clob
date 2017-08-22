@@ -45,6 +45,14 @@ check_PROGRAMS += clob_05
 TESTS += clob_05
 clob_05_LDADD = $(clob_LIBS)
 
+check_PROGRAMS += clob_06
+TESTS += clob_06
+clob_06_LDADD = $(clob_LIBS)
+
+check_PROGRAMS += clob_07
+TESTS += clob_07
+clob_07_LDADD = $(clob_LIBS)
+
 check_PROGRAMS += unxs_xetra_01
 TESTS += unxs_xetra_01
 unxs_xetra_01_LDADD = $(clob_LIBS)

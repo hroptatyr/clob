@@ -83,6 +83,8 @@ typedef struct {
 	uintptr_t user;
 } clob_ord_t;
 
+_Static_assert(sizeof(clob_ord_t) == 48U, "clob_ord_t of odd size");
+
 typedef struct {
 	clob_type_t typ;
 	clob_side_t sid;
@@ -92,7 +94,34 @@ typedef struct {
 } clob_oid_t;
 
 _Static_assert(sizeof(clob_oid_t) == 32U, "clob_oid_t of odd size");
-_Static_assert(sizeof(clob_ord_t) == 48U, "clob_ord_t of odd size");
+
+/* aggregated iterator */
+typedef struct {
+	clob_type_t typ;
+	clob_side_t sid;
+	void *private;
+	size_t i;
+	px_t p;
+	qty_t q;
+} clob_aggiter_t;
+
+_Static_assert(sizeof(clob_aggiter_t) == 48U, "clob_aggiter_t of odd size");
+
+/* disaggregated iterator */
+typedef struct {
+	clob_type_t typ;
+	clob_side_t sid;
+	void *private;
+	size_t i;
+	qty_t q;
+	metr_t tim;
+	uintptr_t usr;
+	px_t p;
+	void *more;
+	size_t j;
+} clob_disiter_t;
+
+_Static_assert(sizeof(clob_disiter_t) == 80U, "clob_disiter_t of odd size");
 
 
 /**
@@ -118,9 +147,12 @@ extern int clob_del(clob_t, clob_oid_t);
 
 extern px_t clob_mid(clob_t);
 
-extern void clob_prnt(clob_t c);
+extern bool clob_aggiter_next(clob_aggiter_t*);
 
-extern void clob_lvl2(clob_t c);
+extern bool clob_disiter_next(clob_disiter_t*);
+
+/* for debugging purposes */
+extern void clob_prnt(clob_t c);
 
 
 /* convenience */
@@ -128,6 +160,18 @@ static inline __attribute__((pure, const)) clob_side_t
 clob_contra_side(clob_side_t s)
 {
 	return (clob_side_t)((unsigned int)s ^ 1U);
+}
+
+static inline __attribute__((pure, const)) clob_aggiter_t
+clob_aggiter(clob_t c, clob_type_t typ, clob_side_t sid)
+{
+	return (clob_aggiter_t){typ, sid, c.lmt[typ * NCLOB_SIDES + sid]};
+}
+
+static inline __attribute__((pure, const)) clob_disiter_t
+clob_disiter(clob_t c, clob_type_t typ, clob_side_t sid)
+{
+	return (clob_disiter_t){typ, sid, c.lmt[typ * NCLOB_SIDES + sid]};
 }
 
 #endif	/* INCLUDED_clob_h_ */

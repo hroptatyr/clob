@@ -63,18 +63,6 @@
 #define SIDE_ASK	CLOB_SIDE_ASK
 
 
-static qx_t
-plqu_sum(plqu_t q)
-{
-/* sum up displayed quantities */
-	qx_t sum = 0.dd;
-	for (plqu_iter_t i = {.q = q}; plqu_iter_next(&i);) {
-		sum += i.v.qty.dis;
-	}
-	return sum;
-}
-
-
 clob_t
 make_clob(void)
 {
@@ -218,6 +206,88 @@ clob_mid(clob_t c)
 	return (a + b) / 2.dd;
 }
 
+bool
+clob_aggiter_next(clob_aggiter_t *iter)
+{
+/* just overlay ITER with a btree_iter */
+	switch (iter->typ) {
+	case CLOB_TYPE_LMT:
+		for (btree_iter_t *i = (void*)&iter->private;
+		     btree_iter_next(i);) {
+			/* use SUM slot of I->V to populate ITER->Q */
+			iter->q = i->v->sum;
+			return true;
+		}
+		break;
+	case CLOB_TYPE_MKT: {
+		plqu_iter_t i = {.q = iter->private};
+		qty_t r = {0.dd, 0.dd};
+
+		if (UNLIKELY(iter->i++)) {
+			break;
+		} else if (!plqu_iter_next(&i)) {
+			break;
+		}
+		do {
+			r = qty_add(r, i.v.qty);
+		} while (plqu_iter_next(&i));
+		iter->p = NANPX;
+		iter->q = r;
+		return true;
+	}
+	default:
+		break;
+	}
+	return false;
+}
+
+bool
+clob_disiter_next(clob_disiter_t *iter)
+{
+/* just overlay ITER with btree and plqu iter */
+	switch (iter->typ) {
+	case CLOB_TYPE_LMT: {
+		plqu_iter_t *j = (void*)&iter->private;
+		btree_iter_t *i = (void*)&iter->private;
+
+		if (!iter->i) {
+			goto biter;
+		}
+		while (!plqu_iter_next(j)) {
+			/* try next level */
+
+			/* use backup slots */
+			iter->private = iter->more;
+			iter->i = iter->j;
+
+		biter:
+			/* copy from backup slots */
+			if (!btree_iter_next(i)) {
+				/* that's the easy bit */
+				return false;
+			}
+			/* push to backup slots */
+			iter->more = i->t;
+			iter->j = i->i;
+			/* set up new plqu iterator */
+			iter->private = i->v->q;
+			iter->i = 0U;
+			iter->p = i->k;
+		}
+		return true;
+	}
+	case CLOB_TYPE_MKT:
+		with (plqu_iter_t *i = (void*)&iter->private) {
+			iter->p = NANPX;
+			return plqu_iter_next(i);
+		}
+
+	default:
+		break;
+	}
+	return false;
+}
+
 
 #include <stdio.h>
 #include <string.h>
@@ -282,57 +352,6 @@ clob_prnt(clob_t c)
 	_prnt_plqu(c.mkt[SIDE_BID]);
 	puts("MKT/ASK");
 	_prnt_plqu(c.mkt[SIDE_ASK]);
-	return;
-}
-
-void
-clob_lvl2(clob_t c)
-{
-	char buf[256U];
-	size_t len = 0U;
-
-	/* market orders first */
-	qx_t mb = plqu_sum(c.mkt[SIDE_BID]);
-	qx_t ma = plqu_sum(c.mkt[SIDE_ASK]);
-
-	len += (memcpy(buf + len, "MKT\t", 4U), 4U);
-	len += (memcpy(buf + len, "MKT\t", 4U), 4U);
-	len += qxtostr(buf + len, sizeof(buf) - len, mb);
-	buf[len++] = '\t';
-	len += qxtostr(buf + len, sizeof(buf) - len, ma);
-	buf[len++] = '\n';
-	fwrite(buf, 1, len, stdout);
-
-	/* now for limits */
-	for (btree_iter_t bi = {c.lmt[SIDE_BID]}, ai = {c.lmt[SIDE_ASK]};;) {
-		bool bp = btree_iter_next(&bi);
-		bool ap = btree_iter_next(&ai);
-
-		if (UNLIKELY(!bp && !ap)) {
-			break;
-		}
-
-		len = 0U;
-		if (bp) {
-			len += pxtostr(buf + len, sizeof(buf) - len, bi.k);
-		}
-		buf[len++] = '\t';
-		if (ap) {
-			len += pxtostr(buf + len, sizeof(buf) - len, ai.k);
-		}
-		buf[len++] = '\t';
-		if (bp) {
-			len += qxtostr(
-				buf + len, sizeof(buf) - len, bi.v->sum.dis);
-		}
-		buf[len++] = '\t';
-		if (ap) {
-			len += qxtostr(
-				buf + len, sizeof(buf) - len, ai.v->sum.dis);
-		}
-		buf[len++] = '\n';
-		fwrite(buf, 1, len, stdout);
-	}
 	return;
 }
 
