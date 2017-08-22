@@ -218,6 +218,41 @@ clob_mid(clob_t c)
 	return (a + b) / 2.dd;
 }
 
+bool
+clob_aggiter_next(clob_aggiter_t *iter)
+{
+/* just overly ITER with a btree_iter */
+	switch (iter->typ) {
+	case CLOB_TYPE_LMT:
+		for (btree_iter_t *i = (void*)&iter->private;
+		     btree_iter_next(i);) {
+			/* use SUM slot of I->V to populate ITER->Q */
+			iter->q = i->v->sum;
+			return true;
+		}
+		break;
+	case CLOB_TYPE_MKT: {
+		plqu_iter_t i = {.q = iter->private};
+		qty_t r = {0.dd, 0.dd};
+
+		if (UNLIKELY(iter->i++)) {
+			break;
+		} else if (!plqu_iter_next(&i)) {
+			break;
+		}
+		do {
+			r = qty_add(r, i.v.qty);
+		} while (plqu_iter_next(&i));
+		iter->p = NANPX;
+		iter->q = r;
+		return true;
+	}
+	default:
+		break;
+	}
+	return false;
+}
+
 
 #include <stdio.h>
 #include <string.h>
