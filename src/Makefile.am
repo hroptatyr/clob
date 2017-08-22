@@ -43,8 +43,6 @@ libclob_a_LIBADD += libdfp.a
 pkginclude_HEADERS =
 pkginclude_HEADERS += clob.h clob_val.h
 pkginclude_HEADERS += unxs.h
-pkginclude_HEADERS += plqu.h plqu_val.h
-pkginclude_HEADERS += btree.h btree_val.h
 pkginclude_HEADERS += mmod-auction.h
 pkginclude_HEADERS += quos.h
 
