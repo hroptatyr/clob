@@ -107,6 +107,22 @@ typedef struct {
 
 _Static_assert(sizeof(clob_aggiter_t) == 48U, "clob_aggiter_t of odd size");
 
+/* disaggregated iterator */
+typedef struct {
+	clob_type_t typ;
+	clob_side_t sid;
+	void *private;
+	size_t i;
+	qty_t q;
+	metr_t tim;
+	uintptr_t usr;
+	px_t p;
+	void *more;
+	size_t j;
+} clob_disiter_t;
+
+_Static_assert(sizeof(clob_disiter_t) == 80U, "clob_disiter_t of odd size");
+
 
 /**
  * Instantiate central limit order book.
@@ -133,6 +149,8 @@ extern px_t clob_mid(clob_t);
 
 extern bool clob_aggiter_next(clob_aggiter_t*);
 
+extern bool clob_disiter_next(clob_disiter_t*);
+
 /* for debugging purposes */
 extern void clob_prnt(clob_t c);
 
@@ -148,6 +166,12 @@ static inline __attribute__((pure, const)) clob_aggiter_t
 clob_aggiter(clob_t c, clob_type_t typ, clob_side_t sid)
 {
 	return (clob_aggiter_t){typ, sid, c.lmt[typ * NCLOB_SIDES + sid]};
+}
+
+static inline __attribute__((pure, const)) clob_disiter_t
+clob_disiter(clob_t c, clob_type_t typ, clob_side_t sid)
+{
+	return (clob_disiter_t){typ, sid, c.lmt[typ * NCLOB_SIDES + sid]};
 }
 
 #endif	/* INCLUDED_clob_h_ */

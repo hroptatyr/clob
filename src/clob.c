@@ -209,7 +209,7 @@ clob_mid(clob_t c)
 bool
 clob_aggiter_next(clob_aggiter_t *iter)
 {
-/* just overly ITER with a btree_iter */
+/* just overlay ITER with a btree_iter */
 	switch (iter->typ) {
 	case CLOB_TYPE_LMT:
 		for (btree_iter_t *i = (void*)&iter->private;
@@ -235,6 +235,53 @@ clob_aggiter_next(clob_aggiter_t *iter)
 		iter->q = r;
 		return true;
 	}
+	default:
+		break;
+	}
+	return false;
+}
+
+bool
+clob_disiter_next(clob_disiter_t *iter)
+{
+/* just overlay ITER with btree and plqu iter */
+	switch (iter->typ) {
+	case CLOB_TYPE_LMT: {
+		plqu_iter_t *j = (void*)&iter->private;
+		btree_iter_t *i = (void*)&iter->private;
+
+		if (!iter->i) {
+			goto biter;
+		}
+		while (!plqu_iter_next(j)) {
+			/* try next level */
+
+			/* use backup slots */
+			iter->private = iter->more;
+			iter->i = iter->j;
+
+		biter:
+			/* copy from backup slots */
+			if (!btree_iter_next(i)) {
+				/* that's the easy bit */
+				return false;
+			}
+			/* push to backup slots */
+			iter->more = i->t;
+			iter->j = i->i;
+			/* set up new plqu iterator */
+			iter->private = i->v->q;
+			iter->i = 0U;
+			iter->p = i->k;
+		}
+		return true;
+	}
+	case CLOB_TYPE_MKT:
+		with (plqu_iter_t *i = (void*)&iter->private) {
+			iter->p = NANPX;
+			return plqu_iter_next(i);
+		}
+
 	default:
 		break;
 	}
