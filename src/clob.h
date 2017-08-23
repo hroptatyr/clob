@@ -111,14 +111,14 @@ _Static_assert(sizeof(clob_aggiter_t) == 48U, "clob_aggiter_t of odd size");
 typedef struct {
 	clob_type_t typ;
 	clob_side_t sid;
-	void *private;
+	void *private1;
 	size_t i;
+	void *private2;
+	size_t j;
 	qty_t q;
 	metr_t tim;
 	uintptr_t usr;
 	px_t p;
-	void *more;
-	size_t j;
 } clob_disiter_t;
 
 _Static_assert(sizeof(clob_disiter_t) == 80U, "clob_disiter_t of odd size");
