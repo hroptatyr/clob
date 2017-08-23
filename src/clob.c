@@ -245,42 +245,29 @@ bool
 clob_disiter_next(clob_disiter_t *iter)
 {
 /* just overlay ITER with btree and plqu iter */
+	btree_iter_t *i = (void*)&iter->private1;
+	plqu_iter_t *j = (void*)&iter->private2;
+
 	switch (iter->typ) {
-	case CLOB_TYPE_LMT: {
-		plqu_iter_t *j = (void*)&iter->private;
-		btree_iter_t *i = (void*)&iter->private;
-
-		if (!iter->i) {
-			goto biter;
-		}
-		while (!plqu_iter_next(j)) {
-			/* try next level */
-
-			/* use backup slots */
-			iter->private = iter->more;
-			iter->i = iter->j;
-
-		biter:
-			/* copy from backup slots */
+	case CLOB_TYPE_LMT:
+		while (!i->i || !plqu_iter_next(j)) {
+			/* try next btree level */
 			if (!btree_iter_next(i)) {
 				/* that's the easy bit */
 				return false;
 			}
-			/* push to backup slots */
-			iter->more = i->t;
-			iter->j = i->i;
-			/* set up new plqu iterator */
-			iter->private = i->v->q;
-			iter->i = 0U;
+			/* copy payload */
 			iter->p = i->k;
+			/* set up new plqu iterator */
+			j->q = i->v->q;
+			j->i = 0U;
 		}
 		return true;
-	}
+
 	case CLOB_TYPE_MKT:
-		with (plqu_iter_t *i = (void*)&iter->private) {
-			iter->p = NANPX;
-			return plqu_iter_next(i);
-		}
+		j->q = j->q ?: iter->private1;
+		iter->p = NANPX;
+		return plqu_iter_next(j);
 
 	default:
 		break;
