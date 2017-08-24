@@ -219,6 +219,9 @@ clob_stress_05_LDADD = $(clob_LIBS)
 check_PROGRAMS += clob_stress_06
 clob_stress_06_LDADD = $(clob_LIBS)
 
+check_PROGRAMS += clob_stress_07
+clob_stress_07_LDADD = $(clob_LIBS)
+
 check_PROGRAMS += cloe_01
 TESTS += cloe_01
 cloe_01_LDADD = $(clob_LIBS)
