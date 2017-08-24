@@ -54,19 +54,36 @@ struct plqu_s {
 	size_t tail;
 };
 
-static struct plqu_s _pool[256U];
+static struct plqu_s _pool[256U], *pool = _pool;
 static size_t zpool = countof(_pool);
-#define Q		_pool[q]
+/* number of plqus in use */
+static size_t npool;
+/* lowest returned plqu */
+static size_t ipool;
+
+#define Q		pool[q]
 
 
 plqu_t
 make_plqu(void)
 {
-	size_t i;
-	for (i = 0U; i < countof(_pool) && _pool[i].z & 1U; i++);
+	if (UNLIKELY(npool >= zpool)) {
+		/* resize */
+		size_t nuz = zpool * 2U;
+		if (UNLIKELY(pool == _pool)) {
+			pool = malloc(nuz * sizeof(*pool));
+			memcpy(pool, _pool, zpool * sizeof(*_pool));
+		} else {
+			pool = realloc(pool, nuz * sizeof(*pool));
+		}
+		zpool = nuz;
+	}
+	for (; ipool < zpool && pool[ipool].z & 1U; ipool++);
 	/* mark in use */
-	_pool[i].z--;
-	return i + 1U;
+	pool[ipool].z--;
+	/* keep track of used pools */
+	npool++;
+	return ipool + 1U;
 }
 
 void
@@ -77,6 +94,8 @@ free_plqu(plqu_t q)
 	Q.tail = 0U;
 	/* mark free */
 	Q.z++;
+	npool--;
+	ipool = q < ipool ? q : ipool;;
 	return;
 }
 
