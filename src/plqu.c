@@ -39,6 +39,7 @@
 #endif	/* HAVE_CONFIG_H */
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 #include "plqu.h"
 #include "plqu_val.h"
 #include "nifty.h"
@@ -46,31 +47,43 @@
 #define PLQU_INIZ	(8U)
 
 struct plqu_s {
+	/* always a 2-power or a 2-power - 1U if in use */
 	size_t z;
 	plqu_val_t *a;
 	size_t head;
 	size_t tail;
 };
 
+static struct plqu_s _pool[256U];
+static size_t zpool = countof(_pool);
+
+
+static size_t
+_next_free(void)
+{
+	size_t i;
+	for (i = 0U; i < countof(_pool) && _pool[i].z & 1U; i++);
+	return i;
+}
+
 
 plqu_t
 make_plqu(void)
 {
-	struct plqu_s *r = malloc(sizeof(*r));
-	r->z = PLQU_INIZ;
-	r->a = malloc(PLQU_INIZ * sizeof(*r));
-	r->head = 0U;
-	r->tail = 0U;
+	const size_t _ipool = _next_free();
+	struct plqu_s *r = _pool + _ipool;
+	/* mark in use */
+	r->z--;
 	return r;
 }
 
 void
 free_plqu(plqu_t q)
 {
-	if (LIKELY(q->a != NULL)) {
-		free(q->a);
-	}
-	free(q);
+	q->head = 0U;
+	q->tail = 0U;
+	/* mark free */
+	q->z++;
 	return;
 }
 
@@ -80,7 +93,7 @@ plqu_get(plqu_t q, plqu_qid_t i)
 	if (UNLIKELY(!(i > q->head && i <= q->tail))) {
 		return plqu_val_nil;
 	}
-	const size_t slot = (i - 1U) % q->z;
+	const size_t slot = (i - 1U) & q->z;
 	return q->a[slot];
 }
 
@@ -90,7 +103,7 @@ plqu_put(plqu_t q, plqu_qid_t i, plqu_val_t v)
 	if (UNLIKELY(!(i > q->head && i <= q->tail))) {
 		return -1;
 	}
-	const size_t slot = (i - 1U) % q->z;
+	const size_t slot = (i - 1U) & q->z;
 	q->a[slot] = v;
 	return 0;
 }
@@ -98,9 +111,9 @@ plqu_put(plqu_t q, plqu_qid_t i, plqu_val_t v)
 plqu_qid_t
 plqu_add(plqu_t q, plqu_val_t v)
 {
-	if (UNLIKELY(q->tail - q->head >= q->z)) {
+	if (UNLIKELY(q->tail - q->head >= (q->z + 1U))) {
 		/* resize him */
-		const size_t nuz = q->z * 2U;
+		const size_t nuz = ((q->z + 1U) * 2U) ?: PLQU_INIZ;
 		void *tmp = realloc(q->a, nuz * sizeof(*q->a));
 		if (UNLIKELY(tmp == NULL)) {
 			return 0ULL;
@@ -111,11 +124,11 @@ plqu_add(plqu_t q, plqu_val_t v)
 		 * the new size, move tail or head respectively
 		 * to make things easy (and branchless) we simply clone the
 		 * whole array */
-		memcpy(q->a + q->z, q->a, q->z * sizeof(*q->a));
+		memcpy(q->a + (q->z + 1U), q->a, (q->z + 1U) * sizeof(*q->a));
 		/* keep track of size */
-		q->z = nuz;
+		q->z = nuz - 1U;
 	}
-	q->a[q->tail++ % q->z] = v;
+	q->a[q->tail++ & q->z] = v;
 	return q->tail;
 }
 
@@ -125,7 +138,7 @@ plqu_top(plqu_t q)
 	plqu_val_t r;
 
 	if (LIKELY(q->head < q->tail)) {
-		r = q->a[q->head % q->z];
+		r = q->a[q->head & q->z];
 	} else {
 		r = plqu_val_nil;
 	}
@@ -138,7 +151,7 @@ plqu_pop(plqu_t q)
 	plqu_val_t r;
 
 	if (LIKELY(q->head < q->tail)) {
-		const size_t slot = q->head++ % q->z;
+		const size_t slot = q->head++ & q->z;
 		r = q->a[slot];
 	} else {
 		r = plqu_val_nil;
@@ -156,7 +169,7 @@ plqu_iter_next(plqu_iter_t *iter)
 		iter->i = iter->q->head;
 	}
 	while (iter->i < iter->q->tail) {
-		const size_t slot = (iter->i++) % iter->q->z;
+		const size_t slot = (iter->i++) & iter->q->z;
 		if (LIKELY(!plqu_val_nil_p(iter->q->a[slot]))) {
 			/* good one */
 			iter->v = iter->q->a[slot];
