@@ -63,8 +63,8 @@ typedef enum {
 _Static_assert(NCLOB_SIDES == 2U, "more than 2 sides");
 
 typedef struct {
-	void *lmt[NCLOB_SIDES];
-	void *mkt[NCLOB_SIDES];
+	uintptr_t lmt[NCLOB_SIDES];
+	uintptr_t mkt[NCLOB_SIDES];
 	struct quos_s *quo;
 	struct unxs_s *exe;
 } clob_t;
@@ -99,7 +99,7 @@ _Static_assert(sizeof(clob_oid_t) == 32U, "clob_oid_t of odd size");
 typedef struct {
 	clob_type_t typ;
 	clob_side_t sid;
-	void *private;
+	uintptr_t private;
 	size_t i;
 	px_t p;
 	qty_t q;
@@ -111,9 +111,9 @@ _Static_assert(sizeof(clob_aggiter_t) == 48U, "clob_aggiter_t of odd size");
 typedef struct {
 	clob_type_t typ;
 	clob_side_t sid;
-	void *private1;
+	uintptr_t private1;
 	size_t i;
-	void *private2;
+	uintptr_t private2;
 	size_t j;
 	qty_t q;
 	metr_t tim;

@@ -14,12 +14,12 @@ typedef struct {
 	qty_t sum;
 } btree_val_t;
 
-#define btree_val_nil	((btree_val_t){NULL})
+#define btree_val_nil	((btree_val_t){0U})
 
 static inline bool
 btree_val_nil_p(btree_val_t v)
 {
-	return v.q == NULL;
+	return v.q == 0U;
 }
 
 static inline void
