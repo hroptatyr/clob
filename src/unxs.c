@@ -380,7 +380,8 @@ unxs_order(clob_t c, clob_ord_t o, px_t r)
 		(void)_unxs_order(c.exe, &o, c.mkt[contra], r, oids);
 	more:
 		if (qty(o.qty) <= 0.dd) {
-			goto rest;
+			/* filled */
+			break;
 		} else if (!lmtp) {
 			goto rest;
 		} else if (o.sid == CLOB_SIDE_ASK && ti.k < o.lmt) {
