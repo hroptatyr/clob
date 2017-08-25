@@ -78,8 +78,6 @@ _fok(clob_ord_t *restrict o, plqu_t q)
 			/* full maker ~ partial taker */
 			o->qty = qty_exe(o->qty, mq);
 		} else {
-			/* partial maker ~ full taker */
-			qi.v.qty = qty_exe(qi.v.qty, oq);
 			/* let everyone know there's nothing left */
 			o->qty = qty0;
 			break;
