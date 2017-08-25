@@ -60,11 +60,9 @@ typedef enum {
 	NCLOB_SIDES,
 } clob_side_t;
 
-_Static_assert(NCLOB_SIDES == 2U, "more than 2 sides");
-
 typedef struct {
-	void *lmt[NCLOB_SIDES];
-	void *mkt[NCLOB_SIDES];
+	uintptr_t lmt[NCLOB_SIDES];
+	uintptr_t mkt[NCLOB_SIDES];
 	struct quos_s *quo;
 	struct unxs_s *exe;
 } clob_t;
@@ -83,8 +81,6 @@ typedef struct {
 	uintptr_t user;
 } clob_ord_t;
 
-_Static_assert(sizeof(clob_ord_t) == 48U, "clob_ord_t of odd size");
-
 typedef struct {
 	clob_type_t typ;
 	clob_side_t sid;
@@ -93,35 +89,29 @@ typedef struct {
 	uintptr_t user;
 } clob_oid_t;
 
-_Static_assert(sizeof(clob_oid_t) == 32U, "clob_oid_t of odd size");
-
 /* aggregated iterator */
 typedef struct {
 	clob_type_t typ;
 	clob_side_t sid;
-	void *private;
+	uintptr_t private;
 	size_t i;
 	px_t p;
 	qty_t q;
 } clob_aggiter_t;
 
-_Static_assert(sizeof(clob_aggiter_t) == 48U, "clob_aggiter_t of odd size");
-
 /* disaggregated iterator */
 typedef struct {
 	clob_type_t typ;
 	clob_side_t sid;
-	void *private1;
+	uintptr_t private1;
 	size_t i;
-	void *private2;
+	uintptr_t private2;
 	size_t j;
 	qty_t q;
 	metr_t tim;
 	uintptr_t usr;
 	px_t p;
 } clob_disiter_t;
-
-_Static_assert(sizeof(clob_disiter_t) == 80U, "clob_disiter_t of odd size");
 
 
 /**

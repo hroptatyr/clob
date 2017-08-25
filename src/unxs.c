@@ -256,7 +256,7 @@ unxs_auction(clob_t c, px_t p, qx_t q)
 	}
 	/* and now limit orders */
 	proto = (clob_oid_t){CLOB_TYPE_LMT, CLOB_SIDE_ASK};
-	for (btree_iter_t i = {.t = c.lmt[proto.sid]};
+	for (btree_iter_t i = {.t = (btree_t)c.lmt[proto.sid]};
 	     Q < q && btree_iter_next(&i) && (proto.prc = i.k) <= p;) {
 		qx_t before = qty(i.v->sum);
 		qx_t after;
@@ -271,7 +271,7 @@ unxs_auction(clob_t c, px_t p, qx_t q)
 					 (quos_msg_t){CLOB_SIDE_ASK, i.k, sum.dis});
 			}
 			if ((after = qty(i.v->sum = sum)) <= 0.dd) {
-				btree_val_t v = btree_rem(c.lmt[proto.sid], i.k);
+				btree_val_t v = btree_rem((btree_t)c.lmt[proto.sid], i.k);
 				free_plqu(v.q);
 			}
 		}
@@ -295,7 +295,7 @@ unxs_auction(clob_t c, px_t p, qx_t q)
 	}
 	/* and limit orders again */
 	proto = (clob_oid_t){CLOB_TYPE_LMT, CLOB_SIDE_BID};
-	for (btree_iter_t i = {.t = c.lmt[proto.sid]};
+	for (btree_iter_t i = {.t = (btree_t)c.lmt[proto.sid]};
 	     Q < q && btree_iter_next(&i) && (proto.prc = i.k) >= p;) {
 		qx_t before = qty(i.v->sum);
 		qx_t after;
@@ -310,7 +310,7 @@ unxs_auction(clob_t c, px_t p, qx_t q)
 					 (quos_msg_t){CLOB_SIDE_BID, i.k, sum.dis});
 			}
 			if ((after = qty(i.v->sum = sum)) <= 0.dd) {
-				btree_val_t v = btree_rem(c.lmt[proto.sid], i.k);
+				btree_val_t v = btree_rem((btree_t)c.lmt[proto.sid], i.k);
 				free_plqu(v.q);
 			}
 		}
@@ -335,7 +335,7 @@ unxs_order(clob_t c, clob_ord_t o, px_t r)
 
 	case CLOB_TYPE_LMT:
 		/* execute against contra market first, then contra limit */
-		ti = (btree_iter_t){.t = c.lmt[contra]};
+		ti = (btree_iter_t){.t = (btree_t)c.lmt[contra]};
 		if (LIKELY((lmtp = btree_iter_next(&ti)))) {
 			/* market orders act like pegs
 			 * so find out about the top bid/ask */
@@ -361,7 +361,7 @@ unxs_order(clob_t c, clob_ord_t o, px_t r)
 
 	case CLOB_TYPE_MKT:
 		/* execute against contra market first, then contra limit */
-		ti = (btree_iter_t){.t = c.lmt[contra]};
+		ti = (btree_iter_t){.t = (btree_t)c.lmt[contra]};
 		if (LIKELY((lmtp = btree_iter_next(&ti)))) {
 			/* aaah, reference price we need not */
 			r = ti.k;
@@ -402,7 +402,7 @@ unxs_order(clob_t c, clob_ord_t o, px_t r)
 					 (quos_msg_t){contra, ti.k, sum.dis});
 			}
 			if (qty(ti.v->sum) <= 0.dd) {
-				btree_val_t v = btree_rem(c.lmt[contra], ti.k);
+				btree_val_t v = btree_rem((btree_t)c.lmt[contra], ti.k);
 				free_plqu(v.q);
 				lmtp = btree_iter_next(&ti);
 			}

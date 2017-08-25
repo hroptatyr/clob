@@ -67,10 +67,10 @@ clob_t
 make_clob(void)
 {
 	clob_t r = {
-		.lmt[SIDE_ASK] = make_btree(false),
-		.lmt[SIDE_BID] = make_btree(true),
-		.mkt[SIDE_ASK] = make_plqu(),
-		.mkt[SIDE_BID] = make_plqu(),
+		.lmt[SIDE_ASK] = (uintptr_t)make_btree(false),
+		.lmt[SIDE_BID] = (uintptr_t)make_btree(true),
+		.mkt[SIDE_ASK] = (uintptr_t)make_plqu(),
+		.mkt[SIDE_BID] = (uintptr_t)make_plqu(),
 	};
 	return r;
 }
@@ -78,10 +78,10 @@ make_clob(void)
 void
 free_clob(clob_t c)
 {
-	free_btree(c.lmt[SIDE_ASK]);
-	free_btree(c.lmt[SIDE_BID]);
-	free_plqu(c.mkt[SIDE_ASK]);
-	free_plqu(c.mkt[SIDE_BID]);
+	free_btree((btree_t)c.lmt[SIDE_ASK]);
+	free_btree((btree_t)c.lmt[SIDE_BID]);
+	free_plqu((plqu_t)c.mkt[SIDE_ASK]);
+	free_plqu((plqu_t)c.mkt[SIDE_BID]);
 	return;
 }
 
@@ -98,11 +98,11 @@ clob_add(clob_t c, clob_ord_t o)
 
 	case CLOB_TYPE_LMT:
 		p = o.lmt;
-		t = c.lmt[o.sid];
+		t = (btree_t)c.lmt[o.sid];
 		goto addv;
 	case CLOB_TYPE_MKT:
 		p = 0;
-		q = c.mkt[o.sid];
+		q = (plqu_t)c.mkt[o.sid];
 		goto addq;
 
 	default:
@@ -143,7 +143,7 @@ clob_del(clob_t c, clob_oid_t o)
 		btree_t t;
 
 	case CLOB_TYPE_LMT:
-		t = c.lmt[o.sid];
+		t = (btree_t)c.lmt[o.sid];
 		goto delt;
 
 	delt:
@@ -193,8 +193,8 @@ clob_mid(clob_t c)
 	btree_key_t b, a;
 	btree_val_t *B, *A;
 
-	A = btree_top(c.lmt[SIDE_ASK], &a);
-	B = btree_top(c.lmt[SIDE_BID], &b);
+	A = btree_top((btree_t)c.lmt[SIDE_ASK], &a);
+	B = btree_top((btree_t)c.lmt[SIDE_BID], &b);
 
 	if (UNLIKELY(A == NULL && B == NULL)) {
 		return NANPX;
@@ -332,13 +332,13 @@ void
 clob_prnt(clob_t c)
 {
 	puts("LMT/BID");
-	_prnt_btree(c.lmt[SIDE_BID]);
+	_prnt_btree((btree_t)c.lmt[SIDE_BID]);
 	puts("LMT/ASK");
-	_prnt_btree(c.lmt[SIDE_ASK]);
+	_prnt_btree((btree_t)c.lmt[SIDE_ASK]);
 	puts("MKT/BID");
-	_prnt_plqu(c.mkt[SIDE_BID]);
+	_prnt_plqu((plqu_t)c.mkt[SIDE_BID]);
 	puts("MKT/ASK");
-	_prnt_plqu(c.mkt[SIDE_ASK]);
+	_prnt_plqu((plqu_t)c.mkt[SIDE_ASK]);
 	return;
 }
 
