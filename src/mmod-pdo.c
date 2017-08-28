@@ -96,7 +96,7 @@ mmod_pdo_t
 mmod_pdo(clob_t c, clob_ord_t o)
 {
 	const clob_side_t contra = clob_contra_side(o.sid);
-	mmod_pdo_t a;
+	mmod_pdo_t a = {.base = 0.dd, .term = 0.dd};
 
 	switch (o.typ) {
 		btree_iter_t ti;
