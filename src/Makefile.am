@@ -47,6 +47,9 @@ pkginclude_HEADERS =
 pkginclude_HEADERS += clob.h clob_val.h
 pkginclude_HEADERS += unxs.h
 pkginclude_HEADERS += mmod-auction.h
+pkginclude_HEADERS += mmod-fok.h
+pkginclude_HEADERS += mmod-ioc.h
+pkginclude_HEADERS += mmod-pdo.h
 pkginclude_HEADERS += quos.h
 
 bin_PROGRAMS += cloe
