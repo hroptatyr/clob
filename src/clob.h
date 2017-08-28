@@ -78,7 +78,7 @@ typedef struct {
 		px_t slp;
 	};
 	px_t stp;
-	uintptr_t user;
+	uintptr_t usr;
 } clob_ord_t;
 
 typedef struct {
@@ -86,7 +86,7 @@ typedef struct {
 	clob_side_t sid;
 	px_t prc;
 	clob_qid_t qid;
-	uintptr_t user;
+	uintptr_t usr;
 } clob_oid_t;
 
 /* aggregated iterator */

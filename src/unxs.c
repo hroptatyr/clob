@@ -127,7 +127,7 @@ _unxs_auction(unxs_t x, plqu_t q, px_t ref, qx_t max, clob_oid_t proto)
 
 	for (; plqu_iter_next(&i) && F < max; F += fil) {
 		proto.qid = plqu_iter_qid(i);
-		proto.user = i.v.usr;
+		proto.usr = i.v.usr;
 		fil = qty(i.v.qty);
 
 		if (UNLIKELY(F + fil > max)) {
@@ -163,7 +163,7 @@ _unxs_order(unxs_t x, clob_ord_t *restrict o, plqu_t q, px_t r, clob_oid_t *ids)
 		qx_t mq = qty(qi.v.qty);
 
 		ids[CLOB_SIDE_MAKER].qid = plqu_iter_qid(qi);
-		ids[CLOB_SIDE_MAKER].user = qi.v.usr;
+		ids[CLOB_SIDE_MAKER].usr = qi.v.usr;
 		if (mq <= oq) {
 			/* full maker ~ partial taker */
 			unxs_add(_x, (unxs_exe_t){r, mq}, ms, ids);
@@ -326,7 +326,7 @@ unxs_order(clob_t c, clob_ord_t o, px_t r)
 	const clob_side_t contra = clob_contra_side(o.sid);
 	clob_oid_t oids[] = {
 		[CLOB_SIDE_MAKER] = {.sid = contra, .prc = NANPX},
-		[CLOB_SIDE_TAKER] = {o.typ, o.sid, .prc = o.lmt, .user = o.user},
+		[CLOB_SIDE_TAKER] = {o.typ, o.sid, .prc = o.lmt, .usr = o.usr},
 	};
 
 	switch (o.typ) {
