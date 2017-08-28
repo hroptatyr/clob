@@ -135,9 +135,17 @@ check_PROGRAMS += mmod_fill_or_kill_02
 TESTS += mmod_fill_or_kill_02
 mmod_fill_or_kill_02_LDADD = $(clob_LIBS)
 
+check_PROGRAMS += mmod_fill_or_kill_03
+TESTS += mmod_fill_or_kill_03
+mmod_fill_or_kill_03_LDADD = $(clob_LIBS)
+
 check_PROGRAMS += mmod_immediate_or_cancel_01
 TESTS += mmod_immediate_or_cancel_01
 mmod_immediate_or_cancel_01_LDADD = $(clob_LIBS)
+
+check_PROGRAMS += mmod_price_discovery_01
+TESTS += mmod_price_discovery_01
+mmod_price_discovery_01_LDADD = $(clob_LIBS)
 
 
 check_PROGRAMS += unxs_order_01

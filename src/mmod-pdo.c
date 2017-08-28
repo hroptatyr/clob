@@ -1,4 +1,4 @@
-/*** mmod-fok.c -- decide on FOK orders
+/*** mmod-pdo.c -- price discovery orders
  *
  * Copyright (C) 2016-2017 Sebastian Freundt
  *
@@ -53,7 +53,7 @@
 #include "plqu_val.h"
 #include "clob.h"
 #include "clob_val.h"
-#include "mmod-fok.h"
+#include "mmod-pdo.h"
 #include "nifty.h"
 
 
@@ -64,12 +64,13 @@ sign_side(px_t p, clob_side_t s)
 	return s == CLOB_SIDE_ASK ? -p : p;
 }
 
-static void
-_fok(clob_ord_t *restrict o, plqu_t q)
+static qx_t
+_pdo(clob_ord_t *restrict o, plqu_t q)
 {
 /* return the quantity taken off of Q */
 	plqu_iter_t qi = {.q = q};
 	qx_t oq = qty(o->qty);
+	qx_t r = 0.dd;
 
 	for (; plqu_iter_next(&qi) && oq > 0.dd; oq = qty(o->qty)) {
 		qx_t mq = qty(qi.v.qty);
@@ -77,71 +78,95 @@ _fok(clob_ord_t *restrict o, plqu_t q)
 		if (mq <= oq) {
 			/* full maker ~ partial taker */
 			o->qty = qty_exe(o->qty, mq);
+			/* add maker quantity to result */
+			r += mq;
 		} else {
+			/* partial maker ~ full taker */
+			r += oq;
 			/* let everyone know there's nothing left */
 			o->qty = qty0;
 			break;
 		}
 	}
-	return;
+	return r;
 }
 
 
-int
-mmod_fok(clob_t c, clob_ord_t o)
+mmod_pdo_t
+mmod_pdo(clob_t c, clob_ord_t o)
 {
 	const clob_side_t contra = clob_contra_side(o.sid);
+	mmod_pdo_t a;
 
 	switch (o.typ) {
 		btree_iter_t ti;
 		bool lmtp;
+		px_t r;
 
 	case CLOB_TYPE_LMT:
 		/* execute against contra market first, then contra limit */
 		ti = (btree_iter_t){.t = (btree_t)c.lmt[contra]};
-		lmtp = btree_iter_next(&ti);
+		if (LIKELY((lmtp = btree_iter_next(&ti)))) {
+			/* market orders act like pegs
+			 * so find out about the top bid/ask */
+			switch (o.sid) {
+			case CLOB_SIDE_ASK:
+				r = max(o.lmt, ti.k);
+				break;
+			case CLOB_SIDE_BID:
+				r = min(o.lmt, ti.k);
+				break;
+			}
+		} else {
+			/* can't execute against NAN reference price */
+			r = o.lmt;
+		}
 		goto marketable;
 
 	case CLOB_TYPE_MKT:
 		/* execute against contra market first, then contra limit */
 		ti = (btree_iter_t){.t = (btree_t)c.lmt[contra]};
 		if (LIKELY((lmtp = btree_iter_next(&ti)))) {
-			/* aaah, reference price, use to imply a limit */
-			o.lmt = ti.k + sign_side(o.slp, o.sid);
+			/* aaah, reference price we need not */
+			r = ti.k;
 		} else {
-			/* no price means no execution */
-			goto kill;
+			/* can't execute against NAN reference price */
+			break;
 		}
+		/* turn slippage into absolute limit price
+		 * only if slippage is a normal */
+		o.lmt = r + sign_side(o.slp, o.sid);
 		goto marketable;
 
 	marketable:
 		/* get markets ready */
-		_fok(&o, c.mkt[contra]);
+		a.base = _pdo(&o, c.mkt[contra]);
+		a.term = a.base * r;
 	more:
 		if (qty(o.qty) <= 0.dd) {
-			goto fill;
+			/* filled */
+			break;
 		} else if (!lmtp) {
-			goto kill;
+			/* no more limit orders */
+			break;
 		} else if (o.sid == CLOB_SIDE_ASK && ti.k < o.lmt) {
-			/* we need an improvement over R */
-			goto kill;
+			/* we need a price improvement */
+			break;
 		} else if (o.sid == CLOB_SIDE_BID && ti.k > o.lmt) {
 			/* not an improvement */
-			goto kill;
+			break;
 		}
 		/* otherwise dive into limits */
-		_fok(&o, ti.v->q);
-		/* climb up/down the ladder */
-		lmtp = btree_iter_next(&ti);
+		with (qx_t q = _pdo(&o, ti.v->q)) {
+			/* maintain the sum */
+			a.base += q;
+			a.term += q * ti.k;
+			lmtp = btree_iter_next(&ti);
+		}
 		goto more;
 	}
-fill:
-	/* filled */
-	return 1;
-
-kill:
-	/* killed */
-	return 0;
+	/* remainder goes back to requester */
+	return a;
 }
 
-/* mmod-fok.c ends here */
+/* mmod-pdo.c ends here */
