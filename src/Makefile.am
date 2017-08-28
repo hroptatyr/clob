@@ -35,6 +35,7 @@ libclob_a_SOURCES += unxs.c unxs.h
 libclob_a_SOURCES += mmod-auction.c mmod-auction.h
 libclob_a_SOURCES += mmod-fok.c mmod-fok.h
 libclob_a_SOURCES += mmod-ioc.c mmod-ioc.h
+libclob_a_SOURCES += mmod-pdo.c mmod-pdo.h
 libclob_a_SOURCES += quos.c quos.h
 libclob_a_SOURCES += nifty.h
 libclob_a_CPPFLAGS = $(AM_CPPFLAGS)
