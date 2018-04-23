@@ -32,7 +32,7 @@ dist-hook:
 clob.pc: .version clob.pc.in
 	$(AM_V_GEN) PATH="$(top_builddir)/build-aux:$${PATH}" \
 		yuck$(EXEEXT) scmver -n \
-			--reference $^ | \
+			--reference .version $(srcdir)/clob.pc.in | \
 		$(SHELL) "$(builddir)/config.status" --file=- > $@
 
 ## Makefile.am ends here
