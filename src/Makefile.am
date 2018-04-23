@@ -63,10 +63,11 @@ BUILT_SOURCES = cloe.yucc
 
 
 ## version rules
-version.c: version.c.in $(top_builddir)/.version
+version.c: $(srcdir)/version.c.in $(top_builddir)/.version
 	$(AM_V_GEN) PATH="$(top_builddir)/build-aux:$${PATH}" \
 		yuck$(EXEEXT) scmver --ignore-noscm --force -o $@ \
-			--use-reference --reference $(top_builddir)/.version $<
+			--use-reference --reference $(top_builddir)/.version \
+			$(srcdir)/version.c.in
 
 ## yuck rule
 SUFFIXES += .yuck
