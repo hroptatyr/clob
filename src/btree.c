@@ -1,6 +1,6 @@
 /*** btree.c -- simple b+tree impl
  *
- * Copyright (C) 2016-2017 Sebastian Freundt
+ * Copyright (C) 2016-2018 Sebastian Freundt
  *
  * Author:  Sebastian Freundt <freundt@ga-group.nl>
  *

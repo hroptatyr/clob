@@ -1,6 +1,6 @@
 /*** dfp754_d32.h -- _Decimal32 goodness
  *
- * Copyright (C) 2013-2016 Sebastian Freundt
+ * Copyright (C) 2013-2018 Sebastian Freundt
  *
  * Author:  Sebastian Freundt <freundt@ga-group.nl>
  *

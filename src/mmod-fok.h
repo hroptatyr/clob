@@ -1,6 +1,6 @@
 /*** mmod-fok.h -- decide on FOK orders
  *
- * Copyright (C) 2016-2017 Sebastian Freundt
+ * Copyright (C) 2016-2018 Sebastian Freundt
  *
  * Author:  Sebastian Freundt <freundt@ga-group.nl>
  *

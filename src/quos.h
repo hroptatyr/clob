@@ -1,6 +1,6 @@
 /*** quos.h -- quote stream attachment to central limit order book
  *
- * Copyright (C) 2016-2017 Sebastian Freundt
+ * Copyright (C) 2016-2018 Sebastian Freundt
  *
  * Author:  Sebastian Freundt <freundt@ga-group.nl>
  *
