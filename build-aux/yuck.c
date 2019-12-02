@@ -1,6 +1,6 @@
 /*** yuck.c -- generate umbrella commands
  *
- * Copyright (C) 2013-2016 Sebastian Freundt
+ * Copyright (C) 2013-2019 Sebastian Freundt
  *
  * Author:  Sebastian Freundt <freundt@ga-group.nl>
  *
@@ -38,6 +38,9 @@
 # include "config.h"
 #endif	/* HAVE_CONFIG_H */
 /* for fgetln() */
+#if !defined __BSD_VISIBLE
+# define __BSD_VISIBLE 1
+#endif /* !__BSD_VISIBLE */
 #if !defined _NETBSD_SOURCE
 # define _NETBSD_SOURCE
 #endif	/* !_NETBSD_SOURCE */
@@ -61,6 +64,8 @@
 #include <fcntl.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/sysctl.h>
 #include <time.h>
 #if defined WITH_SCMVER
 # include <yuck-scmver.h>
@@ -139,16 +144,6 @@ error(const char *fmt, ...)
 	}
 	fputc('\n', stderr);
 	return;
-}
-
-static inline __attribute__((unused)) void*
-deconst(const void *cp)
-{
-	union {
-		const void *c;
-		void *p;
-	} tmp = {cp};
-	return tmp.p;
 }
 
 static inline __attribute__((always_inline)) unsigned int
@@ -405,6 +400,13 @@ static void yield_opt(const struct opt_s *arg);
 static void yield_inter(const bbuf_t x[static 1U]);
 static void yield_setopt(yopt_t);
 
+static struct {
+	unsigned int no_auto_help:1U;
+	unsigned int no_auto_version:1U;
+	unsigned int no_auto_action:1U;
+	unsigned int preserve:1U;
+} global_tweaks;
+
 #define DEBUG(args...)
 
 static int
@@ -533,6 +535,7 @@ optionp(const char *line, size_t llen)
 	static bbuf_t desc[1U];
 	static bbuf_t lopt[1U];
 	static bbuf_t larg[1U];
+	static size_t pos = 0U;
 	const char *sp = line;
 	const char *const ep = line + llen;
 
@@ -549,7 +552,7 @@ optionp(const char *line, size_t llen)
 			sp += 7U;
 		}
 	}
-	if ((sp - line >= 8 || (sp - line >= 1 && *sp != '-')) &&
+	if ((*sp == '\n' || sp - line >= 8 || (sp - line >= 1 && *sp != '-')) &&
 	    (cur_opt.sopt || cur_opt.lopt)) {
 		/* should be description */
 		goto desc;
@@ -671,10 +674,21 @@ yield:
 	for (; sp < ep && isspace(*sp); sp++);
 	/* don't free but reset the old guy */
 	desc->n = 0U;
+	pos = sp - line;
 desc:
 	with (size_t sz = llen - (sp - line)) {
-		if (LIKELY(sz > 0U)) {
-			cur_opt.desc = bbuf_cat(desc, sp, sz);
+		ssize_t temp = (sp - line) - pos;
+		if (temp < 0) {
+			temp = 0;
+		}
+		if (!global_tweaks.preserve) {
+			if (LIKELY(sz > 0U)) {
+				cur_opt.desc = bbuf_cat(desc, sp, sz);
+			}
+		} else if (LIKELY(sz > 0)) {
+			cur_opt.desc = bbuf_cat(desc, sp - temp, sz + temp);
+		} else {
+			cur_opt.desc = bbuf_cat(desc, "\n", 1U);
 		}
 	}
 	return 1;
@@ -737,11 +751,6 @@ setoptp(const char *line, size_t UNUSED(llen))
 static const char nul_str[] = "";
 static const char *const auto_types[] = {"auto", "flag"};
 static FILE *outf;
-
-static struct {
-	unsigned int no_auto_flags:1U;
-	unsigned int no_auto_action:1U;
-} global_tweaks;
 
 static void
 __identify(char *restrict idn)
@@ -900,8 +909,10 @@ yield_usg(const struct usg_s *arg)
 				idn, arg->desc);
 		}
 		/* insert auto-help and auto-version */
-		if (!global_tweaks.no_auto_flags) {
+		if (!global_tweaks.no_auto_help) {
 			yield_help();
+		}
+		if (!global_tweaks.no_auto_version) {
 			yield_version();
 		}
 	}
@@ -1733,12 +1744,12 @@ cmd_gen(const struct yuck_cmd_gen_s argi[static 1U])
 	char *deffn = _deffn;
 	int rc = 0;
 
-	if (argi->no_auto_flags_flag) {
-		global_tweaks.no_auto_flags = 1U;
-	}
-	if (argi->no_auto_actions_flag) {
-		global_tweaks.no_auto_action = 1U;
-	}
+	global_tweaks.no_auto_help =
+		!!(argi->no_auto_flags_flag + argi->no_auto_help_flag);
+	global_tweaks.no_auto_version =
+		!!(argi->no_auto_flags_flag + argi->no_auto_version_flag);
+	global_tweaks.no_auto_action = !!argi->no_auto_actions_flag;
+	global_tweaks.preserve = !!argi->preserve_flag;
 
 	/* deal with the output first */
 	if (UNLIKELY((outf = mkftempp(&deffn, sizeof(P_tmpdir))) == NULL)) {
@@ -1879,12 +1890,12 @@ cmd_gendsl(const struct yuck_cmd_gendsl_s argi[static 1U])
 {
 	int rc = 0;
 
-	if (argi->no_auto_flags_flag) {
-		global_tweaks.no_auto_flags = 1U;
-	}
-	if (argi->no_auto_actions_flag) {
-		global_tweaks.no_auto_action = 1U;
-	}
+	global_tweaks.no_auto_help =
+		!!(argi->no_auto_flags_flag + argi->no_auto_help_flag);
+	global_tweaks.no_auto_version =
+		!!(argi->no_auto_flags_flag + argi->no_auto_version_flag);
+	global_tweaks.no_auto_action = !!argi->no_auto_actions_flag;
+	global_tweaks.preserve = !!argi->preserve_flag;
 
 	/* bang to stdout or argi->output_arg */
 	with (const char *outfn = argi->output_arg) {
