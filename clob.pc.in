@@ -4,11 +4,12 @@ includedir=@includedir@
 headerdir=@headerdir@
 libdir=@libdir@
 datadir=@datarootdir@
-utedir=@utedir@
+dfp754_CFLAGS=@dfp754_CFLAGS@
+dfp754_LIBS=@dfp754_LIBS@
 
 Name: @PACKAGE_NAME@
 Description: Simple limit order book and matching engine.
 Version: YUCK_SCMVER_VERSION
-Libs: -L${libdir} -lclob
-Cflags: -I${includedir}
+Libs: -L${libdir} -lclob ${dfp754_LIBS}
+Cflags: -I${includedir} ${dfp754_CFLAGS}
 
