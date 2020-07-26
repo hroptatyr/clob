@@ -73,8 +73,10 @@ make_plqu(void)
 		if (UNLIKELY(pool == _pool)) {
 			pool = malloc(nuz * sizeof(*pool));
 			memcpy(pool, _pool, zpool * sizeof(*_pool));
+			memset(pool + zpool, 0, zpool * sizeof(*_pool));
 		} else {
 			pool = realloc(pool, nuz * sizeof(*pool));
+			memset(pool + zpool, 0, zpool * sizeof(*_pool));
 		}
 		zpool = nuz;
 	}
