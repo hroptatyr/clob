@@ -22,7 +22,7 @@ check_PROGRAMS =
 CLEANFILES = $(check_PROGRAMS)
 
 clob_CFLAGS = -I$(top_srcdir)/src $(dfp754_CFLAGS)
-clob_LIBS = $(top_builddir)/src/libclob.a $(top_builddir)/src/libdfp.a $(dfp754_LIBS)
+clob_LIBS = $(top_builddir)/src/libclob.a $(dfp754_LIBS)
 
 
 check_PROGRAMS += clob_01
