@@ -137,11 +137,21 @@ extern clob_oid_t clob_add(clob_t, clob_ord_t);
  * be published there. */
 extern int clob_del(clob_t, clob_oid_t);
 
+/**
+ * Return mid point price. */
 extern px_t clob_mid(clob_t);
 
+/**
+ * Advance the iterator, return true if filled, false otherwise. */
 extern bool clob_aggiter_next(clob_aggiter_t*);
 
+/**
+ * Advance the iterator, return true if filled, false otherwise. */
 extern bool clob_disiter_next(clob_disiter_t*);
+
+/**
+ * Obtain current quantities of oid. */
+extern qty_t clob_oid_get_qty(clob_t, clob_oid_t);
 
 /* for debugging purposes */
 extern void clob_prnt(clob_t c);
