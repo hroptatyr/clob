@@ -59,6 +59,9 @@
 #define NANPX		NAND64
 #define isnanpx		isnand64
 
+#define NANQX		NAND64
+#define isnanqx		isnand64
+
 #define SIDE_BID	CLOB_SIDE_BID
 #define SIDE_ASK	CLOB_SIDE_ASK
 
@@ -273,6 +276,96 @@ clob_disiter_next(clob_disiter_t *iter)
 		break;
 	}
 	return false;
+}
+
+qty_t
+clob_oid_get_qty(clob_t c, clob_oid_t o)
+{
+	qty_t r;
+
+	if (UNLIKELY(!o.qid)) {
+		goto err;
+	}
+
+	switch (o.typ) {
+		btree_t t;
+		plqu_t q;
+
+	case CLOB_TYPE_LMT:
+		t = (btree_t)c.lmt[o.sid];
+		with (btree_val_t *v = btree_get(t, o.prc)) {
+			if (UNLIKELY(v == NULL)) {
+				goto err;
+			} else if (UNLIKELY(btree_val_nil_p(*v))) {
+				goto err;
+			}
+			q = v->q;
+		}
+		goto qget;
+
+	case CLOB_TYPE_MKT:
+		q = c.mkt[o.sid];
+		goto qget;
+
+	qget:
+		with (plqu_val_t w = plqu_get(q, o.qid)) {
+			if (UNLIKELY(plqu_val_nil_p(w))) {
+				goto err;
+			}
+			r = w.qty;
+		}
+		break;
+
+	default:
+	err:
+		return qty0;
+	}
+	return r;
+}
+
+metr_t
+clob_oid_get_tim(clob_t c, clob_oid_t o)
+{
+	metr_t m;
+
+	if (UNLIKELY(!o.qid)) {
+		goto err;
+	}
+
+	switch (o.typ) {
+		btree_t t;
+		plqu_t q;
+
+	case CLOB_TYPE_LMT:
+		t = (btree_t)c.lmt[o.sid];
+		with (btree_val_t *v = btree_get(t, o.prc)) {
+			if (UNLIKELY(v == NULL)) {
+				goto err;
+			} else if (UNLIKELY(btree_val_nil_p(*v))) {
+				goto err;
+			}
+			q = v->q;
+		}
+		goto qget;
+
+	case CLOB_TYPE_MKT:
+		q = c.mkt[o.sid];
+		goto qget;
+
+	qget:
+		with (plqu_val_t w = plqu_get(q, o.qid)) {
+			if (UNLIKELY(plqu_val_nil_p(w))) {
+				goto err;
+			}
+			m = w.tim;
+		}
+		break;
+
+	default:
+	err:
+		return 0U;
+	}
+	return m;
 }
 
 

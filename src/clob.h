@@ -153,6 +153,10 @@ extern bool clob_disiter_next(clob_disiter_t*);
  * Obtain current quantities of oid. */
 extern qty_t clob_oid_get_qty(clob_t, clob_oid_t);
 
+/**
+ * Obtain metronome of oid. */
+extern metr_t clob_oid_get_tim(clob_t, clob_oid_t);
+
 /* for debugging purposes */
 extern void clob_prnt(clob_t c);
 
