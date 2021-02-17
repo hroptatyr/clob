@@ -68,8 +68,10 @@ typedef struct unxs_s {
 	const unxs_exe_t *x;
 	/** sides of executions from the maker point of view */
 	const uint_fast8_t *s;
-	/** orders taking part in this match */
+	/** orders taking part in this match, (unxs_mode_t)M  times N */
 	const clob_oid_t *o;
+	/** remaining quantities, same dimension as O */
+	const qty_t *q;
 } *unxs_t;
 
 

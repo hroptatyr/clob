@@ -68,6 +68,7 @@ struct _unxs_s {
 	unxs_exe_t *x;
 	uint_fast8_t *s;
 	clob_oid_t *o;
+	qty_t *q;
 	size_t z;
 };
 
@@ -90,7 +91,7 @@ sign_side(px_t p, clob_side_t s)
 }
 
 static int
-unxs_add(struct _unxs_s *r, unxs_exe_t x, clob_side_t s, const clob_oid_t *o)
+unxs_add(struct _unxs_s *r, unxs_exe_t x, clob_side_t s, const clob_oid_t o[static 1U], const qty_t q[static 1U])
 {
 	if (r == NULL) {
 		return 0;
@@ -101,18 +102,26 @@ unxs_add(struct _unxs_s *r, unxs_exe_t x, clob_side_t s, const clob_oid_t *o)
 		void *tmpx = realloc(r->x, nuz * sizeof(*r->x));
 		void *tmps = realloc(r->s, nuz * sizeof(*r->s));
 		void *tmpo = realloc(r->o, nuz * r->m * sizeof(*r->o));
+		void *tmpq = realloc(r->q, nuz * r->m * sizeof(*r->q));
 
-		if (UNLIKELY(tmpx == NULL || tmpo == NULL || tmps == NULL)) {
+		if (UNLIKELY(tmpx == NULL || tmpo == NULL || tmpq == NULL || tmps == NULL)) {
 			return -1;
 		}
 		/* otherwise assign */
 		r->x = tmpx;
 		r->s = tmps;
 		r->o = tmpo;
+		r->q = tmpq;
 		r->z = nuz;
 	}
-	memcpy(r->o + r->m * r->n, o, r->m * sizeof(*o));
+
 	r->s[r->n] = (uint_fast8_t)s;
+	r->o[r->m * r->n] = o[0U];
+	r->q[r->m * r->n] = q[0U];
+	if (r->m > 1U) {
+		r->o[r->m * r->n + 1U] = o[1U];
+		r->q[r->m * r->n + 1U] = q[1U];
+	}
 	r->x[r->n++] = x;
 	return 0;
 }
@@ -138,11 +147,11 @@ _unxs_auction(unxs_t x, plqu_t q, px_t ref, qx_t max, clob_oid_t proto)
 			i.v.qty = qty_exe(i.v.qty, fil);
 			plqu_iter_put(i, i.v);
 			/* fill him and out */
-			unxs_add(_x, (unxs_exe_t){ref, fil}, proto.sid, &proto);
+			unxs_add(_x, (unxs_exe_t){ref, fil}, proto.sid, &proto, &i.v.qty);
 			break;
 		}
 		/* otherwise fill him fully */
-		unxs_add(_x, (unxs_exe_t){ref, fil}, proto.sid, &proto);
+		unxs_add(_x, (unxs_exe_t){ref, fil}, proto.sid, &proto, &qty0);
 	}
 	plqu_iter_set_top(i);
 	return;
@@ -160,21 +169,25 @@ _unxs_order(unxs_t x, clob_ord_t *restrict o, plqu_t q, px_t r, clob_oid_t *ids)
 	const clob_side_t ms = clob_contra_side(o->sid);
 
 	for (; plqu_iter_next(&qi) && oq > 0.dd; oq = qty(o->qty)) {
+		qty_t remn[2U];
 		qx_t mq = qty(qi.v.qty);
 
 		ids[CLOB_SIDE_MAKER].qid = plqu_iter_qid(qi);
 		ids[CLOB_SIDE_MAKER].usr = qi.v.usr;
 		if (mq <= oq) {
 			/* full maker ~ partial taker */
-			unxs_add(_x, (unxs_exe_t){r, mq}, ms, ids);
-			o->qty = qty_exe(o->qty, mq);
+			o->qty = remn[CLOB_SIDE_TAKER] = qty_exe(o->qty, mq);
+			remn[CLOB_SIDE_MAKER] = qty0;
+			unxs_add(_x, (unxs_exe_t){r, mq}, ms, ids, remn);
 			/* add maker quantity to result */
 			s = qty_add(s, qi.v.qty);
 		} else {
 			/* partial maker ~ full taker */
 			qty_t prvq = qi.v.qty;
-			unxs_add(_x, (unxs_exe_t){r, oq}, ms, ids);
-			qi.v.qty = qty_exe(prvq, oq);
+
+			qi.v.qty = remn[CLOB_SIDE_MAKER] = qty_exe(prvq, oq);
+			remn[CLOB_SIDE_TAKER] = qty0;
+			unxs_add(_x, (unxs_exe_t){r, oq}, ms, ids, remn);
 			/* add residual order quantity to result */
 			s = qty_add(s, qty_sub(prvq, qi.v.qty));
 			plqu_iter_put(qi, qi.v);
@@ -197,6 +210,7 @@ make_unxs(unxs_mode_t m)
 	r->x = malloc(UNXS_INIZ * sizeof(*r->x));
 	r->s = malloc(UNXS_INIZ * sizeof(*r->s));
 	r->o = malloc(UNXS_INIZ * m * sizeof(*r->o));
+	r->q = malloc(UNXS_INIZ * m * sizeof(*r->q));
 	r->z = UNXS_INIZ;
 	return (unxs_t)r;
 }
@@ -213,6 +227,9 @@ free_unxs(unxs_t x)
 	}
 	if (LIKELY(_x->o != NULL)) {
 		free(_x->o);
+	}
+	if (LIKELY(_x->q != NULL)) {
+		free(_x->q);
 	}
 	free(_x);
 	return;
