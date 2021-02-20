@@ -1,6 +1,6 @@
 /*** plqu.c -- price level queue
  *
- * Copyright (C) 2016-2019 Sebastian Freundt
+ * Copyright (C) 2016-2021 Sebastian Freundt
  *
  * Author:  Sebastian Freundt <freundt@ga-group.nl>
  *
