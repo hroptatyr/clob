@@ -39,14 +39,11 @@
 #endif	/* HAVE_CONFIG_H */
 #include <stdlib.h>
 #include <string.h>
-#if defined HAVE_DFP754_H
-# include <dfp754.h>
-#elif defined HAVE_DFP_STDLIB_H
-# include <dfp/stdlib.h>
-#elif defined HAVE_DECIMAL_H
-# include <decimal.h>
+#if defined WITH_DECIMAL
+# include <dfp754_d64.h>
+#else
+# include <math.h>
 #endif
-#include <dfp754_d64.h>
 #include "btree.h"
 #include "btree_val.h"
 #include "plqu.h"
@@ -58,9 +55,6 @@
 #include "nifty.h"
 
 #define UNXS_INIZ	(8U)
-
-#define NANPX		NAND64
-#define isnanpx		isnand64
 
 struct _unxs_s {
 	unxs_mode_t m;

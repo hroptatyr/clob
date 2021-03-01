@@ -3,8 +3,6 @@
 #include "clob.h"
 #include "nifty.h"
 
-#define NANPX		NAND64
-
 
 int
 main(void)

@@ -40,31 +40,41 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#if defined HAVE_DFP754_H
-# include <dfp754.h>
-#elif defined HAVE_DFP_STDLIB_H
-# include <dfp/stdlib.h>
-#elif defined HAVE_DECIMAL_H
-# include <decimal.h>
-#endif	/* DFP754_H || HAVE_DFP_STDLIB_H || HAVE_DECIMAL_H */
-#include "dfp754_d64.h"
+#if defined WITH_DECIMAL
+# include "dfp754_d64.h"
+#else
+# include <math.h>
+#endif
 #include "clob.h"
 #include "unxs.h"
 #include "quos.h"
 #include "mmod-auction.h"
 #include "nifty.h"
 
+#if defined WITH_DECIMAL
 #define strtoqx		strtod64
 #define strtopx		strtod64
 #define qxtostr		d64tostr
 #define pxtostr		d64tostr
-
-#define NANPX		NAND64
-#define isnanpx		isnand64
+#else
+#define strtoqx		strtod
+#define strtopx		strtod
+#define qxtostr		dtostr
+#define pxtostr		dtostr
+#endif
 
 #define CLOB_TYPE_AUC	((clob_type_t)0x10U)
 
 static FILE *traout, *quoout;
+
+
+#if !defined WITH_DECIMAL
+#include <stdio.h>
+static int dtostr(char *restrict buf, size_t bsz, double d)
+{
+	return snprintf(buf, bsz, "%f", d);
+}
+#endif	/* WITH_DECIMAL */
 
 
 static clob_ord_t
