@@ -21,11 +21,14 @@ EXTRA_DIST += version.c.in
 
 lib_LIBRARIES += libclob.a
 libclob_a_SOURCES =
+if WITH_DECIMAL
 libclob_a_SOURCES += dfp754_d32.c dfp754_d32.h
 libclob_a_SOURCES += dfp754_d64.c dfp754_d64.h
+endif
 libclob_a_SOURCES += btree.c btree.h btree_val.h
 libclob_a_SOURCES += plqu.c plqu.h plqu_val.h
 libclob_a_SOURCES += clob.c clob.h clob_val.h
+libclob_a_SOURCES += clob_type.h
 libclob_a_SOURCES += unxs.c unxs.h
 libclob_a_SOURCES += mmod-auction.c mmod-auction.h
 libclob_a_SOURCES += mmod-fok.c mmod-fok.h
@@ -34,8 +37,11 @@ libclob_a_SOURCES += mmod-pdo.c mmod-pdo.h
 libclob_a_SOURCES += quos.c quos.h
 libclob_a_SOURCES += nifty.h
 libclob_a_CPPFLAGS = $(AM_CPPFLAGS)
+libclob_a_LIBADD =
+if WITH_DECIMAL
 libclob_a_CPPFLAGS += $(dfp754_CFLAGS)
-libclob_a_LIBADD = $(dfp754_LIBS)
+libclob_a_LIBADD += $(dfp754_LIBS)
+endif
 
 pkginclude_HEADERS =
 pkginclude_HEADERS += clob.h clob_val.h
@@ -49,11 +55,13 @@ pkginclude_HEADERS += quos.h
 bin_PROGRAMS += cloe
 cloe_SOURCES = cloe.c cloe.yuck
 cloe_CPPFLAGS = $(AM_CPPFLAGS)
-cloe_CPPFLAGS += $(dfp754_CFLAGS)
 cloe_LDFLAGS = $(AM_LDFLAGS)
+if WITH_DECIMAL
+cloe_CPPFLAGS += $(dfp754_CFLAGS)
 cloe_LDFLAGS += $(dfp754_LIBS)
+endif
 cloe_LDADD = libclob.a
-BUILT_SOURCES = cloe.yucc
+BUILT_SOURCES += cloe.yucc
 
 
 ## version rules

@@ -53,8 +53,6 @@
 #include "dfp754_d64.h"
 #include "nifty.h"
 
-#define NANPX	NAND64
-
 typedef union {
 	btree_val_t v;
 	btree_t t;

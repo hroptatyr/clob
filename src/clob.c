@@ -44,7 +44,9 @@
 #elif defined HAVE_DECIMAL_H
 # include <decimal.h>
 #endif	/* DFP754_H || HAVE_DFP_STDLIB_H || HAVE_DECIMAL_H */
-#include "dfp754_d64.h"
+#if defined WITH_DECIMAL
+# include "dfp754_d64.h"
+#endif	/* WITH_DECIMAL */
 #include "btree.h"
 #include "btree_val.h"
 #include "plqu.h"
@@ -53,17 +55,25 @@
 #include "quos.h"
 #include "nifty.h"
 
-#define pxtostr		d64tostr
-#define qxtostr		d64tostr
-
-#define NANPX		NAND64
-#define isnanpx		isnand64
-
-#define NANQX		NAND64
-#define isnanqx		isnand64
+#if defined WITH_DECIMAL
+# define pxtostr	d64tostr
+# define qxtostr	d64tostr
+#else
+# define pxtostr	dtostr
+# define qxtostr	dtostr
+#endif	/* WITH_DECIMAL */
 
 #define SIDE_BID	CLOB_SIDE_BID
 #define SIDE_ASK	CLOB_SIDE_ASK
+
+
+#if !defined WITH_DECIMAL
+#include <stdio.h>
+static int dtostr(char *restrict buf, size_t bsz, double d)
+{
+	return snprintf(buf, bsz, "%f", d);
+}
+#endif	/* WITH_DECIMAL */
 
 
 clob_t

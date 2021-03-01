@@ -15,8 +15,6 @@
 #include "mmod-auction.h"
 #include "nifty.h"
 
-#define isnanpx		isnand64
-
 
 int
 main(void)

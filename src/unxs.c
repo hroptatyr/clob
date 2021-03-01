@@ -46,7 +46,11 @@
 #elif defined HAVE_DECIMAL_H
 # include <decimal.h>
 #endif
-#include <dfp754_d64.h>
+#if defined WITH_DECIMAL
+# include <dfp754_d64.h>
+#else
+# include <math.h>
+#endif
 #include "btree.h"
 #include "btree_val.h"
 #include "plqu.h"
@@ -58,9 +62,6 @@
 #include "nifty.h"
 
 #define UNXS_INIZ	(8U)
-
-#define NANPX		NAND64
-#define isnanpx		isnand64
 
 struct _unxs_s {
 	unxs_mode_t m;

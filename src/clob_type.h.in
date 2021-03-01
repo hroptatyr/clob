@@ -1,4 +1,4 @@
-/*** clob_val.h -- basic types
+/*** clob_type.h -- floating point implementation
  *
  * Copyright (C) 2016-2021 Sebastian Freundt
  *
@@ -34,49 +34,21 @@
  * IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  **/
-#if !defined INCLUDED_clob_val_h_
-#define INCLUDED_clob_val_h_
-#include <stdlib.h>
-#include "clob_type.h"
+#if !defined INCLUDED_clob_type_h_
+#define INCLUDED_clob_type_h_
 
-/* metronome type */
-typedef size_t metr_t;
+#undef CLOB_TYPE
+typedef CLOB_TYPE px_t;
+typedef CLOB_TYPE qx_t;
 
-typedef struct {
-	/** display quantity */
-	qx_t dis;
-	/** hidden quantity */
-	qx_t hid;
-} qty_t;
+#undef CLOB_NAN
+#define NANPX	CLOB_NAN
+#define NANQX	CLOB_NAN
 
-#define qty0		((qty_t){0.dd, 0.dd})
+#undef CLOB_ISNAN
+#define isnanpx	CLOB_ISNAN
+#define isnanqx	CLOB_ISNAN
 
-
-static inline __attribute__((pure, const)) qx_t
-qty(qty_t v)
-{
-	return v.dis + v.hid;
-}
+#undef WITH_DECIMAL
 
-static inline __attribute__((pure, const)) qty_t
-qty_add(qty_t v1, qty_t v2)
-{
-	return (qty_t){v1.dis + v2.dis, v1.hid + v2.hid};
-}
-
-static inline __attribute__((pure, const)) qty_t
-qty_sub(qty_t v1, qty_t v2)
-{
-	return (qty_t){v1.dis - v2.dis, v1.hid - v2.hid};
-}
-
-static inline __attribute__((pure, const)) qty_t
-qty_exe(qty_t v, qx_t q)
-{
-/* V is executed against quantity Q, use up hidden liquidity of V first */
-	qx_t nuh = v.hid <= q ? v.hid : q;
-	qx_t nuv = v.hid <= q ? q - v.hid : 0.dd;
-	return (qty_t){v.dis - nuv, v.hid - nuh};
-}
-
-#endif	/* INCLUDED_clob_val_h_ */
+#endif	/* INCLUDED_clob_type_h_ */
