@@ -37,6 +37,17 @@
 #if !defined INCLUDED_clob_type_h_
 #define INCLUDED_clob_type_h_
 
+#undef HAVE_DFP754_H
+#undef HAVE_DFP_STDLIB_H
+#undef HAVE_DECIMAL_H
+#if defined HAVE_DFP754_H
+# include <dfp754.h>
+#elif defined HAVE_DFP_STDLIB_H
+# include <dfp/stdlib.h>
+#elif defined HAVE_DECIMAL_H
+# include <decimal.h>
+#endif	/* DFP754_H || HAVE_DFP_STDLIB_H || HAVE_DECIMAL_H */
+
 #undef CLOB_TYPE
 typedef CLOB_TYPE px_t;
 typedef CLOB_TYPE qx_t;

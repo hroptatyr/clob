@@ -40,13 +40,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#if defined HAVE_DFP754_H
-# include <dfp754.h>
-#elif defined HAVE_DFP_STDLIB_H
-# include <dfp/stdlib.h>
-#elif defined HAVE_DECIMAL_H
-# include <decimal.h>
-#endif	/* DFP754_H || HAVE_DFP_STDLIB_H || HAVE_DECIMAL_H */
 #if defined WITH_DECIMAL
 # include "dfp754_d64.h"
 #else

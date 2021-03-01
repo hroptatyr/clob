@@ -39,20 +39,11 @@
 #endif	/* HAVE_CONFIG_H */
 #include <stdlib.h>
 #include <stdio.h>
-#if defined HAVE_DFP754_H
-# include <dfp754.h>
-#elif defined HAVE_DFP_STDLIB_H
-# include <dfp/stdlib.h>
-#elif defined HAVE_DECIMAL_H
-# include <decimal.h>
+#if defined WITH_DECIMAL
+# include <dfp754_d64.h>
 #else
-static inline __attribute__((pure, const)) _Decimal64
-fabsd64(_Decimal64 x)
-{
-	return x >= 0.dd ? x : -x;
-}
+# include <math.h>
 #endif
-#include <dfp754_d64.h>
 #include "btree.h"
 #include "btree_val.h"
 #include "plqu.h"
@@ -62,10 +53,25 @@ fabsd64(_Decimal64 x)
 #include "mmod-auction.h"
 #include "nifty.h"
 
-#define MAXQX		INFD64
-#define MINQX		-INFD64
-#define fabsqx		fabsd64
-#define quantizepx	quantized64
+#if defined WITH_DECIMAL
+# define MAXQX		INFD64
+# define MINQX		-INFD64
+# define fabsqx		fabsd64
+# define quantizepx	quantized64
+
+#if !defined HAVE_DFP754_H && !defined HAVE_DFP_STDLIB_H && !defined HAVE_DECIMAL_H
+static inline __attribute__((pure, const)) _Decimal64
+fabsd64(_Decimal64 x)
+{
+	return x >= 0.dd ? x : -x;
+}
+#endif
+#else  /* !WITH_DECIMAL */
+# define MAXQX		INFINITY
+# define MINQX		-INFINITY
+# define fabsqx		fabs
+# define quantizepx(x, y)	(x)
+#endif
 
 /* auction helper */
 static px_t besp;
