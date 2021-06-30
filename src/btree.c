@@ -173,6 +173,8 @@ node_split(btree_t prnt, size_t idx)
 	chld->next = rght;
 	memset(chld->key + chld->n, -1,
 	       (countof(chld->key) - chld->n) * sizeof(*chld->key));
+	/* reset CHLD's split indicator */
+	chld->splitp = false;
 	return;
 }
 
@@ -229,7 +231,7 @@ twig_get(btree_t t, btree_key_t k)
 
 
 static btree_val_t*
-leaf_add(btree_t t, btree_key_t k, bool *splitp)
+leaf_add(btree_t t, btree_key_t k)
 {
 	size_t nul;
 	size_t i;
@@ -251,6 +253,9 @@ leaf_add(btree_t t, btree_key_t k, bool *splitp)
 	for (nul = 0U; nul < t->n && !btree_val_nil_p(t->val[nul].v); nul++);
 
 	if (nul > i) {
+		/* |x|x|x|x|0|
+		 *     ^---->
+		 * |x|x|i|x|x| */
 		/* spare item is far to the right */
 		memmove(t->key + i + 1U,
 			t->key + i + 0U,
@@ -259,6 +264,9 @@ leaf_add(btree_t t, btree_key_t k, bool *splitp)
 			t->val + i + 0U,
 			(nul - i) * sizeof(*t->val));
 	} else if (nul < i) {
+		/* |0|x|x|x|x|
+		 *  <----^
+		 * |x|x|i|x|x| */
 		/* spare item to the left, good job
 		 * go down with the index as the hole will be to our left */
 		i--;
@@ -273,17 +281,18 @@ leaf_add(btree_t t, btree_key_t k, bool *splitp)
 	t->key[i] = k;
 	t->val[i].v = btree_val_nil;
 out:
-	*splitp = t->n >= countof(t->key) - 1U;
+	t->splitp = t->n >= countof(t->key) - 1U;
 	return &t->val[i].v;
 }
 
 static btree_val_t*
-twig_add(btree_t t, btree_key_t k, bool *splitp)
+twig_add(btree_t t, btree_key_t k)
 {
 	btree_val_t *r;
 	btree_t c;
 	size_t i;
 
+redo:
 	switch (t->descp) {
 	case 0U:
 		for (i = 0U; i < t->n && k > t->key[i]; i++);
@@ -296,19 +305,21 @@ twig_add(btree_t t, btree_key_t k, bool *splitp)
 	/* descent */
 	c = t->val[i].t;
 
-	if (!c->innerp) {
-		/* oh, we're in the leaves again */
-		r = leaf_add(c, k, splitp);
-	} else {
-		/* got to go deeper, isn't it? */
-		r = twig_add(c, k, splitp);
-	}
-
-	if (UNLIKELY(*splitp)) {
+	if (UNLIKELY(c->splitp)) {
 		/* C needs splitting, not again */
 		node_split(t, i);
+		goto redo;
 	}
-	*splitp = t->n >= countof(t->key) - 1U;
+
+	if (!c->innerp) {
+		/* oh, we're in the leaves again */
+		r = leaf_add(c, k);
+	} else {
+		/* got to go deeper, isn't it? */
+		r = twig_add(c, k);
+	}
+
+	t->splitp = t->n >= countof(t->key) - 1U;
 	return r;
 }
 
@@ -361,7 +372,6 @@ btree_val_t*
 btree_put(btree_t t, btree_key_t k)
 {
 	btree_val_t *vp;
-	bool splitp;
 
 	if (UNLIKELY(t->splitp)) {
 		/* root got split, bollocks */
@@ -370,12 +380,11 @@ btree_put(btree_t t, btree_key_t k)
 
 	/* check if root has leaves */
 	if (!t->innerp) {
-		vp = leaf_add(t, k, &splitp);
+		vp = leaf_add(t, k);
 	} else {
-		vp = twig_add(t, k, &splitp);
+		vp = twig_add(t, k);
 	}
 
-	t->splitp = splitp;
 	return vp;
 }
 

@@ -25,6 +25,14 @@ clob_CFLAGS = -I$(top_srcdir)/src $(dfp754_CFLAGS)
 clob_LIBS = $(top_builddir)/src/libclob.a $(dfp754_LIBS)
 
 
+check_PROGRAMS += btree_01
+TESTS += btree_01
+btree_01_LDADD = $(clob_LIBS)
+
+check_PROGRAMS += btree_02
+TESTS += btree_02
+btree_02_LDADD = $(clob_LIBS)
+
 check_PROGRAMS += clob_01
 TESTS += clob_01
 clob_01_LDADD = $(clob_LIBS)
@@ -242,6 +250,9 @@ clob_stress_06_LDADD = $(clob_LIBS)
 
 check_PROGRAMS += clob_stress_07
 clob_stress_07_LDADD = $(clob_LIBS)
+
+check_PROGRAMS += clob_stress_08
+clob_stress_08_LDADD = $(clob_LIBS)
 
 check_PROGRAMS += cloe_01
 TESTS += cloe_01
