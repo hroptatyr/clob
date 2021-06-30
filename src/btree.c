@@ -57,7 +57,7 @@ struct btree_s {
 	uint32_t n;
 	uint32_t innerp:1;
 	uint32_t descp:1;
-	uint32_t splitp:1;
+
 	btree_key_t key[63U + 1U/*spare*/];
 	btree_ual_t val[64U];
 	btree_t next;
@@ -173,8 +173,6 @@ node_split(btree_t prnt, size_t idx)
 	chld->next = rght;
 	memset(chld->key + chld->n, -1,
 	       (countof(chld->key) - chld->n) * sizeof(*chld->key));
-	/* reset CHLD's split indicator */
-	chld->splitp = false;
 	return;
 }
 
@@ -281,7 +279,6 @@ leaf_add(btree_t t, btree_key_t k)
 	t->key[i] = k;
 	t->val[i].v = btree_val_nil;
 out:
-	t->splitp = t->n >= countof(t->key) - 1U;
 	return &t->val[i].v;
 }
 
@@ -305,7 +302,7 @@ redo:
 	/* descent */
 	c = t->val[i].t;
 
-	if (UNLIKELY(c->splitp)) {
+	if (UNLIKELY(c->n >= countof(c->key) - 1U)) {
 		/* C needs splitting, not again */
 		node_split(t, i);
 		goto redo;
@@ -319,7 +316,6 @@ redo:
 		r = twig_add(c, k);
 	}
 
-	t->splitp = t->n >= countof(t->key) - 1U;
 	return r;
 }
 
@@ -373,7 +369,7 @@ btree_put(btree_t t, btree_key_t k)
 {
 	btree_val_t *vp;
 
-	if (UNLIKELY(t->splitp)) {
+	if (UNLIKELY(t->n >= countof(t->key) - 1U)) {
 		/* root got split, bollocks */
 		root_split(t);
 	}
