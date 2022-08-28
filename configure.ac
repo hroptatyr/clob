@@ -3,7 +3,7 @@ dnl Autoconf startup.
 dnl -------------------------------------------------------------------------
 
 AC_PREREQ([2.63])
-AC_INIT([clob], [0.1.0.GIT], [freundt@ga-group.nl])
+AC_INIT([clob], [0.1.0], [freundt@ga-group.nl])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_HEADERS([src/config.h src/clob_type.h])
 AC_CONFIG_MACRO_DIR([m4])
