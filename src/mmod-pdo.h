@@ -1,6 +1,6 @@
 /*** mmod-pdo.h -- price discovery order
  *
- * Copyright (C) 2016-2021 Sebastian Freundt
+ * Copyright (C) 2016-2022 Sebastian Freundt
  *
  * Author:  Sebastian Freundt <freundt@ga-group.nl>
  *

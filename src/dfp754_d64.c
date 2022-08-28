@@ -1,6 +1,6 @@
 /*** dfp754_d64.c -- _Decimal64 goodness
  *
- * Copyright (C) 2013-2021 Sebastian Freundt
+ * Copyright (C) 2013-2022 Sebastian Freundt
  *
  * Author:  Sebastian Freundt <freundt@ga-group.nl>
  *
